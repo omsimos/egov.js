@@ -2,55 +2,58 @@
 $schema: https://holocron.so/frontmatter.json
 title: Handle eGov API errors and timeouts
 sidebarTitle: Errors and Timeouts
-description: Catch normalized eGov API failures, inspect response details safely, and use AbortSignal deadlines without unsafe automatic retries.
+description: Reject failed generated SDK requests, apply deadlines, and retry side-effecting operations deliberately.
 ---
 
 # Handle errors and timeouts
 
-## Catch API failures
+## Reject failed responses
 
-**Non-successful HTTP responses** throw `EgovApiError`. The error includes the
-status, status text, headers, parsed response body, request method, and URL.
+Pass the literal `throwOnError: true` to reject unsuccessful HTTP responses and
+retain a non-optional success type.
 
 ```ts
-import { EgovApiError } from "egov.js/core";
+import { egovPay } from "egov.js";
 
 try {
-  await client.getTransaction(transactionUuid);
-} catch (error) {
-  if (error instanceof EgovApiError) {
-    logger.warn("eGov request failed", {
-      method: error.method,
-      status: error.status,
-    });
-  }
+  const transaction = await egovPay.getTransaction({
+    client,
+    path: { uuid: transactionUuid },
+    throwOnError: true,
+  });
 
+  console.log(transaction.data);
+} catch (error) {
+  logger.warn("eGov request failed");
   throw error;
 }
 ```
 
+HTTP failures throw the parsed JSON body or response text. Network and abort
+failures propagate as native errors. Treat every caught value as `unknown` until
+your application has validated it.
+
 <Warning>
-  Treat **error bodies, headers, and URLs as sensitive**. They can include citizen data, provider
-  diagnostics, transaction identifiers, or session tokens.
+  Provider error bodies can contain **citizen data, payment details, phone numbers, tokens, or
+  diagnostics**. Do not log them unless the fields have been explicitly validated and redacted.
 </Warning>
 
 ## Set a deadline
 
-**Every client method accepts call options** as its final argument. Pass an
-`AbortSignal` to apply a deadline controlled by the application.
-
 ```ts
-const response = await client.getTransaction(transactionUuid, {
+import { egovPay } from "egov.js";
+
+await egovPay.getTransaction({
+  client,
+  path: { uuid: transactionUuid },
   signal: AbortSignal.timeout(10_000),
+  throwOnError: true,
 });
 ```
 
 ## Retry deliberately
 
-**The SDK never retries automatically** because some service methods create
-payments, send messages, submit complaints, or begin biometric sessions. Retry
-only when the endpoint is idempotent or the service supports a stable
+The generated Fetch client does not retry automatically. Payment, messaging,
+complaint, blockchain, and biometric operations can have external side effects.
+Retry only when the endpoint is idempotent or the provider supports a stable
 idempotency key.
-
-**Backoff and observability** should live in application middleware where retry
-count, latency budgets, and business consequences can be measured together.

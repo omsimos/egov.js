@@ -19,6 +19,16 @@ pnpm check
 Use `pnpm test:watch` while changing behavior and `pnpm docs:dev` while editing
 the Holocron site.
 
+`openapi.json` is the SDK's source of truth. After changing the contract, run:
+
+```bash
+pnpm openapi:lint
+pnpm generate
+```
+
+Commit the resulting `src/generated` changes and do not edit generated files by
+hand. `pnpm check` verifies that generated output is current.
+
 ## Changes
 
 - Keep credentials and personal data out of source, fixtures, logs, and issues.

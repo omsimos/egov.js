@@ -1,12 +1,13 @@
 {
   "name": "egov.js",
   "version": "0.1.0",
-  "description": "Typed JavaScript and TypeScript SDK for Philippine eGov APIs.",
+  "description": "OpenAPI specification and generated TypeScript SDK for Philippine eGov APIs.",
   "keywords": [
     "api",
     "egov",
     "egovph",
     "government",
+    "openapi",
     "philippines",
     "sdk",
     "typescript"
@@ -23,6 +24,7 @@
   },
   "files": [
     "dist",
+    "openapi.json",
     "CHANGELOG.md"
   ],
   "type": "module",
@@ -41,195 +43,8 @@
         "default": "./dist/index.cjs"
       }
     },
-    "./core": {
-      "import": {
-        "types": "./dist/core/index.d.ts",
-        "default": "./dist/core/index.js"
-      },
-      "require": {
-        "types": "./dist/core/index.d.cts",
-        "default": "./dist/core/index.cjs"
-      }
-    },
-    "./eGovAi": {
-      "import": {
-        "types": "./dist/eGovAi/index.d.ts",
-        "default": "./dist/eGovAi/index.js"
-      },
-      "require": {
-        "types": "./dist/eGovAi/index.d.cts",
-        "default": "./dist/eGovAi/index.cjs"
-      }
-    },
-    "./eGovAi/types": {
-      "import": {
-        "types": "./dist/eGovAi/types.d.ts",
-        "default": "./dist/eGovAi/types.js"
-      },
-      "require": {
-        "types": "./dist/eGovAi/types.d.cts",
-        "default": "./dist/eGovAi/types.cjs"
-      }
-    },
-    "./eGovChain": {
-      "import": {
-        "types": "./dist/eGovChain/index.d.ts",
-        "default": "./dist/eGovChain/index.js"
-      },
-      "require": {
-        "types": "./dist/eGovChain/index.d.cts",
-        "default": "./dist/eGovChain/index.cjs"
-      }
-    },
-    "./eGovChain/types": {
-      "import": {
-        "types": "./dist/eGovChain/types.d.ts",
-        "default": "./dist/eGovChain/types.js"
-      },
-      "require": {
-        "types": "./dist/eGovChain/types.d.cts",
-        "default": "./dist/eGovChain/types.cjs"
-      }
-    },
-    "./eGovCompass": {
-      "import": {
-        "types": "./dist/eGovCompass/index.d.ts",
-        "default": "./dist/eGovCompass/index.js"
-      },
-      "require": {
-        "types": "./dist/eGovCompass/index.d.cts",
-        "default": "./dist/eGovCompass/index.cjs"
-      }
-    },
-    "./eGovCompass/types": {
-      "import": {
-        "types": "./dist/eGovCompass/types.d.ts",
-        "default": "./dist/eGovCompass/types.js"
-      },
-      "require": {
-        "types": "./dist/eGovCompass/types.d.cts",
-        "default": "./dist/eGovCompass/types.cjs"
-      }
-    },
-    "./eGovFaceLiveness": {
-      "import": {
-        "types": "./dist/eGovFaceLiveness/index.d.ts",
-        "default": "./dist/eGovFaceLiveness/index.js"
-      },
-      "require": {
-        "types": "./dist/eGovFaceLiveness/index.d.cts",
-        "default": "./dist/eGovFaceLiveness/index.cjs"
-      }
-    },
-    "./eGovFaceLiveness/types": {
-      "import": {
-        "types": "./dist/eGovFaceLiveness/types.d.ts",
-        "default": "./dist/eGovFaceLiveness/types.js"
-      },
-      "require": {
-        "types": "./dist/eGovFaceLiveness/types.d.cts",
-        "default": "./dist/eGovFaceLiveness/types.cjs"
-      }
-    },
-    "./eGovPay": {
-      "import": {
-        "types": "./dist/eGovPay/index.d.ts",
-        "default": "./dist/eGovPay/index.js"
-      },
-      "require": {
-        "types": "./dist/eGovPay/index.d.cts",
-        "default": "./dist/eGovPay/index.cjs"
-      }
-    },
-    "./eGovPay/types": {
-      "import": {
-        "types": "./dist/eGovPay/types.d.ts",
-        "default": "./dist/eGovPay/types.js"
-      },
-      "require": {
-        "types": "./dist/eGovPay/types.d.cts",
-        "default": "./dist/eGovPay/types.cjs"
-      }
-    },
-    "./eGovSso": {
-      "import": {
-        "types": "./dist/eGovSso/index.d.ts",
-        "default": "./dist/eGovSso/index.js"
-      },
-      "require": {
-        "types": "./dist/eGovSso/index.d.cts",
-        "default": "./dist/eGovSso/index.cjs"
-      }
-    },
-    "./eGovSso/types": {
-      "import": {
-        "types": "./dist/eGovSso/types.d.ts",
-        "default": "./dist/eGovSso/types.js"
-      },
-      "require": {
-        "types": "./dist/eGovSso/types.d.cts",
-        "default": "./dist/eGovSso/types.cjs"
-      }
-    },
-    "./eMessage": {
-      "import": {
-        "types": "./dist/eMessage/index.d.ts",
-        "default": "./dist/eMessage/index.js"
-      },
-      "require": {
-        "types": "./dist/eMessage/index.d.cts",
-        "default": "./dist/eMessage/index.cjs"
-      }
-    },
-    "./eMessage/types": {
-      "import": {
-        "types": "./dist/eMessage/types.d.ts",
-        "default": "./dist/eMessage/types.js"
-      },
-      "require": {
-        "types": "./dist/eMessage/types.d.cts",
-        "default": "./dist/eMessage/types.cjs"
-      }
-    },
-    "./eReport": {
-      "import": {
-        "types": "./dist/eReport/index.d.ts",
-        "default": "./dist/eReport/index.js"
-      },
-      "require": {
-        "types": "./dist/eReport/index.d.cts",
-        "default": "./dist/eReport/index.cjs"
-      }
-    },
-    "./eReport/types": {
-      "import": {
-        "types": "./dist/eReport/types.d.ts",
-        "default": "./dist/eReport/types.js"
-      },
-      "require": {
-        "types": "./dist/eReport/types.d.cts",
-        "default": "./dist/eReport/types.cjs"
-      }
-    },
-    "./eVerify": {
-      "import": {
-        "types": "./dist/eVerify/index.d.ts",
-        "default": "./dist/eVerify/index.js"
-      },
-      "require": {
-        "types": "./dist/eVerify/index.d.cts",
-        "default": "./dist/eVerify/index.cjs"
-      }
-    },
-    "./eVerify/types": {
-      "import": {
-        "types": "./dist/eVerify/types.d.ts",
-        "default": "./dist/eVerify/types.js"
-      },
-      "require": {
-        "types": "./dist/eVerify/types.d.cts",
-        "default": "./dist/eVerify/types.cjs"
-      }
+    "./openapi.json": {
+      "default": "./openapi.json"
     },
     "./package.json": "./package.json"
   },
@@ -238,27 +53,33 @@
   },
   "scripts": {
     "build": "tsdown",
+    "generate": "openapi-ts && node scripts/fix-generated.mjs && oxfmt src/generated/sdk.gen.ts src/generated/client/utils.gen.ts",
+    "check:generated": "node scripts/check-generated.mjs",
+    "openapi:lint": "redocly lint openapi.json --extends=spec",
     "dev": "tsdown --watch",
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "lint": "oxlint src test tsdown.config.ts",
+    "lint": "oxlint src test scripts openapi-ts.config.ts tsdown.config.ts",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
     "audit": "pnpm audit --audit-level high",
     "check:package": "publint && attw --pack . --profile node16",
     "docs:dev": "pnpm --dir docs dev",
     "docs:build": "pnpm --dir docs build",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm check:package && pnpm docs:build",
+    "check": "pnpm format:check && pnpm lint && pnpm openapi:lint && pnpm check:generated && pnpm typecheck && pnpm test && pnpm build && pnpm check:package && pnpm docs:build",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "pnpm check && changeset publish",
-    "prepack": "pnpm build"
+    "prepack": "pnpm generate && pnpm build"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
     "@changesets/cli": "2.31.1",
+    "@hey-api/openapi-ts": "0.99.0",
+    "@redocly/cli": "2.40.0",
+    "@types/node": "22.20.1",
     "oxfmt": "0.60.0",
     "oxlint": "1.75.0",
     "publint": "0.3.22",

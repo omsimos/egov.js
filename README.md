@@ -1,127 +1,132 @@
 # egov.js
 
-Typed JavaScript and TypeScript SDK for Philippine eGov APIs.
+OpenAPI specification and generated TypeScript SDK for nine Philippine eGov
+partner services. The SDK is generated with
+[`@hey-api/openapi-ts`](https://heyapi.dev/openapi-ts/get-started) and bundles a
+Fetch client without runtime dependencies.
 
-`egov.js` provides dependency-free clients for nine eGov partner
-services. It ships ESM and CommonJS builds, TypeScript declarations, explicit
-service subpaths, and a shared fetch-based transport.
-
-> The configured hosts are hackathon or staging services unless noted
-> otherwise. Do not use them for production traffic without confirmation from
-> the relevant eGov service owner.
+> Provider hosts are staging or hackathon services unless confirmed otherwise.
+> Keep credentials and citizen data on trusted server infrastructure.
 
 ## Services
 
-| Import                     | Service       | Capability                                                             |
-| -------------------------- | ------------- | ---------------------------------------------------------------------- |
-| `egov.js/eGovAi`           | eGov AI       | Text generation, translation, document extraction, and credit tracking |
-| `egov.js/eGovCompass`      | eGov Compass  | Budget releases, allocations, obligations, and disbursements           |
-| `egov.js/eMessage`         | eMessage      | SMS delivery                                                           |
-| `egov.js/eGovChain`        | eGovChain     | EVM-compatible JSON-RPC reads and signed transaction submission        |
-| `egov.js/eReport`          | eReport       | Complaint submission, OTP verification, reports, and location datasets |
-| `egov.js/eGovSso`          | eGov SSO      | Citizen sign-in token exchange and profile retrieval                   |
-| `egov.js/eVerify`          | eVerify       | Identity and QR verification                                           |
-| `egov.js/eGovPay`          | eGovPay       | Payment creation, lookup, and voiding                                  |
-| `egov.js/eGovFaceLiveness` | Face Liveness | Liveness sessions and verification results                             |
+| Service       | Capability                                                             |
+| ------------- | ---------------------------------------------------------------------- |
+| eGov AI       | Text generation, translation, document extraction, and credit tracking |
+| eGov Compass  | Budget releases, allocations, obligations, and disbursements           |
+| eMessage      | SMS delivery                                                           |
+| eGovChain     | EVM-compatible JSON-RPC reads and signed transaction submission        |
+| eReport       | Complaint submission, OTP verification, reports, and location datasets |
+| eGov SSO      | Citizen sign-in token exchange and profile retrieval                   |
+| eVerify       | Identity and QR verification                                           |
+| eGovPay       | Payment creation, lookup, and voiding                                  |
+| Face Liveness | Liveness sessions and verification results                             |
 
 ## Installation
-
-The package is not yet listed on npm. The command below is the public
-installation path and will work after the first npm release.
 
 ```bash
 pnpm add egov.js
 ```
 
-Node.js 22.18 or newer is supported. Explicitly configured clients also work in
-modern runtimes that provide Fetch, Web Crypto, `Blob`, and `FormData`.
+Node.js 22.18 or newer is supported. Other modern runtimes can use the SDK when
+they provide Fetch, `Blob`, and `FormData`.
 
 ## Quickstart
 
-Import a service subpath so applications only load the API surface they use:
+Create a client for a provider host, exchange the access code, and pass the raw
+bearer token to authenticated operations:
 
 ```ts
-import { eGovAiApi } from "egov.js/eGovAi";
+import { createClient, egovAi } from "egov.js";
 
-const ai = eGovAiApi.fromEnv({
+const client = createClient({
   baseUrl: "https://egov-ai-core-ws.oueg.info",
 });
 
-const token = await ai.generateAccessToken();
-const answer = await ai.generateAssistant(token.access_token, {
-  category: "general",
-  prompt: "How do I register a business in the Philippines?",
+const token = await egovAi.generateAccessToken({
+  client,
+  body: {
+    access_code: process.env.EGOVAI_ACCESS_CODE!,
+  },
+  throwOnError: true,
+});
+
+const answer = await egovAi.generateAssistant({
+  client,
+  auth: token.access_token,
+  body: {
+    category: "general",
+    prompt: "How do I register a business in the Philippines?",
+  },
+  throwOnError: true,
 });
 
 console.log(answer.data);
 ```
 
-`fromEnv(...)` reads credentials only. Pass the service base URL explicitly so
-staging and production endpoints cannot be confused silently.
+Generated service methods accept one grouped options object. Depending on the
+operation, request values belong under `body`, `query`, or `path`. Shared options
+such as `client`, `auth`, `headers`, `signal`, and `throwOnError` remain at the
+top level.
 
-Use `create(...)` when credentials come from another secret provider:
+## Authentication
 
-```ts
-import { eMessageApi } from "egov.js/eMessage";
-
-const messaging = eMessageApi.create({
-  accessToken: secrets.emessageToken,
-  baseUrl: "https://ws-message.e.gov.ph",
-});
-
-await messaging.sendSms({
-  message: "Your application is ready for review.",
-  number: "+639171234567",
-});
-```
-
-Keep credential-bearing clients on the server. SMS, payment, complaint, and
-liveness methods can cause real external side effects.
-
-## Error handling
-
-All non-successful HTTP responses throw `EgovApiError` with the normalized
-status, headers, parsed body, method, and URL:
+Read secrets in application code and configure one client per provider or
+credential scope. Bearer operations accept a raw token through `auth`. API-key
+services can configure their required header once:
 
 ```ts
-import { EgovApiError } from "egov.js/core";
+import { createClient, compass } from "egov.js";
 
-try {
-  await client.getTransaction(transactionUuid);
-} catch (error) {
-  if (error instanceof EgovApiError) {
-    console.error(error.status, error.body);
-  }
-}
+const client = createClient({
+  baseUrl: "https://dbm-ws.oueg.info",
+  headers: {
+    "X-API-Key": process.env.EGOVCOMPASS_API_KEY!,
+  },
+});
+
+const records = await compass.getSaaodbRecords({
+  client,
+  query: {
+    period: "FY",
+    reportYear: 2026,
+  },
+  throwOnError: true,
+});
 ```
 
-Pass an `AbortSignal` in the final call-options argument to enforce application
-timeouts. The SDK intentionally does not retry requests because several eGov
-operations are not safe to repeat.
+## Errors
 
-## Environment variables
+Pass `throwOnError: true` to reject unsuccessful HTTP responses and retain a
+non-optional success type. The generated Fetch client throws the parsed error
+body for HTTP failures. Network and abort failures propagate as native errors.
+The SDK does not retry automatically.
 
-| Service       | Variables read by `fromEnv(...)`                               |
-| ------------- | -------------------------------------------------------------- |
-| eGov AI       | `EGOVAI_ACCESS_CODE`                                           |
-| eGov Compass  | `EGOVCOMPASS_API_KEY`                                          |
-| eMessage      | `EMESSAGE_ACCESS_TOKEN`                                        |
-| eReport       | `EREPORT_ACCESS_TOKEN`                                         |
-| eGov SSO      | `EGOVSSO_PARTNER_CODE`, `EGOVSSO_PARTNER_SECRET`               |
-| eVerify       | `EVERIFY_CLIENT_ID`, `EVERIFY_CLIENT_SECRET`, `EVERIFY_PUBKEY` |
-| eGovPay       | `EGOVPAY_API_KEY`, `EGOVPAY_SETTLEMENT_TEMPLATE_UUID`          |
-| Face Liveness | `EGOVLIVENESS_API_KEY`                                         |
+## OpenAPI
 
-eGovChain uses a public default RPC endpoint and does not read credentials.
+The published OpenAPI 3.1 document is the source of truth for every generated
+operation and type:
 
-## Documentation
+```ts
+import openapi from "egov.js/openapi.json" with { type: "json" };
 
-The full SDK guide is a [Holocron](https://github.com/remorses/holocron) site in
-[`docs/`](./docs/index.mdx). Run it locally with:
-
-```bash
-pnpm docs:dev
+console.log(openapi.openapi);
 ```
+
+Use `import.meta.resolve("egov.js/openapi.json")` to locate the document for an
+external generator. Update `openapi.json`, run `pnpm generate`, and commit the
+generated changes when contributing.
+
+## Migration
+
+| Handwritten SDK                                | Generated SDK                                      |
+| ---------------------------------------------- | -------------------------------------------------- |
+| Service subpaths such as `egov.js/eGovAi`      | Named exports from `egov.js`                       |
+| Service factories and `fromEnv()`              | `createClient()` and tagged static service classes |
+| Positional method arguments                    | Grouped `body`, `query`, and `path` options        |
+| Runtime endpoint catalogs                      | `egov.js/openapi.json`                             |
+| Custom `EgovApiError`                          | Generated Fetch client errors                      |
+| Payment digest and named JSON-RPC conveniences | Application logic over documented wire operations  |
 
 ## Development
 
@@ -130,12 +135,10 @@ pnpm install
 pnpm check
 ```
 
-`pnpm check` verifies formatting, lint, types, unit tests, dual-format builds,
-package exports with publint and Are the Types Wrong, and the Holocron site.
+`pnpm check` validates and regenerates the OpenAPI SDK, checks formatting and
+types, runs tests, verifies package exports, and builds the Holocron docs.
 
-Use `pnpm changeset` for user-facing changes. See
-[`CONTRIBUTING.md`](./CONTRIBUTING.md), [`SECURITY.md`](./SECURITY.md), and
-[`CHANGELOG.md`](./CHANGELOG.md) for project policies and release history.
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the contribution workflow.
 
 ## License
 

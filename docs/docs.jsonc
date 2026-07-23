@@ -1,7 +1,7 @@
 {
   "$schema": "https://holocron.so/docs.json",
   "name": "egov.js",
-  "description": "JavaScript and TypeScript SDK for Philippine eGov APIs.",
+  "description": "OpenAPI specification and generated TypeScript SDK for Philippine eGov APIs.",
   "colors": {
     "primary": "#155eef",
     "light": "#6ea8fe",
@@ -44,18 +44,17 @@
           },
           {
             "group": "Services",
-            "icon": "lucide:blocks",
+            "icon": "lucide:layers-3",
             "pages": [
-              "services/overview",
               "services/egov-ai",
-              "services/egov-compass",
               "services/egov-chain",
+              "services/egov-compass",
+              "services/face-liveness",
               "services/egov-pay",
               "services/egov-sso",
               "services/emessage",
               "services/ereport",
               "services/everify",
-              "services/face-liveness",
             ],
           },
           {
@@ -64,6 +63,12 @@
             "pages": ["reference/package-exports", "reference/versioning"],
           },
         ],
+      },
+      {
+        "tab": "API Reference",
+        "icon": "lucide:code-xml",
+        "openapi": "../openapi.json",
+        "base": "api",
       },
     ],
     "global": {
@@ -94,18 +99,23 @@
   },
   "redirects": [
     {
+      "source": "/services/overview",
+      "destination": "/reference/package-exports",
+      "permanent": true,
+    },
+    {
       "source": "/services/identity",
-      "destination": "/services/overview",
+      "destination": "/reference/package-exports",
       "permanent": true,
     },
     {
       "source": "/services/citizen-services",
-      "destination": "/services/overview",
+      "destination": "/reference/package-exports",
       "permanent": true,
     },
     {
       "source": "/services/data-and-chain",
-      "destination": "/services/overview",
+      "destination": "/reference/package-exports",
       "permanent": true,
     },
   ],

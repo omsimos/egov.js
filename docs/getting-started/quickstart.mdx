@@ -2,61 +2,57 @@
 $schema: https://holocron.so/frontmatter.json
 title: Make your first typed eGov API request
 sidebarTitle: Quickstart
-description: Configure the eGov AI client from server environment credentials, mint an access token, and make a typed assistant request.
+description: Create a generated Fetch client, mint an eGov AI token, and make an authenticated request.
 ---
 
 # Make your first request
 
-## Configure a credential
+## Read the credential
 
-**Server environment variables** keep partner access codes out of application
-source and browser bundles.
+Load provider credentials in server-side application code. The generated SDK
+does not read environment variables automatically.
 
-```bash
-export EGOVAI_ACCESS_CODE="your-access-code"
+```ts
+const accessCode = process.env.EGOVAI_ACCESS_CODE;
+if (!accessCode) throw new Error("EGOVAI_ACCESS_CODE is required");
 ```
 
 ## Create the client
 
-**Service subpath imports** expose each runtime client without requiring a
-root-package import. Some service types are re-exported there; all service types
-are available from the matching `/types` subpath.
+Each provider has its own host. Create a client for the host you intend to call:
 
 ```ts
-import { eGovAiApi } from "egov.js/eGovAi";
+import { createClient, egovAi } from "egov.js";
 
-const ai = eGovAiApi.fromEnv({
+const client = createClient({
   baseUrl: "https://egov-ai-core-ws.oueg.info",
 });
 ```
 
-<Note>
-  `fromEnv(...)` reads **credentials only**. The explicit `baseUrl` prevents an application from
-  silently switching between staging and production hosts.
-</Note>
-
 ## Generate text
 
-**eGov AI access tokens** are short-lived and credit-metered. Mint a token,
-reuse it within its lifetime, and monitor the remaining balance.
-
 ```ts
-const token = await ai.generateAccessToken();
-
-const answer = await ai.generateAssistant(token.access_token, {
-  category: "general",
-  prompt: "Explain the steps for registering a sole proprietorship.",
+const token = await egovAi.generateAccessToken({
+  client,
+  body: { access_code: accessCode },
+  throwOnError: true,
 });
 
-const credits = await ai.getTokenCredits(token.access_token);
+const answer = await egovAi.generateAssistant({
+  client,
+  auth: token.access_token,
+  body: {
+    category: "general",
+    prompt: "Explain the steps for registering a sole proprietorship.",
+  },
+  throwOnError: true,
+});
 
 console.log(answer.data);
-console.log(credits.credits_remaining);
 ```
 
-**Application-level caching** can reduce repeated calls and conserve credits,
-but never cache citizen data beyond the retention period allowed by your data
-sharing agreement.
+The raw token passed through `auth` is serialized as a bearer credential because
+the operation declares bearer security in `openapi.json`.
 
-Next, review [authentication patterns](../guides/authentication.mdx) or compare
-the [supported services](../services/overview.mdx).
+Next, review [authentication patterns](../guides/authentication.mdx) and the
+[public package exports](../reference/package-exports.mdx).

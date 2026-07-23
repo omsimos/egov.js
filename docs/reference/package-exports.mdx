@@ -1,57 +1,53 @@
 ---
 $schema: https://holocron.so/frontmatter.json
-title: Import egov.js packages and TypeScript types
+title: Import egov.js services and OpenAPI
 sidebarTitle: Package Exports
-description: Understand root and service subpath imports, dual ESM and CommonJS builds, type-only entry points, and the package runtime boundary.
+description: Import the generated client, tagged static service classes, types, and canonical OpenAPI document.
 ---
 
-# Import packages and types
+# Import package exports
 
-## Root import
+## Root SDK
 
-**The root entry exports every service** for applications that prefer one public
-module.
-
-```ts
-import { eGovAiApi, eGovSsoApi } from "egov.js";
-```
-
-## Service subpaths
-
-**Subpath imports are recommended** because they communicate service boundaries
-and give bundlers the smallest possible graph.
+The root entry exports `createClient`, tagged static classes for every service,
+and all generated request and response types.
 
 ```ts
-import { eGovSsoApi } from "egov.js/eGovSso";
-import type { EgovSsoCitizenProfile } from "egov.js/eGovSso";
+import { createClient, egovAi } from "egov.js";
+import type { EgovAiPromptRequest } from "egov.js";
 ```
 
-**Dedicated type subpaths remain available** for consumers that separate runtime
-and contract imports. Use them consistently across services; Compass, eReport,
-and Face Liveness types are available only from their dedicated `/types`
-subpaths.
-
-```ts
-import type { EgovSsoCitizenProfile } from "egov.js/eGovSso/types";
-```
-
-```ts
-import type { CompassSaaodbRecordsQuery } from "egov.js/eGovCompass/types";
-import type { EReportRecord } from "egov.js/eReport/types";
-import type { FaceLivenessVerificationResult } from "egov.js/eGovFaceLiveness/types";
-```
-
-## Module formats
-
-**ESM and CommonJS are both published** with matching declarations. The exports
-map routes `import` to `.js` and `require` to `.cjs` while keeping private build
-files inaccessible.
+The package ships matching ESM, CommonJS, and TypeScript declaration outputs.
 
 ```js
-const { eGovChainApi } = require("egov.js/eGovChain");
+const { createClient } = require("egov.js");
 ```
 
-<Note>
-  The package is marked **side-effect free**, allowing modern bundlers to remove unused services
-  from production bundles.
-</Note>
+Service and `/types` subpaths from the handwritten SDK are no longer exported.
+
+## OpenAPI document
+
+Import the canonical OpenAPI 3.1 JSON document directly:
+
+```ts
+import openapi from "egov.js/openapi.json" with { type: "json" };
+
+console.log(Object.keys(openapi.paths));
+```
+
+CommonJS consumers can require it:
+
+```js
+const openapi = require("egov.js/openapi.json");
+```
+
+External generators can resolve the installed file:
+
+```ts
+import { fileURLToPath } from "node:url";
+
+const openapiPath = fileURLToPath(import.meta.resolve("egov.js/openapi.json"));
+```
+
+The public export boundary is intentionally small: `egov.js`,
+`egov.js/openapi.json`, and `egov.js/package.json`.
