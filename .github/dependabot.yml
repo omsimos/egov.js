@@ -7,13 +7,6 @@ updates:
     groups:
       development-dependencies:
         dependency-type: development
-  - package-ecosystem: npm
-    directory: /docs
-    schedule:
-      interval: weekly
-    groups:
-      documentation-dependencies:
-        patterns: ["*"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
