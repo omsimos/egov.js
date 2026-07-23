@@ -1,0 +1,32 @@
+import { defineConfig } from "tsdown";
+
+export default defineConfig({
+  clean: true,
+  dts: true,
+  entry: {
+    index: "src/index.ts",
+    "core/index": "src/core/index.ts",
+    "eGovAi/index": "src/eGovAi/index.ts",
+    "eGovAi/types": "src/eGovAi/types.ts",
+    "eGovChain/index": "src/eGovChain/index.ts",
+    "eGovChain/types": "src/eGovChain/types.ts",
+    "eGovCompass/index": "src/eGovCompass/index.ts",
+    "eGovCompass/types": "src/eGovCompass/types.ts",
+    "eGovFaceLiveness/index": "src/eGovFaceLiveness/index.ts",
+    "eGovFaceLiveness/types": "src/eGovFaceLiveness/types.ts",
+    "eGovPay/index": "src/eGovPay/index.ts",
+    "eGovPay/types": "src/eGovPay/types.ts",
+    "eGovSso/index": "src/eGovSso/index.ts",
+    "eGovSso/types": "src/eGovSso/types.ts",
+    "eMessage/index": "src/eMessage/index.ts",
+    "eMessage/types": "src/eMessage/types.ts",
+    "eReport/index": "src/eReport/index.ts",
+    "eReport/types": "src/eReport/types.ts",
+    "eVerify/index": "src/eVerify/index.ts",
+    "eVerify/types": "src/eVerify/types.ts",
+  },
+  format: ["esm", "cjs"],
+  platform: "neutral",
+  sourcemap: true,
+  target: "es2022",
+});

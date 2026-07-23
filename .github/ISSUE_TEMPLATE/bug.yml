@@ -1,0 +1,51 @@
+name: Bug report
+description: Report reproducible SDK behavior that differs from the documented contract.
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include credentials, access tokens, citizen data, or unredacted provider responses.
+  - type: input
+    id: version
+    attributes:
+      label: SDK version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: service
+    attributes:
+      label: Service
+      options:
+        - Core transport
+        - eGov AI
+        - eGovChain
+        - eGov Compass
+        - Face Liveness
+        - eGovPay
+        - eGov SSO
+        - eMessage
+        - eReport
+        - eVerify
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Provide redacted code and the steps needed to reproduce the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true

@@ -1,0 +1,61 @@
+---
+$schema: https://holocron.so/frontmatter.json
+title: Make your first typed eGov API request
+sidebarTitle: Quickstart
+description: Configure the eGov AI client from server environment credentials, mint an access token, and make a typed assistant request.
+---
+
+# Make your first request
+
+## Configure a credential
+
+**Server environment variables** keep partner access codes out of application
+source and browser bundles.
+
+```bash
+export EGOVAI_ACCESS_CODE="your-access-code"
+```
+
+## Create the client
+
+**Service subpath imports** expose the runtime client and all related TypeScript
+types without requiring a root-package import.
+
+```ts
+import { eGovAiApi } from "@omsimos/egov/eGovAi";
+
+const ai = eGovAiApi.fromEnv({
+  baseUrl: "https://egov-ai-core-ws.oueg.info",
+});
+```
+
+<Note>
+  `fromEnv(...)` reads **credentials only**. The explicit `baseUrl` prevents an application from
+  silently switching between staging and production hosts.
+</Note>
+
+## Generate text
+
+**eGov AI access tokens** are short-lived and credit-metered. Mint a token,
+reuse it within its lifetime, and monitor the remaining balance.
+
+```ts
+const token = await ai.generateAccessToken();
+
+const answer = await ai.generateAssistant(token.access_token, {
+  category: "general",
+  prompt: "Explain the steps for registering a sole proprietorship.",
+});
+
+const credits = await ai.getTokenCredits(token.access_token);
+
+console.log(answer.data);
+console.log(credits.credits_remaining);
+```
+
+**Application-level caching** can reduce repeated calls and conserve credits,
+but never cache citizen data beyond the retention period allowed by your data
+sharing agreement.
+
+Next, review [authentication patterns](../guides/authentication.mdx) or compare
+the [supported services](../services/overview.mdx).

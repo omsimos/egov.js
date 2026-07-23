@@ -1,0 +1,48 @@
+---
+$schema: https://holocron.so/frontmatter.json
+title: Query budget data and the eGov blockchain
+sidebarTitle: Data and Chain
+description: Read structured Philippine budget records with eGov Compass and access the eGov EVM-compatible blockchain through typed JSON-RPC helpers.
+---
+
+# Query public data and blockchain state
+
+## eGov Compass
+
+**Compass provides authenticated budget data** for SAAODB, SARO, NCA, and LGSF
+records and dashboards.
+
+```ts
+import { eGovCompassApi } from "@omsimos/egov/eGovCompass";
+
+const compass = eGovCompassApi.fromEnv({
+  baseUrl: "https://dbm-ws.oueg.info",
+});
+
+const releases = await compass.getSaroRecords({ limit: 25 });
+const spending = await compass.getSaaodbRecords({
+  period: "FY",
+  reportYear: 2026,
+  sheetScope: "agency",
+});
+```
+
+**Budget responses remain provider data**. Preserve reporting period, scope,
+unit, and source metadata when presenting figures to users.
+
+## eGovChain
+
+**eGovChain is an EVM-compatible JSON-RPC client** with public read helpers and
+raw signed transaction submission.
+
+```ts
+import { eGovChainApi } from "@omsimos/egov/eGovChain";
+
+const chain = eGovChainApi.create();
+const [chainId, blockNumber] = await Promise.all([chain.chainId(), chain.blockNumber()]);
+```
+
+<Warning>
+  `sendRawTransaction(...)` **writes to the chain**. Sign transactions outside the SDK, protect
+  private keys, and verify chain ID and RPC URL before sending.
+</Warning>

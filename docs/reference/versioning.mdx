@@ -1,0 +1,48 @@
+---
+$schema: https://holocron.so/frontmatter.json
+title: Version and release the egov.js SDK
+sidebarTitle: Versioning
+description: Follow semantic versioning, record user-facing changes with Changesets, validate package artifacts, and create signed release tags.
+---
+
+# Version and release the SDK
+
+## Semantic versioning
+
+**egov.js follows Semantic Versioning**. Before `1.0.0`, minor releases may
+change experimental public APIs and patch releases remain backward-compatible
+bug fixes.
+
+| Change                       | Version bump | Example                             |
+| ---------------------------- | ------------ | ----------------------------------- |
+| Backward-compatible fix      | Patch        | Correct response parsing            |
+| New client method or service | Minor        | Add a new read endpoint             |
+| Breaking public API change   | Major        | Remove or rename an exported method |
+
+## Record a change
+
+**Every user-facing pull request includes a Changeset** describing impact from
+the SDK consumer's perspective.
+
+```bash
+pnpm changeset
+```
+
+**Maintainers consume pending Changesets** to update `package.json` and
+`CHANGELOG.md` before creating the release commit.
+
+```bash
+pnpm version
+pnpm check
+```
+
+## Validate the artifact
+
+**The release gate checks more than source tests**. It builds ESM and CommonJS,
+validates package metadata with publint, checks declaration resolution with Are
+the Types Wrong, inspects the npm tarball, and builds these Holocron docs.
+
+<Note>
+  Public npm publishing remains **intentionally disabled operationally** while the GitHub repository
+  is private. Git tags and GitHub Releases still identify every versioned artifact.
+</Note>

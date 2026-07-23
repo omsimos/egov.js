@@ -1,0 +1,90 @@
+{
+  "$schema": "https://holocron.so/docs.json",
+  "name": "egov.js",
+  "description": "JavaScript and TypeScript SDK for Philippine eGov APIs.",
+  "colors": {
+    "primary": "#155eef",
+    "light": "#6ea8fe",
+    "dark": "#1249b8",
+  },
+  "appearance": {
+    "default": "system",
+  },
+  "icons": {
+    "library": "lucide",
+  },
+  "navbar": {
+    "links": [
+      {
+        "type": "github",
+        "href": "https://github.com/omsimos/egov.js",
+      },
+    ],
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "icon": "lucide:book-open",
+        "groups": [
+          {
+            "group": "Overview",
+            "icon": "lucide:landmark",
+            "pages": ["index"],
+          },
+          {
+            "group": "Getting Started",
+            "icon": "lucide:rocket",
+            "pages": ["getting-started/installation", "getting-started/quickstart"],
+          },
+          {
+            "group": "Guides",
+            "icon": "lucide:map",
+            "pages": ["guides/authentication", "guides/error-handling"],
+          },
+          {
+            "group": "Services",
+            "icon": "lucide:blocks",
+            "pages": [
+              "services/overview",
+              "services/egov-ai",
+              "services/identity",
+              "services/citizen-services",
+              "services/data-and-chain",
+            ],
+          },
+          {
+            "group": "Reference",
+            "icon": "lucide:braces",
+            "pages": ["reference/package-exports", "reference/versioning"],
+          },
+        ],
+      },
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "GitHub",
+          "href": "https://github.com/omsimos/egov.js",
+          "icon": "lucide:github",
+        },
+        {
+          "anchor": "Releases",
+          "href": "https://github.com/omsimos/egov.js/releases",
+          "icon": "lucide:tags",
+        },
+      ],
+    },
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/omsimos",
+    },
+  },
+  "search": {
+    "prompt": "Search egov.js docs...",
+  },
+  "assistant": {
+    "enabled": false,
+  },
+}

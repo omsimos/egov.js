@@ -1,0 +1,56 @@
+---
+$schema: https://holocron.so/frontmatter.json
+title: Handle eGov API errors and timeouts
+sidebarTitle: Errors and Timeouts
+description: Catch normalized eGov API failures, inspect response details safely, and use AbortSignal deadlines without unsafe automatic retries.
+---
+
+# Handle errors and timeouts
+
+## Catch API failures
+
+**Non-successful HTTP responses** throw `EgovApiError`. The error includes the
+status, status text, headers, parsed response body, request method, and URL.
+
+```ts
+import { EgovApiError } from "@omsimos/egov/core";
+
+try {
+  await client.getTransaction(transactionUuid);
+} catch (error) {
+  if (error instanceof EgovApiError) {
+    logger.warn("eGov request failed", {
+      method: error.method,
+      status: error.status,
+    });
+  }
+
+  throw error;
+}
+```
+
+<Warning>
+  Treat **error bodies, headers, and URLs as sensitive**. They can include citizen data, provider
+  diagnostics, transaction identifiers, or session tokens.
+</Warning>
+
+## Set a deadline
+
+**Every client method accepts call options** as its final argument. Pass an
+`AbortSignal` to apply a deadline controlled by the application.
+
+```ts
+const response = await client.getTransaction(transactionUuid, {
+  signal: AbortSignal.timeout(10_000),
+});
+```
+
+## Retry deliberately
+
+**The SDK never retries automatically** because some service methods create
+payments, send messages, submit complaints, or begin biometric sessions. Retry
+only when the endpoint is idempotent or the service supports a stable
+idempotency key.
+
+**Backoff and observability** should live in application middleware where retry
+count, latency budgets, and business consequences can be measured together.

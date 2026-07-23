@@ -1,0 +1,49 @@
+---
+$schema: https://holocron.so/frontmatter.json
+title: Import egov.js packages and TypeScript types
+sidebarTitle: Package Exports
+description: Understand root and service subpath imports, dual ESM and CommonJS builds, type-only entry points, and the package runtime boundary.
+---
+
+# Import packages and types
+
+## Root import
+
+**The root entry exports every service** for applications that prefer one public
+module.
+
+```ts
+import { eGovAiApi, eGovSsoApi } from "@omsimos/egov";
+```
+
+## Service subpaths
+
+**Subpath imports are recommended** because they communicate service boundaries
+and give bundlers the smallest possible graph.
+
+```ts
+import { eGovSsoApi } from "@omsimos/egov/eGovSso";
+import type { EgovSsoCitizenProfile } from "@omsimos/egov/eGovSso";
+```
+
+**Dedicated type subpaths remain available** for consumers that separate runtime
+and contract imports.
+
+```ts
+import type { EgovSsoCitizenProfile } from "@omsimos/egov/eGovSso/types";
+```
+
+## Module formats
+
+**ESM and CommonJS are both published** with matching declarations. The exports
+map routes `import` to `.js` and `require` to `.cjs` while keeping private build
+files inaccessible.
+
+```js
+const { eGovChainApi } = require("@omsimos/egov/eGovChain");
+```
+
+<Note>
+  The package is marked **side-effect free**, allowing modern bundlers to remove unused services
+  from production bundles.
+</Note>

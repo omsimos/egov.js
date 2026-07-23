@@ -1,0 +1,60 @@
+---
+$schema: https://holocron.so/frontmatter.json
+title: Generate and transform content with eGov AI
+sidebarTitle: eGov AI
+description: Mint a credit-metered eGov AI token, generate or translate text, extract documents, and monitor usage through the typed client.
+---
+
+# Use eGov AI
+
+## Create a client
+
+**eGov AI uses an access code** to mint short-lived bearer tokens with a finite
+credit balance.
+
+```ts
+import { eGovAiApi } from "@omsimos/egov/eGovAi";
+
+const ai = eGovAiApi.fromEnv({
+  baseUrl: "https://egov-ai-core-ws.oueg.info",
+});
+
+const token = await ai.generateAccessToken();
+```
+
+## Supported operations
+
+**Typed methods** cover assistant generation, laws and regulations, speech
+generation, tourism generation, translation, document extraction, and credit
+inspection.
+
+```ts
+const translation = await ai.translate(token.access_token, {
+  prompt: "Magandang umaga",
+  sourceLanguage: "fil",
+  targetLanguage: "en",
+});
+
+const credits = await ai.getTokenCredits(token.access_token);
+```
+
+<Note>
+  `generateSpeech(...)` is **speech generation, not speech-to-text**. The API does not provide
+  transcription, embeddings, or streamed tool calls.
+</Note>
+
+## Extract a document
+
+**Document extraction** sends multipart form data and accepts any runtime `Blob`
+supported by the provider.
+
+```ts
+const result = await ai.extractDocument(token.access_token, {
+  file: pdfBlob,
+  fileName: "application.pdf",
+});
+```
+
+**Cache repeated transformations** where policy permits and inspect credits
+before starting large jobs. Validate Filipino and Taglish quality against your
+own representative data before relying on generated output.

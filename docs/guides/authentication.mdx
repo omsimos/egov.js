@@ -1,0 +1,57 @@
+---
+$schema: https://holocron.so/frontmatter.json
+title: Configure eGov credentials safely
+sidebarTitle: Authentication
+description: Choose explicit or environment-backed clients, keep partner secrets server-side, and handle short-lived service tokens safely.
+---
+
+# Configure credentials safely
+
+## Choose a constructor
+
+**Explicit clients** accept credentials in `create(...)` and work with any
+secret manager. Use them when secrets come from a vault, platform binding, or
+request-scoped credential provider.
+
+```ts
+import { eMessageApi } from "@omsimos/egov/eMessage";
+
+const client = eMessageApi.create({
+  accessToken: await secrets.get("EMESSAGE_ACCESS_TOKEN"),
+  baseUrl: "https://ws-message.e.gov.ph",
+});
+```
+
+**Environment-backed clients** use `fromEnv(...)` and fail fast when a required
+value is missing. You can pass a custom environment object for runtimes without
+Node's `process.env`.
+
+```ts
+const client = eMessageApi.fromEnv({
+  baseUrl: "https://ws-message.e.gov.ph",
+  env: { EMESSAGE_ACCESS_TOKEN: platform.env.EMESSAGE_ACCESS_TOKEN },
+});
+```
+
+<Warning>
+  Never expose **partner secrets, API keys, or access tokens** in browser code, public logs,
+  screenshots, issue reports, or client-visible error payloads.
+</Warning>
+
+## Handle token exchanges
+
+**eGov AI, eGov SSO, eReport, and eVerify** exchange a long-lived partner
+credential or one-time code for a shorter-lived token. Store that token only as
+long as its workflow requires and honor the service's expiry response.
+
+**eGov SSO exchange codes** should be treated as single-use values. Perform the
+exchange and citizen-profile request on the server, then issue your own secure
+application session.
+
+## Separate hosts from secrets
+
+**Every `fromEnv(...)` call still requires `baseUrl`**. Keeping the host explicit
+lets deployment configuration distinguish sandbox, staging, and production
+without overloading the credential lookup.
+
+See the [service overview](../services/overview.mdx) for every credential name.

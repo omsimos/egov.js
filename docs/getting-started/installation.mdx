@@ -1,0 +1,61 @@
+---
+$schema: https://holocron.so/frontmatter.json
+title: Install egov.js in a JavaScript project
+sidebarTitle: Installation
+description: Install the private v0.1 release from a local package tarball and prepare applications for the future public npm package.
+---
+
+# Install egov.js
+
+## Requirements
+
+**Node.js 22.18 or newer** is supported for server applications. Other modern
+runtimes can use explicitly configured clients when they provide Fetch, Web
+Crypto, `Blob`, and `FormData`.
+
+## Install the private release
+
+**npm publishing is paused** while the source repository remains private. Clone
+the repository with an authorized GitHub account and create the exact tarball
+that would be sent to npm.
+
+```bash
+git clone https://github.com/omsimos/egov.js.git
+cd egov.js
+pnpm install
+pnpm pack
+```
+
+**Install the generated archive** in another project with the package manager of
+your choice.
+
+<CodeGroup>
+```bash pnpm
+pnpm add /path/to/omsimos-egov-0.1.0.tgz
+```
+
+```bash npm
+npm install /path/to/omsimos-egov-0.1.0.tgz
+```
+
+```bash yarn
+yarn add file:/path/to/omsimos-egov-0.1.0.tgz
+```
+
+</CodeGroup>
+
+<Note>
+  The tarball contains only **compiled output and package metadata**. Source, tests, documentation
+  build dependencies, and local environment files are not published.
+</Note>
+
+## Future npm installation
+
+**Public registry installation** will use the scoped package after publishing is
+enabled.
+
+```bash
+pnpm add @omsimos/egov
+```
+
+Continue with the [quickstart](./quickstart.mdx) after installation.

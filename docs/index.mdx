@@ -1,0 +1,57 @@
+---
+$schema: https://holocron.so/frontmatter.json
+title: Typed access to Philippine eGov APIs
+sidebarTitle: Home
+description: Build government integrations with typed clients for nine Philippine eGov partner services across Node.js and modern runtimes.
+---
+
+# Typed access to Philippine eGov APIs
+
+**egov.js** is a dependency-free JavaScript and TypeScript SDK for nine eGov
+partner services. It standardizes authentication, request construction, error
+handling, and public types without hiding the underlying API contracts.
+
+<Warning>
+  Most configured endpoints are **hackathon or staging services**. Confirm the correct production
+  host and access agreement with each service owner before serving real users.
+</Warning>
+
+## Start with one service
+
+**Subpath imports** keep each integration explicit and tree-shakeable. Choose a
+service, create a client, and pass its base URL separately from credentials.
+
+<CardGroup cols={2}>
+  <Card
+    title="Install the SDK"
+    icon="lucide:package-plus"
+    href="./getting-started/installation.mdx"
+  >
+    Prepare a local package today and switch to npm when public publishing opens.
+  </Card>
+  <Card title="Run the quickstart" icon="lucide:play" href="./getting-started/quickstart.mdx">
+    Create an eGov AI client and make a typed request.
+  </Card>
+  <Card title="Choose a service" icon="lucide:blocks" href="./services/overview.mdx">
+    Compare the nine supported services and their side effects.
+  </Card>
+  <Card title="Handle failures" icon="lucide:triangle-alert" href="./guides/error-handling.mdx">
+    Normalize API errors and add explicit request deadlines.
+  </Card>
+</CardGroup>
+
+## Runtime model
+
+**Modern web standards** power the SDK: Fetch, `Headers`, `URL`, `FormData`,
+`Blob`, and Web Crypto. Node.js 22.18 or newer is the supported server runtime.
+
+<Aside>
+  <Info>
+    Credential-bearing clients belong on the **server**, even when the runtime APIs also exist in a
+    browser.
+  </Info>
+</Aside>
+
+**No automatic retries** are performed. Payment, messaging, complaint, and
+biometric operations can have side effects, so retry policy belongs to the
+application that understands idempotency.
