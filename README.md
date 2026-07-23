@@ -26,17 +26,8 @@ service subpaths, and a shared fetch-based transport.
 
 ## Installation
 
-The npm package is not published while the repository is private. To evaluate
-the current release, clone the repository, create a package tarball, and install
-that tarball in your application:
-
-```bash
-pnpm install
-pnpm pack
-pnpm add /path/to/egov.js-0.1.0.tgz
-```
-
-Once public npm publishing is enabled, installation will be:
+The package is not yet listed on npm. The command below is the public
+installation path and will work after the first npm release.
 
 ```bash
 pnpm add egov.js

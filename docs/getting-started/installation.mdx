@@ -2,7 +2,7 @@
 $schema: https://holocron.so/frontmatter.json
 title: Install egov.js in a JavaScript project
 sidebarTitle: Installation
-description: Install the private v0.1 release from a local package tarball and prepare applications for the future public npm package.
+description: Prepare to install egov.js from npm with pnpm, npm, or Yarn, confirm runtime requirements, and verify the SDK import after publication.
 ---
 
 # Install egov.js
@@ -13,49 +13,45 @@ description: Install the private v0.1 release from a local package tarball and p
 runtimes can use explicitly configured clients when they provide Fetch, Web
 Crypto, `Blob`, and `FormData`.
 
-## Install the private release
+## npm installation
 
-**npm publishing is paused** while the source repository remains private. Clone
-the repository with an authorized GitHub account and create the exact tarball
-that would be sent to npm.
+<Warning>
+  `egov.js` is **not yet listed on npm**. These commands become available with the first public
+  package release.
+</Warning>
 
-```bash
-git clone https://github.com/omsimos/egov.js.git
-cd egov.js
-pnpm install
-pnpm pack
-```
-
-**Install the generated archive** in another project with the package manager of
-your choice.
+**After publication, add `egov.js`** with the package manager used by your
+application.
 
 <CodeGroup>
 ```bash pnpm
-pnpm add /path/to/egov.js-0.1.0.tgz
+pnpm add egov.js
 ```
 
 ```bash npm
-npm install /path/to/egov.js-0.1.0.tgz
+npm install egov.js
 ```
 
 ```bash yarn
-yarn add file:/path/to/egov.js-0.1.0.tgz
+yarn add egov.js
 ```
 
 </CodeGroup>
 
 <Note>
-  The tarball contains only **compiled output and package metadata**. Source, tests, documentation
-  build dependencies, and local environment files are not published.
+  The package ships **ESM, CommonJS, and TypeScript declarations**. Use a service subpath when an
+  application only needs one integration.
 </Note>
 
-## Future npm installation
+## Verify the import after installation
 
-**Public registry installation** will use the unscoped package after publishing is
-enabled.
+**Import one service client** to confirm that package resolution and TypeScript
+declarations are working.
 
-```bash
-pnpm add egov.js
+```ts
+import { eGovChainApi } from "egov.js/eGovChain";
+
+console.log(eGovChainApi.catalog.name);
 ```
 
 Continue with the [quickstart](./quickstart.mdx) after installation.

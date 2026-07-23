@@ -18,8 +18,9 @@ export EGOVAI_ACCESS_CODE="your-access-code"
 
 ## Create the client
 
-**Service subpath imports** expose the runtime client and all related TypeScript
-types without requiring a root-package import.
+**Service subpath imports** expose each runtime client without requiring a
+root-package import. Some service types are re-exported there; all service types
+are available from the matching `/types` subpath.
 
 ```ts
 import { eGovAiApi } from "egov.js/eGovAi";

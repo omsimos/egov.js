@@ -48,9 +48,14 @@
             "pages": [
               "services/overview",
               "services/egov-ai",
-              "services/identity",
-              "services/citizen-services",
-              "services/data-and-chain",
+              "services/egov-compass",
+              "services/egov-chain",
+              "services/egov-pay",
+              "services/egov-sso",
+              "services/emessage",
+              "services/ereport",
+              "services/everify",
+              "services/face-liveness",
             ],
           },
           {
@@ -87,4 +92,21 @@
   "assistant": {
     "enabled": false,
   },
+  "redirects": [
+    {
+      "source": "/services/identity",
+      "destination": "/services/overview",
+      "permanent": true,
+    },
+    {
+      "source": "/services/citizen-services",
+      "destination": "/services/overview",
+      "permanent": true,
+    },
+    {
+      "source": "/services/data-and-chain",
+      "destination": "/services/overview",
+      "permanent": true,
+    },
+  ],
 }

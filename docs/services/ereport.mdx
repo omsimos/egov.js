@@ -1,0 +1,968 @@
+---
+$schema: https://holocron.so/frontmatter.json
+title: Build citizen complaint workflows with eReport
+sidebarTitle: eReport
+description: Submit citizen complaints, request and confirm OTPs, traverse location datasets, and retrieve reports with typed eReport tokens.
+---
+
+# eReport public API reference
+
+The eReport client submits citizen complaints, reads authenticated reference
+datasets, performs email OTP verification, and retrieves reports. There is no
+default base URL: pass the eReport deployment URL supplied for your integration.
+
+**Imports**
+
+Runtime factories, the catalog, and the runtime API object are exported from
+`egov.js/eReport`:
+
+```ts
+import {
+  EREPORT_SOURCE_URL,
+  createEReportClient,
+  createEReportClientFromEnv,
+  eReportApi,
+  eReportCatalog,
+} from "egov.js/eReport";
+```
+
+eReport interfaces and type aliases are exported from the dedicated
+`egov.js/eReport/types` subpath, not from `egov.js/eReport`:
+
+```ts
+import type {
+  EReportClient,
+  EReportClientOptions,
+  EReportConfirmOtpRequest,
+  EReportConfirmOtpResponse,
+  EReportDatasetListResponse,
+  EReportDatasetRecord,
+  EReportEnvironmentClient,
+  EReportEnvironmentClientOptions,
+  EReportGenerateTokenResponse,
+  EReportListReportsQuery,
+  EReportLocationAttributes,
+  EReportPagination,
+  EReportRecord,
+  EReportReportResponse,
+  EReportReportsResponse,
+  EReportReportTypeAttributes,
+  EReportRequestOtpResponse,
+  EReportSubmitComplaintRequest,
+  EReportSubmitComplaintResponse,
+} from "egov.js/eReport/types";
+import type { EgovCallOptions, EgovEnvironment, EgovFetch } from "egov.js/core";
+```
+
+The types describe the expected provider payloads at compile time. The SDK does
+not validate successful response bodies at runtime.
+
+**Credential stages**
+
+eReport uses three distinct credentials. Do not interchange them.
+
+| Credential               | Source                                                                | Sent as                         | Used by                                                           |
+| ------------------------ | --------------------------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------- |
+| Access code              | Integration configuration, or `EREPORT_ACCESS_TOKEN` with `fromEnv()` | JSON field `access_code`        | `generateToken()` only                                            |
+| Integration bearer token | `generateToken().access_token`                                        | `Authorization: Bearer <token>` | Dataset reads, complaint submission, and OTP request/confirmation |
+| Report-view token        | `confirmOtp().report_view_token`                                      | `X-EReport-View-Token: <token>` | Report listing and individual report retrieval                    |
+
+<Warning>
+  `EREPORT_ACCESS_TOKEN` is a naming exception. Its value is an access code, not the integration
+  bearer token returned by the API. `fromEnv()` sends the value in the `access_code` request field.
+</Warning>
+
+**Factories**
+
+| Export                       | Kind                  | Purpose                                                                |
+| ---------------------------- | --------------------- | ---------------------------------------------------------------------- |
+| `createEReportClient`        | Factory               | Create a direct client whose `generateToken()` accepts an access code  |
+| `createEReportClientFromEnv` | Factory               | Create a client with `generateToken()` bound to `EREPORT_ACCESS_TOKEN` |
+| `eReportApi`                 | Frozen runtime object | Group `create`, `fromEnv`, and `catalog`                               |
+| `eReportCatalog`             | Catalog               | Describe the eleven eReport HTTP endpoints                             |
+| `EREPORT_SOURCE_URL`         | Constant              | Link to the government API catalog source                              |
+
+**`createEReportClient`**
+
+**Signature**
+
+```ts
+createEReportClient(options: EReportClientOptions): EReportClient
+```
+
+`eReportApi.create` is the same function.
+
+**Options**
+
+| Field     | Type          | Required | Behavior                                                        |
+| --------- | ------------- | -------- | --------------------------------------------------------------- |
+| `baseUrl` | `string`      | Yes      | Base URL used to resolve every endpoint path                    |
+| `fetch`   | `EgovFetch`   | No       | Fetch-compatible implementation; defaults to `globalThis.fetch` |
+| `headers` | `HeadersInit` | No       | Default headers merged into every request                       |
+
+The factory performs no network request. The direct client requires an explicit
+access code when calling `generateToken(accessCode, options?)`.
+
+**`createEReportClientFromEnv`**
+
+**Signature**
+
+```ts
+createEReportClientFromEnv(
+  options: EReportEnvironmentClientOptions,
+): EReportEnvironmentClient
+```
+
+`eReportApi.fromEnv` is the same function.
+
+**Options**
+
+| Field                      | Type                  | Required                                  | Behavior                                                           |
+| -------------------------- | --------------------- | ----------------------------------------- | ------------------------------------------------------------------ |
+| `baseUrl`                  | `string`              | Yes                                       | Base URL used to resolve every endpoint path                       |
+| `fetch`                    | `EgovFetch`           | No                                        | Fetch-compatible implementation; defaults to `globalThis.fetch`    |
+| `headers`                  | `HeadersInit`         | No                                        | Default headers merged into every request                          |
+| `env`                      | `EgovEnvironment`     | No                                        | Explicit environment map from which `EREPORT_ACCESS_TOKEN` is read |
+| `env.EREPORT_ACCESS_TOKEN` | `string \| undefined` | No at the type level; required at runtime | Trimmed and bound to the `access_code` body field                  |
+
+The factory reads and trims `EREPORT_ACCESS_TOKEN` immediately. If `env` is not
+provided, resolution uses `Bun.env` when available, then `process.env`, then an
+empty object. A missing, empty, or whitespace-only value throws:
+
+```text
+Missing required eGov environment variable: EREPORT_ACCESS_TOKEN
+```
+
+The returned client changes only the `generateToken` signature. Every other
+method still requires the appropriate integration or report-view token.
+
+**`eReportApi`**
+
+**Shape**
+
+```ts
+const eReportApi: Readonly<{
+  catalog: typeof eReportCatalog;
+  create: typeof createEReportClient;
+  fromEnv: typeof createEReportClientFromEnv;
+}>;
+```
+
+The top-level object is shallow-frozen with `Object.freeze()`.
+
+**`eReportCatalog`**
+
+**Shape**
+
+`eReportCatalog` is static runtime metadata, not a network discovery call.
+`eReportApi.catalog` references this same object.
+
+| Field       | Value                                                               |
+| ----------- | ------------------------------------------------------------------- |
+| `id`        | `"ereport"`                                                         |
+| `name`      | `"eReport"`                                                         |
+| `slug`      | `"ereport"`                                                         |
+| `sourceUrl` | `EREPORT_SOURCE_URL`                                                |
+| `summary`   | `"Submit, verify, list, and track citizen complaints and reports."` |
+
+Its `endpoints` array is in this catalog order:
+
+| Endpoint ID         | Method and path                                | Authentication                                                  | Cataloged status |
+| ------------------- | ---------------------------------------------- | --------------------------------------------------------------- | ---------------- |
+| `report-type-list`  | `GET /api/integration/datasets/report_types`   | Integration bearer token                                        | `200`            |
+| `region-list`       | `GET /api/integration/datasets/regions`        | Integration bearer token                                        | `200`            |
+| `province-list`     | `GET /api/integration/datasets/provinces`      | Integration bearer token and required `region_code` query       | `200`            |
+| `municipality-list` | `GET /api/integration/datasets/municipalities` | Integration bearer token and required `province_code` query     | `200`            |
+| `barangay-list`     | `GET /api/integration/datasets/barangays`      | Integration bearer token and required `municipality_code` query | `200`            |
+| `generate-token`    | `POST /api/integration/token`                  | Required `access_code` body field                               | `200`            |
+| `submit-complaint`  | `POST /api/integration/submit_complaint`       | Integration bearer token                                        | `200`            |
+| `request-otp`       | `POST /api/integration/verify/request`         | Integration bearer token                                        | `200`            |
+| `confirm-otp`       | `POST /api/integration/verify/confirm`         | Integration bearer token                                        | `200`            |
+| `reports-list`      | `GET /api/integration/reports`                 | Report-view token                                               | `200`            |
+| `view-report`       | `GET /api/integration/reports/{case_number}`   | Report-view token                                               | `200`            |
+
+**`EREPORT_SOURCE_URL`**
+
+**Value**
+
+```ts
+const EREPORT_SOURCE_URL = "https://platforms.e.gov.ph/dashboard/api-catalogs/ereport";
+```
+
+**Call options and errors**
+
+Every client method accepts an optional final `options?: EgovCallOptions`
+parameter.
+
+| Field     | Type          | Required | Behavior                                      |
+| --------- | ------------- | -------- | --------------------------------------------- |
+| `headers` | `HeadersInit` | No       | Per-call headers merged over factory defaults |
+| `signal`  | `AbortSignal` | No       | Forwarded to `fetch` for cancellation         |
+
+Authentication helpers set `Authorization` or `X-EReport-View-Token` after
+reading per-call headers, so a caller-supplied value for the method's required
+authentication header is replaced by the token argument. JSON bodies receive
+`Content-Type: application/json` unless a content type is already configured.
+`Accept: application/json` is added unless already configured.
+
+The catalog declares HTTP `200` for every eReport endpoint. The transport treats
+any HTTP `2xx` response as successful and returns its parsed body without schema
+validation. Any non-`2xx` response throws `EgovApiError` with `body`, `headers`,
+`method`, `status`, `statusText`, and `url`. JSON and `+json` error bodies are
+parsed; other bodies remain text, and empty bodies become `undefined`. Fetch
+failures and aborts propagate from the configured `fetch` implementation. The
+SDK does not automatically retry any request. A response body's numeric `code`
+field is provider data and is separate from the HTTP status.
+
+**Workflow order**
+
+A typical complaint and report-viewing workflow is:
+
+1. Exchange the access code for an integration bearer token.
+2. Read report types and the region, province, municipality, and barangay hierarchy with that bearer token.
+3. Submit the complaint with codes selected from those authenticated datasets.
+4. Request an OTP for the complainant email.
+5. Confirm the OTP to obtain a report-view token.
+6. List the verified user's available reports, then retrieve a report by case number.
+
+```ts
+import { eReportApi } from "egov.js/eReport";
+
+const reports = eReportApi.fromEnv({
+  baseUrl: "https://your-ereport-deployment.example",
+});
+
+const { access_token: integrationToken } = await reports.generateToken();
+
+const reportTypes = await reports.listReportTypes(integrationToken);
+const regions = await reports.listRegions(integrationToken);
+const provinces = await reports.listProvinces(integrationToken, "040000000");
+const municipalities = await reports.listMunicipalities(integrationToken, "042100000");
+const barangays = await reports.listBarangays(integrationToken, "042111000");
+
+const reportType = reportTypes.data[0];
+if (!reportType) throw new Error("No eReport types are available");
+
+const complaint = await reports.submitComplaint(integrationToken, {
+  barangayCode: "042111011",
+  complainantEmail: "citizen@example.com",
+  firstName: "Juan",
+  gender: "Male",
+  lastName: "Dela Cruz",
+  message: "Streetlight has been out for three nights.",
+  mobile: "639171234567",
+  municipalityCode: "042111000",
+  provinceCode: "042100000",
+  regionCode: "040000000",
+  reportType: reportType.attributes.code,
+  subject: "Broken streetlight",
+});
+
+await reports.requestOtp(integrationToken, "citizen@example.com");
+const verification = await reports.confirmOtp(integrationToken, {
+  email: "citizen@example.com",
+  otp: "123456",
+});
+
+const history = await reports.listReports(verification.report_view_token, {
+  limit: 20,
+  page: 1,
+});
+const report = await reports.getReport(verification.report_view_token, complaint.case_number);
+```
+
+`reportTypes`, `regions`, `provinces`, `municipalities`, `barangays`, `history`,
+and `report` are shown as separate values because each response retains its
+provider-defined metadata and open record fields.
+
+<Warning>
+  `submitComplaint()` creates an external complaint record and has no SDK idempotency key. A blind
+  retry can create a duplicate. `requestOtp()` sends email, and repeated requests can send multiple
+  messages or encounter provider rate limits. Do not automatically retry `confirmOtp()` either: OTP
+  expiry, reuse, and attempt limits are provider-controlled. Reconcile outcomes before retrying.
+</Warning>
+
+**Methods**
+
+The following order matches the client object in `src/eReport/api.ts`.
+
+| Method                                      | Endpoint                                       | Credential                  | Purpose                                                    |
+| ------------------------------------------- | ---------------------------------------------- | --------------------------- | ---------------------------------------------------------- |
+| [`confirmOtp`](#confirmotp)                 | `POST /api/integration/verify/confirm`         | Integration bearer token    | Confirm an email OTP and mint a report-view token          |
+| [`generateToken`](#generatetoken)           | `POST /api/integration/token`                  | Access code in request body | Mint an integration bearer token                           |
+| [`getReport`](#getreport)                   | `GET /api/integration/reports/{case_number}`   | Report-view token           | Retrieve one report by case number                         |
+| [`listBarangays`](#listbarangays)           | `GET /api/integration/datasets/barangays`      | Integration bearer token    | List barangays in a municipality                           |
+| [`listMunicipalities`](#listmunicipalities) | `GET /api/integration/datasets/municipalities` | Integration bearer token    | List municipalities in a province                          |
+| [`listProvinces`](#listprovinces)           | `GET /api/integration/datasets/provinces`      | Integration bearer token    | List provinces in a region                                 |
+| [`listRegions`](#listregions)               | `GET /api/integration/datasets/regions`        | Integration bearer token    | List regions                                               |
+| [`listReports`](#listreports)               | `GET /api/integration/reports`                 | Report-view token           | Search and paginate reports available to the verified user |
+| [`listReportTypes`](#listreporttypes)       | `GET /api/integration/datasets/report_types`   | Integration bearer token    | List complaint and report categories                       |
+| [`requestOtp`](#requestotp)                 | `POST /api/integration/verify/request`         | Integration bearer token    | Send a verification code to an email address               |
+| [`submitComplaint`](#submitcomplaint)       | `POST /api/integration/submit_complaint`       | Integration bearer token    | Create a complaint and receive its case number             |
+
+## `confirmOtp`
+
+**Signature**
+
+Direct client:
+
+```ts
+directClient.confirmOtp(
+  integrationToken: string,
+  request: EReportConfirmOtpRequest,
+  options?: EgovCallOptions,
+): Promise<EReportConfirmOtpResponse>
+```
+
+Environment client:
+
+```ts
+envClient.confirmOtp(
+  integrationToken: string,
+  request: EReportConfirmOtpRequest,
+  options?: EgovCallOptions,
+): Promise<EReportConfirmOtpResponse>
+```
+
+**Parameters**
+
+| Parameter or field | Type                       | Required | Wire name and location                                            |
+| ------------------ | -------------------------- | -------- | ----------------------------------------------------------------- |
+| `integrationToken` | `string`                   | Yes      | `Authorization: Bearer <integrationToken>` header                 |
+| `request`          | `EReportConfirmOtpRequest` | Yes      | JSON request body                                                 |
+| `request.email`    | `string`                   | Yes      | `email` body field                                                |
+| `request.otp`      | `string`                   | Yes      | `otp` body field                                                  |
+| `options`          | `EgovCallOptions`          | No       | Final call options                                                |
+| `options.headers`  | `HeadersInit`              | No       | Additional HTTP headers; cannot replace the bearer token argument |
+| `options.signal`   | `AbortSignal`              | No       | Fetch cancellation signal                                         |
+
+The SDK does not validate email syntax, OTP length, or OTP format.
+
+**Returns**
+
+`Promise<EReportConfirmOtpResponse>` resolves to:
+
+| Field               | Type     | Required | Description                                 |
+| ------------------- | -------- | -------- | ------------------------------------------- |
+| `code`              | `number` | Yes      | Provider response code                      |
+| `expires_at`        | `string` | Yes      | Provider-formatted report-view token expiry |
+| `report_view_token` | `string` | Yes      | Token for `listReports()` and `getReport()` |
+
+**Behavior/Errors**
+
+Sends `POST /api/integration/verify/confirm` with integration bearer
+authentication. The catalog declares HTTP `200`; the transport accepts any
+`2xx`. Confirmation produces a distinct report-view token and does not replace
+the integration token. OTP expiry, reuse rules, and failed-attempt limits are
+provider-controlled, so do not blindly retry a failed or ambiguous confirmation.
+Non-`2xx` responses throw `EgovApiError`; fetch and abort errors propagate.
+
+## `generateToken`
+
+**Signature**
+
+Direct client:
+
+```ts
+directClient.generateToken(
+  accessCode: string,
+  options?: EgovCallOptions,
+): Promise<EReportGenerateTokenResponse>
+```
+
+Environment client:
+
+```ts
+envClient.generateToken(
+  options?: EgovCallOptions,
+): Promise<EReportGenerateTokenResponse>
+```
+
+**Parameters**
+
+| Parameter or field | Type              | Required           | Wire name and location                                       |
+| ------------------ | ----------------- | ------------------ | ------------------------------------------------------------ |
+| `accessCode`       | `string`          | Direct client only | `access_code` JSON body field                                |
+| `options`          | `EgovCallOptions` | No                 | Final call options; first argument on the environment client |
+| `options.headers`  | `HeadersInit`     | No                 | Additional HTTP headers                                      |
+| `options.signal`   | `AbortSignal`     | No                 | Fetch cancellation signal                                    |
+
+For the environment client, the factory-bound, trimmed
+`EREPORT_ACCESS_TOKEN` value supplies `access_code`. This request does not use an
+integration bearer token or report-view token.
+
+**Returns**
+
+`Promise<EReportGenerateTokenResponse>` resolves to:
+
+| Field          | Type     | Required | Description                                                       |
+| -------------- | -------- | -------- | ----------------------------------------------------------------- |
+| `access_token` | `string` | Yes      | Integration bearer token for authenticated integration operations |
+| `expires_at`   | `string` | Yes      | Provider-formatted integration token expiry                       |
+
+**Behavior/Errors**
+
+Sends `POST /api/integration/token` and serializes the access code as
+`{"access_code":"..."}`. The catalog declares HTTP `200`; the transport
+accepts any `2xx`. The SDK does not validate the access code or expiry string and
+does not refresh or cache the returned token. Non-`2xx` responses throw
+`EgovApiError`; fetch and abort errors propagate. With `fromEnv()`, a missing
+access code fails during client creation, before this method can be called.
+
+## `getReport`
+
+**Signature**
+
+Direct client:
+
+```ts
+directClient.getReport(
+  reportViewToken: string,
+  caseNumber: string,
+  options?: EgovCallOptions,
+): Promise<EReportReportResponse>
+```
+
+Environment client:
+
+```ts
+envClient.getReport(
+  reportViewToken: string,
+  caseNumber: string,
+  options?: EgovCallOptions,
+): Promise<EReportReportResponse>
+```
+
+**Parameters**
+
+| Parameter or field | Type              | Required | Wire name and location                                                 |
+| ------------------ | ----------------- | -------- | ---------------------------------------------------------------------- |
+| `reportViewToken`  | `string`          | Yes      | `X-EReport-View-Token` header                                          |
+| `caseNumber`       | `string`          | Yes      | `{case_number}` path segment, encoded with `encodeURIComponent`        |
+| `options`          | `EgovCallOptions` | No       | Final call options                                                     |
+| `options.headers`  | `HeadersInit`     | No       | Additional HTTP headers; cannot replace the report-view token argument |
+| `options.signal`   | `AbortSignal`     | No       | Fetch cancellation signal                                              |
+
+For example, `PFM/001` is sent as the path segment `PFM%2F001`.
+
+**Returns**
+
+`Promise<EReportReportResponse>` resolves to this open record shape:
+
+| Field               | Type            | Required         | Description                                       |
+| ------------------- | --------------- | ---------------- | ------------------------------------------------- |
+| `data`              | `EReportRecord` | Yes              | Report object                                     |
+| `data.case_number`  | `string`        | No               | Case number when present                          |
+| Other `data` fields | `unknown`       | Provider-defined | `EReportRecord` extends `Record<string, unknown>` |
+
+**Behavior/Errors**
+
+Sends `GET /api/integration/reports/{case_number}` with report-view token
+authentication. This is an authenticated report read, not a public dataset. The
+catalog declares HTTP `200`; the transport accepts any `2xx`. The SDK does not
+validate the case-number format or response fields. Non-`2xx` responses,
+including provider authorization or not-found responses, throw `EgovApiError`
+with the actual status; the catalog does not enumerate those error statuses.
+Fetch and abort errors propagate.
+
+## `listBarangays`
+
+**Signature**
+
+Direct client:
+
+```ts
+directClient.listBarangays(
+  integrationToken: string,
+  municipalityCode: string,
+  options?: EgovCallOptions,
+): Promise<EReportDatasetListResponse<EReportLocationAttributes>>
+```
+
+Environment client:
+
+```ts
+envClient.listBarangays(
+  integrationToken: string,
+  municipalityCode: string,
+  options?: EgovCallOptions,
+): Promise<EReportDatasetListResponse<EReportLocationAttributes>>
+```
+
+**Parameters**
+
+| Parameter or field | Type              | Required | Wire name and location                                            |
+| ------------------ | ----------------- | -------- | ----------------------------------------------------------------- |
+| `integrationToken` | `string`          | Yes      | `Authorization: Bearer <integrationToken>` header                 |
+| `municipalityCode` | `string`          | Yes      | `municipality_code` query parameter                               |
+| `options`          | `EgovCallOptions` | No       | Final call options                                                |
+| `options.headers`  | `HeadersInit`     | No       | Additional HTTP headers; cannot replace the bearer token argument |
+| `options.signal`   | `AbortSignal`     | No       | Fetch cancellation signal                                         |
+
+**Returns**
+
+`Promise<EReportDatasetListResponse<EReportLocationAttributes>>` resolves to:
+
+| Field                            | Type                                                     | Required                  | Description                                          |
+| -------------------------------- | -------------------------------------------------------- | ------------------------- | ---------------------------------------------------- |
+| `data`                           | `Array<EReportDatasetRecord<EReportLocationAttributes>>` | Yes                       | Barangay records                                     |
+| `data[].id`                      | `string`                                                 | Yes                       | Dataset record ID                                    |
+| `data[].type`                    | `string`                                                 | Yes                       | Dataset record type                                  |
+| `data[].attributes`              | `EReportLocationAttributes`                              | Yes                       | Open location attributes object                      |
+| `data[].attributes.name`         | `string`                                                 | Yes                       | Barangay name                                        |
+| Other `data[].attributes` fields | `unknown`                                                | Provider-defined          | Location attributes extend `Record<string, unknown>` |
+| `jsonapi`                        | `{ version: string }`                                    | No                        | JSON:API version metadata                            |
+| `jsonapi.version`                | `string`                                                 | When `jsonapi` is present | JSON:API version                                     |
+| `meta`                           | `{ pagination: EReportPagination }`                      | No                        | Pagination wrapper                                   |
+| `meta.pagination.current_page`   | `number`                                                 | When `meta` is present    | Current page                                         |
+| `meta.pagination.per_page`       | `number`                                                 | When `meta` is present    | Records per page                                     |
+| `meta.pagination.total`          | `number`                                                 | When `meta` is present    | Total records                                        |
+| `meta.pagination.total_pages`    | `number`                                                 | When `meta` is present    | Total pages                                          |
+
+**Behavior/Errors**
+
+Sends `GET /api/integration/datasets/barangays?municipality_code=...` with
+integration bearer authentication. This is an authenticated reference-dataset
+read. The catalog declares HTTP `200`; the transport accepts any `2xx`. The SDK
+does not validate the municipality code or response records. Non-`2xx`
+responses throw `EgovApiError`; fetch and abort errors propagate.
+
+## `listMunicipalities`
+
+**Signature**
+
+Direct client:
+
+```ts
+directClient.listMunicipalities(
+  integrationToken: string,
+  provinceCode: string,
+  options?: EgovCallOptions,
+): Promise<EReportDatasetListResponse<EReportLocationAttributes>>
+```
+
+Environment client:
+
+```ts
+envClient.listMunicipalities(
+  integrationToken: string,
+  provinceCode: string,
+  options?: EgovCallOptions,
+): Promise<EReportDatasetListResponse<EReportLocationAttributes>>
+```
+
+**Parameters**
+
+| Parameter or field | Type              | Required | Wire name and location                                            |
+| ------------------ | ----------------- | -------- | ----------------------------------------------------------------- |
+| `integrationToken` | `string`          | Yes      | `Authorization: Bearer <integrationToken>` header                 |
+| `provinceCode`     | `string`          | Yes      | `province_code` query parameter                                   |
+| `options`          | `EgovCallOptions` | No       | Final call options                                                |
+| `options.headers`  | `HeadersInit`     | No       | Additional HTTP headers; cannot replace the bearer token argument |
+| `options.signal`   | `AbortSignal`     | No       | Fetch cancellation signal                                         |
+
+**Returns**
+
+`Promise<EReportDatasetListResponse<EReportLocationAttributes>>` resolves to:
+
+| Field                            | Type                                                     | Required                  | Description                                          |
+| -------------------------------- | -------------------------------------------------------- | ------------------------- | ---------------------------------------------------- |
+| `data`                           | `Array<EReportDatasetRecord<EReportLocationAttributes>>` | Yes                       | Municipality records                                 |
+| `data[].id`                      | `string`                                                 | Yes                       | Dataset record ID                                    |
+| `data[].type`                    | `string`                                                 | Yes                       | Dataset record type                                  |
+| `data[].attributes`              | `EReportLocationAttributes`                              | Yes                       | Open location attributes object                      |
+| `data[].attributes.name`         | `string`                                                 | Yes                       | Municipality name                                    |
+| Other `data[].attributes` fields | `unknown`                                                | Provider-defined          | Location attributes extend `Record<string, unknown>` |
+| `jsonapi`                        | `{ version: string }`                                    | No                        | JSON:API version metadata                            |
+| `jsonapi.version`                | `string`                                                 | When `jsonapi` is present | JSON:API version                                     |
+| `meta`                           | `{ pagination: EReportPagination }`                      | No                        | Pagination wrapper                                   |
+| `meta.pagination.current_page`   | `number`                                                 | When `meta` is present    | Current page                                         |
+| `meta.pagination.per_page`       | `number`                                                 | When `meta` is present    | Records per page                                     |
+| `meta.pagination.total`          | `number`                                                 | When `meta` is present    | Total records                                        |
+| `meta.pagination.total_pages`    | `number`                                                 | When `meta` is present    | Total pages                                          |
+
+**Behavior/Errors**
+
+Sends `GET /api/integration/datasets/municipalities?province_code=...` with
+integration bearer authentication. This is an authenticated reference-dataset
+read. The catalog declares HTTP `200`; the transport accepts any `2xx`. The SDK
+does not validate the province code or response records. Non-`2xx` responses
+throw `EgovApiError`; fetch and abort errors propagate.
+
+## `listProvinces`
+
+**Signature**
+
+Direct client:
+
+```ts
+directClient.listProvinces(
+  integrationToken: string,
+  regionCode: string,
+  options?: EgovCallOptions,
+): Promise<EReportDatasetListResponse<EReportLocationAttributes>>
+```
+
+Environment client:
+
+```ts
+envClient.listProvinces(
+  integrationToken: string,
+  regionCode: string,
+  options?: EgovCallOptions,
+): Promise<EReportDatasetListResponse<EReportLocationAttributes>>
+```
+
+**Parameters**
+
+| Parameter or field | Type              | Required | Wire name and location                                            |
+| ------------------ | ----------------- | -------- | ----------------------------------------------------------------- |
+| `integrationToken` | `string`          | Yes      | `Authorization: Bearer <integrationToken>` header                 |
+| `regionCode`       | `string`          | Yes      | `region_code` query parameter                                     |
+| `options`          | `EgovCallOptions` | No       | Final call options                                                |
+| `options.headers`  | `HeadersInit`     | No       | Additional HTTP headers; cannot replace the bearer token argument |
+| `options.signal`   | `AbortSignal`     | No       | Fetch cancellation signal                                         |
+
+**Returns**
+
+`Promise<EReportDatasetListResponse<EReportLocationAttributes>>` resolves to:
+
+| Field                            | Type                                                     | Required                  | Description                                          |
+| -------------------------------- | -------------------------------------------------------- | ------------------------- | ---------------------------------------------------- |
+| `data`                           | `Array<EReportDatasetRecord<EReportLocationAttributes>>` | Yes                       | Province records                                     |
+| `data[].id`                      | `string`                                                 | Yes                       | Dataset record ID                                    |
+| `data[].type`                    | `string`                                                 | Yes                       | Dataset record type                                  |
+| `data[].attributes`              | `EReportLocationAttributes`                              | Yes                       | Open location attributes object                      |
+| `data[].attributes.name`         | `string`                                                 | Yes                       | Province name                                        |
+| Other `data[].attributes` fields | `unknown`                                                | Provider-defined          | Location attributes extend `Record<string, unknown>` |
+| `jsonapi`                        | `{ version: string }`                                    | No                        | JSON:API version metadata                            |
+| `jsonapi.version`                | `string`                                                 | When `jsonapi` is present | JSON:API version                                     |
+| `meta`                           | `{ pagination: EReportPagination }`                      | No                        | Pagination wrapper                                   |
+| `meta.pagination.current_page`   | `number`                                                 | When `meta` is present    | Current page                                         |
+| `meta.pagination.per_page`       | `number`                                                 | When `meta` is present    | Records per page                                     |
+| `meta.pagination.total`          | `number`                                                 | When `meta` is present    | Total records                                        |
+| `meta.pagination.total_pages`    | `number`                                                 | When `meta` is present    | Total pages                                          |
+
+**Behavior/Errors**
+
+Sends `GET /api/integration/datasets/provinces?region_code=...` with integration
+bearer authentication. This is an authenticated reference-dataset read. The
+catalog declares HTTP `200`; the transport accepts any `2xx`. The SDK does not
+validate the region code or response records. Non-`2xx` responses throw
+`EgovApiError`; fetch and abort errors propagate.
+
+## `listRegions`
+
+**Signature**
+
+Direct client:
+
+```ts
+directClient.listRegions(
+  integrationToken: string,
+  options?: EgovCallOptions,
+): Promise<EReportDatasetListResponse<EReportLocationAttributes>>
+```
+
+Environment client:
+
+```ts
+envClient.listRegions(
+  integrationToken: string,
+  options?: EgovCallOptions,
+): Promise<EReportDatasetListResponse<EReportLocationAttributes>>
+```
+
+**Parameters**
+
+| Parameter or field | Type              | Required | Wire name and location                                            |
+| ------------------ | ----------------- | -------- | ----------------------------------------------------------------- |
+| `integrationToken` | `string`          | Yes      | `Authorization: Bearer <integrationToken>` header                 |
+| `options`          | `EgovCallOptions` | No       | Final call options                                                |
+| `options.headers`  | `HeadersInit`     | No       | Additional HTTP headers; cannot replace the bearer token argument |
+| `options.signal`   | `AbortSignal`     | No       | Fetch cancellation signal                                         |
+
+**Returns**
+
+`Promise<EReportDatasetListResponse<EReportLocationAttributes>>` resolves to:
+
+| Field                            | Type                                                     | Required                  | Description                                          |
+| -------------------------------- | -------------------------------------------------------- | ------------------------- | ---------------------------------------------------- |
+| `data`                           | `Array<EReportDatasetRecord<EReportLocationAttributes>>` | Yes                       | Region records                                       |
+| `data[].id`                      | `string`                                                 | Yes                       | Dataset record ID                                    |
+| `data[].type`                    | `string`                                                 | Yes                       | Dataset record type                                  |
+| `data[].attributes`              | `EReportLocationAttributes`                              | Yes                       | Open location attributes object                      |
+| `data[].attributes.name`         | `string`                                                 | Yes                       | Region name                                          |
+| Other `data[].attributes` fields | `unknown`                                                | Provider-defined          | Location attributes extend `Record<string, unknown>` |
+| `jsonapi`                        | `{ version: string }`                                    | No                        | JSON:API version metadata                            |
+| `jsonapi.version`                | `string`                                                 | When `jsonapi` is present | JSON:API version                                     |
+| `meta`                           | `{ pagination: EReportPagination }`                      | No                        | Pagination wrapper                                   |
+| `meta.pagination.current_page`   | `number`                                                 | When `meta` is present    | Current page                                         |
+| `meta.pagination.per_page`       | `number`                                                 | When `meta` is present    | Records per page                                     |
+| `meta.pagination.total`          | `number`                                                 | When `meta` is present    | Total records                                        |
+| `meta.pagination.total_pages`    | `number`                                                 | When `meta` is present    | Total pages                                          |
+
+**Behavior/Errors**
+
+Sends `GET /api/integration/datasets/regions` with integration bearer
+authentication. This is an authenticated reference-dataset read. The catalog
+declares HTTP `200`; the transport accepts any `2xx`. The SDK does not validate
+response records. Non-`2xx` responses throw `EgovApiError`; fetch and abort
+errors propagate.
+
+## `listReports`
+
+**Signature**
+
+Direct client:
+
+```ts
+directClient.listReports(
+  reportViewToken: string,
+  query?: EReportListReportsQuery,
+  options?: EgovCallOptions,
+): Promise<EReportReportsResponse>
+```
+
+Environment client:
+
+```ts
+envClient.listReports(
+  reportViewToken: string,
+  query?: EReportListReportsQuery,
+  options?: EgovCallOptions,
+): Promise<EReportReportsResponse>
+```
+
+**Parameters**
+
+| Parameter or field | Type                      | Required | Wire name and location                                                 |
+| ------------------ | ------------------------- | -------- | ---------------------------------------------------------------------- |
+| `reportViewToken`  | `string`                  | Yes      | `X-EReport-View-Token` header                                          |
+| `query`            | `EReportListReportsQuery` | No       | Query object                                                           |
+| `query.limit`      | `number`                  | No       | `limit` query parameter                                                |
+| `query.page`       | `number`                  | No       | `page` query parameter                                                 |
+| `query.q`          | `string`                  | No       | `q` query parameter                                                    |
+| `options`          | `EgovCallOptions`         | No       | Final call options                                                     |
+| `options.headers`  | `HeadersInit`             | No       | Additional HTTP headers; cannot replace the report-view token argument |
+| `options.signal`   | `AbortSignal`             | No       | Fetch cancellation signal                                              |
+
+Undefined query fields are omitted. The SDK does not validate search text,
+page values, or limits.
+
+**Returns**
+
+`Promise<EReportReportsResponse>` resolves to:
+
+| Field                          | Type                                                           | Required                   | Description                                   |
+| ------------------------------ | -------------------------------------------------------------- | -------------------------- | --------------------------------------------- |
+| `data`                         | `EReportRecord[]`                                              | Yes                        | Array of open report records                  |
+| `data[].case_number`           | `string`                                                       | No                         | Case number when present                      |
+| Other `data[]` fields          | `unknown`                                                      | Provider-defined           | Each record extends `Record<string, unknown>` |
+| `meta`                         | `{ pagination?: EReportPagination } & Record<string, unknown>` | No                         | Open metadata object                          |
+| `meta.pagination`              | `EReportPagination`                                            | No                         | Pagination details                            |
+| `meta.pagination.current_page` | `number`                                                       | When pagination is present | Current page                                  |
+| `meta.pagination.per_page`     | `number`                                                       | When pagination is present | Records per page                              |
+| `meta.pagination.total`        | `number`                                                       | When pagination is present | Total records                                 |
+| `meta.pagination.total_pages`  | `number`                                                       | When pagination is present | Total pages                                   |
+| Other `meta` fields            | `unknown`                                                      | Provider-defined           | Additional metadata is allowed                |
+
+**Behavior/Errors**
+
+Sends `GET /api/integration/reports` with report-view token authentication. The
+reports are those available to the verified user; this is not a public listing.
+The catalog declares HTTP `200`; the transport accepts any `2xx`. Non-`2xx`
+responses throw `EgovApiError`; fetch and abort errors propagate. The method has
+no external write side effect and the SDK performs no pagination automatically.
+
+## `listReportTypes`
+
+**Signature**
+
+Direct client:
+
+```ts
+directClient.listReportTypes(
+  integrationToken: string,
+  options?: EgovCallOptions,
+): Promise<EReportDatasetListResponse<EReportReportTypeAttributes>>
+```
+
+Environment client:
+
+```ts
+envClient.listReportTypes(
+  integrationToken: string,
+  options?: EgovCallOptions,
+): Promise<EReportDatasetListResponse<EReportReportTypeAttributes>>
+```
+
+**Parameters**
+
+| Parameter or field | Type              | Required | Wire name and location                                            |
+| ------------------ | ----------------- | -------- | ----------------------------------------------------------------- |
+| `integrationToken` | `string`          | Yes      | `Authorization: Bearer <integrationToken>` header                 |
+| `options`          | `EgovCallOptions` | No       | Final call options                                                |
+| `options.headers`  | `HeadersInit`     | No       | Additional HTTP headers; cannot replace the bearer token argument |
+| `options.signal`   | `AbortSignal`     | No       | Fetch cancellation signal                                         |
+
+**Returns**
+
+`Promise<EReportDatasetListResponse<EReportReportTypeAttributes>>` resolves to:
+
+| Field                            | Type                                                       | Required                  | Description                                             |
+| -------------------------------- | ---------------------------------------------------------- | ------------------------- | ------------------------------------------------------- |
+| `data`                           | `Array<EReportDatasetRecord<EReportReportTypeAttributes>>` | Yes                       | Report-type records                                     |
+| `data[].id`                      | `string`                                                   | Yes                       | Dataset record ID                                       |
+| `data[].type`                    | `string`                                                   | Yes                       | Dataset record type                                     |
+| `data[].attributes`              | `EReportReportTypeAttributes`                              | Yes                       | Open report-type attributes object                      |
+| `data[].attributes.code`         | `string`                                                   | Yes                       | Value suitable for the complaint `reportType` field     |
+| `data[].attributes.name`         | `string`                                                   | Yes                       | Display name                                            |
+| Other `data[].attributes` fields | `unknown`                                                  | Provider-defined          | Report-type attributes extend `Record<string, unknown>` |
+| `jsonapi`                        | `{ version: string }`                                      | No                        | JSON:API version metadata                               |
+| `jsonapi.version`                | `string`                                                   | When `jsonapi` is present | JSON:API version                                        |
+| `meta`                           | `{ pagination: EReportPagination }`                        | No                        | Pagination wrapper                                      |
+| `meta.pagination.current_page`   | `number`                                                   | When `meta` is present    | Current page                                            |
+| `meta.pagination.per_page`       | `number`                                                   | When `meta` is present    | Records per page                                        |
+| `meta.pagination.total`          | `number`                                                   | When `meta` is present    | Total records                                           |
+| `meta.pagination.total_pages`    | `number`                                                   | When `meta` is present    | Total pages                                             |
+
+**Behavior/Errors**
+
+Sends `GET /api/integration/datasets/report_types` with integration bearer
+authentication. This is an authenticated reference-dataset read. The catalog
+declares HTTP `200`; the transport accepts any `2xx`. The SDK does not validate
+response records. Non-`2xx` responses throw `EgovApiError`; fetch and abort
+errors propagate.
+
+## `requestOtp`
+
+**Signature**
+
+Direct client:
+
+```ts
+directClient.requestOtp(
+  integrationToken: string,
+  email: string,
+  options?: EgovCallOptions,
+): Promise<EReportRequestOtpResponse>
+```
+
+Environment client:
+
+```ts
+envClient.requestOtp(
+  integrationToken: string,
+  email: string,
+  options?: EgovCallOptions,
+): Promise<EReportRequestOtpResponse>
+```
+
+**Parameters**
+
+| Parameter or field | Type              | Required | Wire name and location                                            |
+| ------------------ | ----------------- | -------- | ----------------------------------------------------------------- |
+| `integrationToken` | `string`          | Yes      | `Authorization: Bearer <integrationToken>` header                 |
+| `email`            | `string`          | Yes      | `email` JSON body field                                           |
+| `options`          | `EgovCallOptions` | No       | Final call options                                                |
+| `options.headers`  | `HeadersInit`     | No       | Additional HTTP headers; cannot replace the bearer token argument |
+| `options.signal`   | `AbortSignal`     | No       | Fetch cancellation signal                                         |
+
+The SDK does not validate email syntax.
+
+**Returns**
+
+`Promise<EReportRequestOtpResponse>` resolves to:
+
+| Field              | Type      | Required | Description                                             |
+| ------------------ | --------- | -------- | ------------------------------------------------------- |
+| `already_verified` | `boolean` | Yes      | Provider indication that the email was already verified |
+| `code`             | `number`  | Yes      | Provider response code                                  |
+| `message`          | `string`  | Yes      | Provider response message                               |
+
+**Behavior/Errors**
+
+Sends `POST /api/integration/verify/request` with integration bearer
+authentication and causes the provider to send an email OTP. The catalog
+describes the verification code as six digits and declares HTTP `200`; the
+transport accepts any `2xx`. The SDK does not suppress, deduplicate, queue, or
+retry email delivery. Repeating an ambiguous request can send multiple messages
+or encounter provider rate limits, so reconcile the provider outcome before
+retrying. Non-`2xx` responses throw `EgovApiError`; fetch and abort errors
+propagate.
+
+## `submitComplaint`
+
+**Signature**
+
+Direct client:
+
+```ts
+directClient.submitComplaint(
+  integrationToken: string,
+  request: EReportSubmitComplaintRequest,
+  options?: EgovCallOptions,
+): Promise<EReportSubmitComplaintResponse>
+```
+
+Environment client:
+
+```ts
+envClient.submitComplaint(
+  integrationToken: string,
+  request: EReportSubmitComplaintRequest,
+  options?: EgovCallOptions,
+): Promise<EReportSubmitComplaintResponse>
+```
+
+**Parameters**
+
+| Parameter or field         | Type                            | Required | Wire name and location                                            |
+| -------------------------- | ------------------------------- | -------- | ----------------------------------------------------------------- |
+| `integrationToken`         | `string`                        | Yes      | `Authorization: Bearer <integrationToken>` header                 |
+| `request`                  | `EReportSubmitComplaintRequest` | Yes      | JSON request body                                                 |
+| `request.barangayCode`     | `string`                        | Yes      | `barangay_code` body field                                        |
+| `request.complainantEmail` | `string`                        | Yes      | `complainant_email` body field                                    |
+| `request.evidences`        | `string[]`                      | No       | `evidences` body field                                            |
+| `request.firstName`        | `string`                        | Yes      | `first_name` body field                                           |
+| `request.gender`           | `string`                        | Yes      | `gender` body field                                               |
+| `request.lastName`         | `string`                        | Yes      | `last_name` body field                                            |
+| `request.latitude`         | `string`                        | No       | `latitude` body field                                             |
+| `request.longitude`        | `string`                        | No       | `longitude` body field                                            |
+| `request.message`          | `string`                        | Yes      | `message` body field                                              |
+| `request.mobile`           | `string`                        | Yes      | `mobile` body field                                               |
+| `request.municipalityCode` | `string`                        | Yes      | `municipality_code` body field                                    |
+| `request.provinceCode`     | `string`                        | Yes      | `province_code` body field                                        |
+| `request.regionCode`       | `string`                        | Yes      | `region_code` body field                                          |
+| `request.reportType`       | `string`                        | Yes      | `report_type` body field                                          |
+| `request.subject`          | `string`                        | Yes      | `subject` body field                                              |
+| `options`                  | `EgovCallOptions`               | No       | Final call options                                                |
+| `options.headers`          | `HeadersInit`                   | No       | Additional HTTP headers; cannot replace the bearer token argument |
+| `options.signal`           | `AbortSignal`                   | No       | Fetch cancellation signal                                         |
+
+Optional properties with value `undefined` are omitted by JSON serialization.
+`evidences` contains string references; this method does not perform multipart
+file uploads. Coordinates are strings, not numbers. The SDK does not validate
+names, gender values, email or mobile formats, evidence references, coordinates,
+location hierarchy, report type, subject, or message.
+
+**Returns**
+
+`Promise<EReportSubmitComplaintResponse>` resolves to:
+
+| Field         | Type     | Required | Description                              |
+| ------------- | -------- | -------- | ---------------------------------------- |
+| `case_number` | `string` | Yes      | Case number for subsequent report lookup |
+| `code`        | `number` | Yes      | Provider response code                   |
+| `message`     | `string` | Yes      | Provider response message                |
+
+**Behavior/Errors**
+
+Sends `POST /api/integration/submit_complaint` with integration bearer
+authentication and creates an external complaint record. The catalog declares
+HTTP `200`; the transport accepts any `2xx`. The SDK supplies no idempotency key
+and performs no duplicate detection. If the response is lost after the provider
+accepts the complaint, a blind retry can create another record; reconcile using
+provider data before retrying. Non-`2xx` responses throw `EgovApiError`; fetch
+and abort errors propagate.

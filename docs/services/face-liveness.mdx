@@ -1,0 +1,293 @@
+---
+$schema: https://holocron.so/frontmatter.json
+title: Run biometric checks with Face Liveness
+sidebarTitle: Face Liveness
+description: Create hosted Face Liveness sessions, direct completion behavior, and retrieve confidence scores and verification results safely.
+---
+
+# Face Liveness API reference
+
+**Face Liveness** creates hosted biometric verification sessions and retrieves
+their status, confidence score, and reference image URL. The API key must remain
+server-side, while the user visits the hosted session URL in a browser.
+
+**Imports**
+
+Runtime exports come from `egov.js/eGovFaceLiveness`. Face Liveness types are
+published from the dedicated `/types` subpath:
+
+```ts
+import {
+  FACE_LIVENESS_SOURCE_URL,
+  createFaceLivenessClient,
+  createFaceLivenessClientFromEnv,
+  eGovFaceLivenessApi,
+  faceLivenessCatalog,
+} from "egov.js/eGovFaceLiveness";
+import type {
+  FaceLivenessAction,
+  FaceLivenessClient,
+  FaceLivenessCreateSessionRequest,
+  FaceLivenessCreateSessionResponse,
+  FaceLivenessVerificationResult,
+} from "egov.js/eGovFaceLiveness/types";
+import type { EgovCallOptions } from "egov.js/core";
+```
+
+`eGovFaceLivenessApi` is frozen and its members reference the corresponding
+named exports.
+
+**Factories**
+
+| Factory or catalog            | Named export                      | Purpose                                     |
+| ----------------------------- | --------------------------------- | ------------------------------------------- |
+| `eGovFaceLivenessApi.create`  | `createFaceLivenessClient`        | Create a client from an explicit API key    |
+| `eGovFaceLivenessApi.fromEnv` | `createFaceLivenessClientFromEnv` | Create a client from `EGOVLIVENESS_API_KEY` |
+| `eGovFaceLivenessApi.catalog` | `faceLivenessCatalog`             | Inspect static endpoint metadata            |
+
+**Create a client**
+
+**Signature**
+
+```ts
+function createFaceLivenessClient(
+  options: FaceLivenessClientOptions,
+): FaceLivenessClient;
+eGovFaceLivenessApi.create(
+  options: FaceLivenessClientOptions,
+): FaceLivenessClient;
+
+interface FaceLivenessClientOptions extends EgovTransportOptions {
+  apiKey: string;
+}
+```
+
+**Parameters**
+
+| Parameter         | Type                                                                   | Required | Behavior                                                                                                 |
+| ----------------- | ---------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------- |
+| `options`         | `FaceLivenessClientOptions`                                            | Yes      | API credential and transport configuration.                                                              |
+| `options.apiKey`  | `string`                                                               | Yes      | Sent as `X-API-Key` on every method request.                                                             |
+| `options.baseUrl` | `string`                                                               | Yes      | Service origin or base path. There is no SDK default.                                                    |
+| `options.fetch`   | `(input: RequestInfo \| URL, init?: RequestInit) => Promise<Response>` | No       | Fetch implementation; defaults to `globalThis.fetch`.                                                    |
+| `options.headers` | `HeadersInit`                                                          | No       | Default headers. Per-call headers override matching defaults; the SDK-controlled API key overrides both. |
+
+**Behavior/Errors**
+
+Creating a client performs no request. API-key content and URL syntax are not
+validated at construction time.
+
+**Create a client from an environment variable**
+
+**Signature**
+
+```ts
+function createFaceLivenessClientFromEnv(
+  options: FaceLivenessEnvironmentClientOptions,
+): FaceLivenessClient;
+eGovFaceLivenessApi.fromEnv(
+  options: FaceLivenessEnvironmentClientOptions,
+): FaceLivenessClient;
+
+interface FaceLivenessEnvironmentClientOptions extends EgovTransportOptions {
+  env?: EgovEnvironment;
+}
+```
+
+**Parameters**
+
+| Parameter         | Type                                                                   | Required | Behavior                                                                                                                                                                                      |
+| ----------------- | ---------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `options`         | `FaceLivenessEnvironmentClientOptions`                                 | Yes      | Environment and transport configuration.                                                                                                                                                      |
+| `options.env`     | `EgovEnvironment`                                                      | No       | Explicit read-only environment map whose values are `string \| undefined`. If omitted, resolution is `Bun.env`, then `process.env`, then `{}`. An explicit object is not merged with globals. |
+| `options.baseUrl` | `string`                                                               | Yes      | Service origin or base path.                                                                                                                                                                  |
+| `options.fetch`   | `(input: RequestInfo \| URL, init?: RequestInit) => Promise<Response>` | No       | Fetch implementation; defaults to `globalThis.fetch`.                                                                                                                                         |
+| `options.headers` | `HeadersInit`                                                          | No       | Default request headers.                                                                                                                                                                      |
+
+| Environment variable   | Required | Use                                     |
+| ---------------------- | -------- | --------------------------------------- |
+| `EGOVLIVENESS_API_KEY` | Yes      | Trimmed and used as the client API key. |
+
+**Behavior/Errors**
+
+Construction throws an `Error` naming `EGOVLIVENESS_API_KEY` when the resolved
+value is absent, empty, or whitespace-only. It makes no network request.
+
+**Endpoint catalog**
+
+**Signature**
+
+```ts
+const faceLivenessCatalog: EgovCatalogService;
+const FACE_LIVENESS_SOURCE_URL =
+  "https://platforms.e.gov.ph/dashboard/api-catalogs/face-liveness" as const;
+
+const eGovFaceLivenessApi: Readonly<{
+  catalog: typeof faceLivenessCatalog;
+  create: typeof createFaceLivenessClient;
+  fromEnv: typeof createFaceLivenessClientFromEnv;
+}>;
+```
+
+The catalog has `id` and `slug` `face-liveness`, name `Face Liveness`, summary
+`Create liveness checks and retrieve their verification results.`, the source
+URL above, and these endpoints:
+
+| ID                        | Method and route                         | Authentication              | Cataloged statuses                         |
+| ------------------------- | ---------------------------------------- | --------------------------- | ------------------------------------------ |
+| `create-session`          | `POST /v1/liveness/session`              | Required `X-API-Key` header | `201` session and verification URL created |
+| `get-verification-result` | `GET /v1/liveness/result/{sessionToken}` | Required `X-API-Key` header | `200` verification result returned         |
+
+No error statuses are included in the static catalog. Actual non-2xx responses
+still throw. Reading catalog data makes no request.
+
+**Methods**
+
+| Method                                                                    | Purpose                                                           |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| [`createSession(request, options?)`](#createsession)                      | Create a hosted verification session and URL                      |
+| [`getVerificationResult(sessionToken, options?)`](#getverificationresult) | Retrieve status, score, and reference image after the hosted flow |
+
+## `createSession`
+
+**Signature**
+
+```ts
+createSession(
+  request: FaceLivenessCreateSessionRequest,
+  options?: EgovCallOptions,
+): Promise<FaceLivenessCreateSessionResponse>;
+
+type FaceLivenessAction = "close" | "post" | "redirect";
+
+interface FaceLivenessCreateSessionRequest {
+  action: FaceLivenessAction;
+  callbackUrl?: string;
+  delay?: number;
+}
+```
+
+**Parameters**
+
+| Parameter             | Type                               | Required      | Wire field and format                                                                                                                                                     |
+| --------------------- | ---------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `request`             | `FaceLivenessCreateSessionRequest` | Yes           | JSON session configuration.                                                                                                                                               |
+| `request.action`      | `"close" \| "post" \| "redirect"`  | Yes           | `action`. The SDK and catalog enumerate these values but do not further define their provider-side semantics.                                                             |
+| `request.callbackUrl` | `string`                           | Conditionally | `callback_url`; catalog format `URL`. The provider catalog says it is required when `action` is `"redirect"`, but the TypeScript type makes it optional for every action. |
+| `request.delay`       | `number`                           | No            | `delay`; catalog format `integer`. The SDK enforces neither integer form nor units/range.                                                                                 |
+| `options`             | `EgovCallOptions`                  | No            | Final per-call options.                                                                                                                                                   |
+| `options.headers`     | `HeadersInit`                      | No            | Merged over client defaults; `X-API-Key` is then forced to the client API key.                                                                                            |
+| `options.signal`      | `AbortSignal`                      | No            | Passed to `fetch` for cancellation.                                                                                                                                       |
+
+Optional values that are `undefined` are omitted by JSON serialization.
+
+**Returns**
+
+```ts
+interface FaceLivenessCreateSessionResponse {
+  token: string;
+  url: string;
+}
+```
+
+Both fields are required and non-null. `url` is the hosted verification URL the
+user must visit. `token` identifies the session and is the exact value passed to
+`getVerificationResult`.
+
+**Behavior/Errors**
+
+Makes `POST /v1/liveness/session` with JSON and `X-API-Key`. It creates external
+session state. The catalog lists only `201`. Any non-2xx response throws
+`EgovApiError` with parsed `body`, response `headers`, `method`, `status`,
+`statusText`, and `url`. Fetch, abort, URL, and serialization failures propagate.
+The SDK does not enforce the redirect callback condition.
+
+## `getVerificationResult`
+
+**Signature**
+
+```ts
+getVerificationResult(
+  sessionToken: string,
+  options?: EgovCallOptions,
+): Promise<FaceLivenessVerificationResult>;
+```
+
+**Parameters**
+
+| Parameter         | Type              | Required | Wire field and format                                                              |
+| ----------------- | ----------------- | -------- | ---------------------------------------------------------------------------------- |
+| `sessionToken`    | `string`          | Yes      | URL-encoded into `{sessionToken}` in the result route. The SDK accepts any string. |
+| `options`         | `EgovCallOptions` | No       | Final per-call options.                                                            |
+| `options.headers` | `HeadersInit`     | No       | Merged over client defaults; `X-API-Key` is then forced to the client API key.     |
+| `options.signal`  | `AbortSignal`     | No       | Passed to `fetch`.                                                                 |
+
+**Returns**
+
+```ts
+interface FaceLivenessVerificationResult {
+  confidence_score: number;
+  reference_image_url: string;
+  status: "FAILED" | "PENDING" | "SUCCEEDED" | (string & {});
+}
+```
+
+All three fields are required and non-null. `confidence_score` remains an
+unconstrained number; the SDK does not define its range or threshold.
+`reference_image_url` is a provider pre-signed reference-image URL. `status`
+names three known values but deliberately permits any other string. Only treat
+`"SUCCEEDED"` as known success; handle unknown values explicitly.
+
+**Behavior/Errors**
+
+Makes `GET /v1/liveness/result/{sessionToken}` with `X-API-Key` and no body. It
+reads external state and performs no local mutation. The catalog lists only
+`200`. Any non-2xx response throws `EgovApiError`; fetch and abort failures
+propagate unchanged. The method does not poll, wait for completion, refresh an
+expired image URL, or interpret the result.
+
+**Hosted redirect flow**
+
+Create the session on a trusted server, persist the token in server-side state,
+and redirect the user's browser to `session.url`. Look up the result only after
+the hosted flow returns control to your application or your backend otherwise
+learns that the flow completed.
+
+```ts
+import { eGovFaceLivenessApi } from "egov.js/eGovFaceLiveness";
+import type { FaceLivenessVerificationResult } from "egov.js/eGovFaceLiveness/types";
+
+const liveness = eGovFaceLivenessApi.fromEnv({
+  baseUrl: "https://hackathon-face-liveness-api.e.gov.ph",
+});
+
+// Server route that starts the flow.
+const session = await liveness.createSession({
+  action: "redirect",
+  callbackUrl: "https://example.gov.ph/identity/liveness-complete",
+});
+await saveSessionTokenForCurrentUser(session.token);
+return Response.redirect(session.url, 303);
+
+// Server callback route after the hosted flow.
+const sessionToken = await loadSessionTokenForCurrentUser();
+const result: FaceLivenessVerificationResult = await liveness.getVerificationResult(sessionToken);
+```
+
+<Note>
+  The conditional callback requirement comes from the endpoint catalog, not the TypeScript type:
+  `callbackUrl` is optional even when `action` is `"redirect"`. Validate this condition in
+  application code before sending the request.
+</Note>
+
+**Validation and security**
+
+The SDK does not validate action/callback combinations, URLs, delay integer or
+units, session-token format, status values, score ranges, image URLs, or response
+bodies. Successful responses are cast to the declared TypeScript type.
+
+<Warning>
+  API keys, session tokens, verification results, and reference images are sensitive biometric data.
+  Keep API calls server-side, avoid logging tokens or pre-signed URLs, restrict access, and apply
+  strict consent and retention rules.
+</Warning>

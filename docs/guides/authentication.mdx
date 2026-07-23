@@ -9,9 +9,10 @@ description: Choose explicit or environment-backed clients, keep partner secrets
 
 ## Choose a constructor
 
-**Explicit clients** accept credentials in `create(...)` and work with any
-secret manager. Use them when secrets come from a vault, platform binding, or
-request-scoped credential provider.
+**Explicit clients** accept credentials either in `create(...)` or in a token or
+authentication method, depending on the service. They work with any secret
+manager and are appropriate when credentials come from a vault, platform
+binding, or request-scoped provider.
 
 ```ts
 import { eMessageApi } from "egov.js/eMessage";
@@ -42,7 +43,8 @@ const client = eMessageApi.fromEnv({
 
 **eGov AI, eGov SSO, eReport, and eVerify** exchange a long-lived partner
 credential or one-time code for a shorter-lived token. Store that token only as
-long as its workflow requires and honor the service's expiry response.
+long as its workflow requires and honor expiry metadata when the service returns
+it. The eGov SSO token response does not expose an expiry field.
 
 **eGov SSO exchange codes** should be treated as single-use values. Perform the
 exchange and citizen-profile request on the server, then issue your own secure

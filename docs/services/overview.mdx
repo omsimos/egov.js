@@ -10,30 +10,56 @@ description: Compare all nine typed eGov clients, their capabilities, credential
 **Nine service clients** share one transport and error model while preserving
 each provider's authentication and response types.
 
-| Service       | Capability                                              | Environment credentials                                        | Side effects                    |
-| ------------- | ------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------- |
-| eGov AI       | Generate, translate, extract documents, inspect credits | `EGOVAI_ACCESS_CODE`                                           | Consumes credits                |
-| eGov Compass  | Query national budget records and dashboards            | `EGOVCOMPASS_API_KEY`                                          | Read-only                       |
-| eMessage      | Send SMS messages                                       | `EMESSAGE_ACCESS_TOKEN`                                        | Sends messages                  |
-| eGovChain     | Call an EVM-compatible JSON-RPC service                 | None                                                           | Raw transactions write to chain |
-| eReport       | Submit and view citizen reports                         | `EREPORT_ACCESS_TOKEN`                                         | Submits reports and OTPs        |
-| eGov SSO      | Exchange login codes and retrieve citizen profiles      | `EGOVSSO_PARTNER_CODE`, `EGOVSSO_PARTNER_SECRET`               | Creates tokens                  |
-| eVerify       | Verify identities and QR payloads                       | `EVERIFY_CLIENT_ID`, `EVERIFY_CLIENT_SECRET`, `EVERIFY_PUBKEY` | Processes identity data         |
-| eGovPay       | Create, inspect, and void payments                      | `EGOVPAY_API_KEY`, `EGOVPAY_SETTLEMENT_TEMPLATE_UUID`          | Changes payment state           |
-| Face Liveness | Create sessions and retrieve verification results       | `EGOVLIVENESS_API_KEY`                                         | Starts biometric sessions       |
+| Service                              | Primary capability                         | Authentication                            | Writes or side effects           |
+| ------------------------------------ | ------------------------------------------ | ----------------------------------------- | -------------------------------- |
+| [eGov AI](./egov-ai.mdx)             | Generate, translate, and extract content   | Access code, then bearer token            | Consumes credits                 |
+| [eGov Compass](./egov-compass.mdx)   | Query budget records and dashboards        | API key                                   | None                             |
+| [eGovChain](./egov-chain.mdx)        | Use EVM-compatible JSON-RPC                | None                                      | Raw transactions write to chain  |
+| [eGovPay](./egov-pay.mdx)            | Create, inspect, and void payments         | API key and settlement template           | Changes payment state            |
+| [eGov SSO](./egov-sso.mdx)           | Exchange login codes and retrieve profiles | Partner code and secret                   | Creates tokens and processes PII |
+| [eMessage](./emessage.mdx)           | Send SMS messages                          | Access token                              | Sends messages                   |
+| [eReport](./ereport.mdx)             | Submit and view citizen reports            | Access code, bearer token, and view token | Submits complaints and OTPs      |
+| [eVerify](./everify.mdx)             | Verify identities and QR payloads          | Client credentials                        | Processes identity data          |
+| [Face Liveness](./face-liveness.mdx) | Create biometric verification sessions     | API key                                   | Starts biometric sessions        |
 
 <Warning>
-  All listed hosts except the default eGovChain RPC are **partner staging or hackathon systems**.
-  Access is governed by provider agreements and credentials.
+  Documented and example hosts, including the default eGovChain RPC, are **partner staging or
+  hackathon systems**. Access is governed by provider agreements and credentials.
 </Warning>
 
-## Explore by workflow
+## Service guides
 
-- **AI and document processing:** [eGov AI](./egov-ai.mdx)
-- **Citizen identity:** [SSO, eVerify, and Face Liveness](./identity.mdx)
-- **Citizen transactions:** [eMessage, eReport, and eGovPay](./citizen-services.mdx)
-- **Public data and blockchain:** [Compass and eGovChain](./data-and-chain.mdx)
+<CardGroup cols={2}>
+  <Card title="eGov AI" icon="lucide:sparkles" href="./egov-ai.mdx">
+    Generate text, translate content, extract documents, and monitor credits.
+  </Card>
+  <Card title="eGov Compass" icon="lucide:chart-no-axes-combined" href="./egov-compass.mdx">
+    Read SAAODB, SARO, NCA, and LGSF budget data.
+  </Card>
+  <Card title="eGovChain" icon="lucide:blocks" href="./egov-chain.mdx">
+    Query the eGov EVM chain and submit signed transactions.
+  </Card>
+  <Card title="eGovPay" icon="lucide:credit-card" href="./egov-pay.mdx">
+    Create hosted payments, inspect transactions, and void them.
+  </Card>
+  <Card title="eGov SSO" icon="lucide:log-in" href="./egov-sso.mdx">
+    Exchange citizen login codes and retrieve verified profiles.
+  </Card>
+  <Card title="eMessage" icon="lucide:message-square-text" href="./emessage.mdx">
+    Send authenticated SMS notifications.
+  </Card>
+  <Card title="eReport" icon="lucide:message-square-warning" href="./ereport.mdx">
+    Build complaint submission, OTP, and report-viewing flows.
+  </Card>
+  <Card title="eVerify" icon="lucide:badge-check" href="./everify.mdx">
+    Verify personal information and National ID QR payloads.
+  </Card>
+  <Card title="Face Liveness" icon="lucide:scan-face" href="./face-liveness.mdx">
+    Create biometric sessions and retrieve verification results.
+  </Card>
+</CardGroup>
 
 **Endpoint catalogs** are also exported by every service. Use each catalog for
-runtime discovery of supported paths, methods, parameters, and expected status
-codes.
+runtime discovery of supported paths, methods, and expected status codes.
+Parameter detail varies by provider; eGovChain exposes generic JSON-RPC envelope
+metadata rather than method-specific parameter schemas.

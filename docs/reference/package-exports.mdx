@@ -27,10 +27,18 @@ import type { EgovSsoCitizenProfile } from "egov.js/eGovSso";
 ```
 
 **Dedicated type subpaths remain available** for consumers that separate runtime
-and contract imports.
+and contract imports. Use them consistently across services; Compass, eReport,
+and Face Liveness types are available only from their dedicated `/types`
+subpaths.
 
 ```ts
 import type { EgovSsoCitizenProfile } from "egov.js/eGovSso/types";
+```
+
+```ts
+import type { CompassSaaodbRecordsQuery } from "egov.js/eGovCompass/types";
+import type { EReportRecord } from "egov.js/eReport/types";
+import type { FaceLivenessVerificationResult } from "egov.js/eGovFaceLiveness/types";
 ```
 
 ## Module formats

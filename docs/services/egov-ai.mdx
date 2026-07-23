@@ -1,16 +1,40 @@
 ---
 $schema: https://holocron.so/frontmatter.json
-title: Generate and transform content with eGov AI
+title: eGov AI API reference
 sidebarTitle: eGov AI
-description: Mint a credit-metered eGov AI token, generate or translate text, extract documents, and monitor usage through the typed client.
+description: Create an eGov AI client, mint access tokens, generate or translate text, extract documents, and inspect token credits.
 ---
 
-# Use eGov AI
+# eGov AI API reference
 
-## Create a client
+eGov AI provides credit-metered text generation, translation, and document
+extraction. Exchange an access code for a short-lived token, then pass the
+returned `access_token` to each subsequent authenticated operation. Token
+generation does not store the bearer token on the client or attach it
+automatically to later calls.
 
-**eGov AI uses an access code** to mint short-lived bearer tokens with a finite
-credit balance.
+**Factories**
+
+| Namespace member | Direct export               | Purpose                                                                               |
+| ---------------- | --------------------------- | ------------------------------------------------------------------------------------- |
+| `create`         | `createEgovAiClient`        | Create a client whose access code is supplied directly to `generateAccessToken`       |
+| `fromEnv`        | `createEgovAiClientFromEnv` | Create a client that reads `EGOVAI_ACCESS_CODE` and binds it to `generateAccessToken` |
+| `catalog`        | `egovAiCatalog`             | Read the SDK's static eGov AI endpoint catalog                                        |
+
+**Methods**
+
+| Method                                                      | Purpose                                                                           |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| [`generateAccessToken`](#generateaccesstoken)               | Exchange an access code for a short-lived bearer token and initial credit balance |
+| [`generateAssistant`](#generateassistant)                   | Generate general assistant text                                                   |
+| [`generateLawsAndRegulations`](#generatelawsandregulations) | Generate laws and regulations text                                                |
+| [`generateSpeech`](#generatespeech)                         | Generate Speech Maker text, not audio or transcription                            |
+| [`generateTourism`](#generatetourism)                       | Generate tourism text                                                             |
+| [`translate`](#translate)                                   | Translate and transliterate text                                                  |
+| [`extractDocument`](#extractdocument)                       | Upload a document `Blob` for extraction                                           |
+| [`getTokenCredits`](#gettokencredits)                       | Read the authenticated token's credit usage and expiry                            |
+
+**Quick start**
 
 ```ts
 import { eGovAiApi } from "egov.js/eGovAi";
@@ -20,13 +44,391 @@ const ai = eGovAiApi.fromEnv({
 });
 
 const token = await ai.generateAccessToken();
+const answer = await ai.generateAssistant(token.access_token, {
+  category: "general",
+  prompt: "Summarize the application process.",
+});
 ```
 
-## Supported operations
+The SDK has no default base URL. Keep credentials and generated bearer tokens
+in a server-side runtime.
 
-**Typed methods** cover assistant generation, laws and regulations, speech
-generation, tourism generation, translation, document extraction, and credit
-inspection.
+**`eGovAiApi.create`**
+
+Creates a direct `EgovAiClient`. This namespace function is the same function
+as the public `createEgovAiClient` export.
+
+**Signature**
+
+```ts
+eGovAiApi.create(options: EgovTransportOptions): EgovAiClient
+```
+
+**Parameters**
+
+| Parameter         | Type                   | Required | Description                                                                                            |
+| ----------------- | ---------------------- | -------- | ------------------------------------------------------------------------------------------------------ |
+| `options`         | `EgovTransportOptions` | Yes      | Transport configuration                                                                                |
+| `options.baseUrl` | `string`               | Yes      | Service origin or base path; no default is supplied                                                    |
+| `options.fetch`   | `EgovFetch`            | No       | `(input: RequestInfo \| URL, init?: RequestInit) => Promise<Response>`; defaults to `globalThis.fetch` |
+| `options.headers` | `HeadersInit`          | No       | Default headers merged into every request                                                              |
+
+**Returns and behavior**
+
+Returns an `EgovAiClient`. On this client,
+`generateAccessToken(accessCode, options?)` requires the access code as its
+first argument. The remaining methods require a bearer token as their first
+argument.
+
+The base URL is normalized with a trailing slash before endpoint paths are
+resolved. Per-call headers override matching default headers, except that each
+authenticated method always sets its own `Authorization` header.
+
+**`eGovAiApi.fromEnv`**
+
+Creates an `EgovAiEnvironmentClient`. This namespace function is the same
+function as the public `createEgovAiClientFromEnv` export.
+
+**Signature**
+
+```ts
+eGovAiApi.fromEnv(
+  options: EgovAiEnvironmentClientOptions,
+): EgovAiEnvironmentClient
+```
+
+**Parameters**
+
+| Parameter                        | Type                             | Required                                  | Description                                                                          |
+| -------------------------------- | -------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------ |
+| `options`                        | `EgovAiEnvironmentClientOptions` | Yes                                       | Environment and transport configuration                                              |
+| `options.baseUrl`                | `string`                         | Yes                                       | Service origin or base path; no default is supplied                                  |
+| `options.fetch`                  | `EgovFetch`                      | No                                        | Custom fetch implementation; defaults to `globalThis.fetch`                          |
+| `options.headers`                | `HeadersInit`                    | No                                        | Default headers merged into every request                                            |
+| `options.env`                    | `EgovEnvironment`                | No                                        | Explicit string environment map; when present, it is used instead of runtime globals |
+| `options.env.EGOVAI_ACCESS_CODE` | `string \| undefined`            | No at the type level; required at runtime | Access code used only by `generateAccessToken`                                       |
+
+**Returns and behavior**
+
+Returns an `EgovAiEnvironmentClient`. Its token method is
+`generateAccessToken(options?)`; the access code argument is omitted because
+the factory binds the environment value. All other method signatures are the
+same as `EgovAiClient`.
+
+The factory resolves the environment immediately in this order:
+
+1. `options.env`, when supplied
+2. `Bun.env`
+3. `process.env`
+4. An empty object
+
+It trims `EGOVAI_ACCESS_CODE`. A missing, empty, or whitespace-only value throws
+`Error("Missing required eGov environment variable: EGOVAI_ACCESS_CODE")`
+synchronously while creating the client. It does not read a base URL or bearer
+token from the environment.
+
+**`eGovAiApi.catalog`**
+
+Exposes the same object as the public `egovAiCatalog` export. It is a static SDK
+description, not a network discovery call. `EGOV_AI_SOURCE_URL` is also exported
+and equals the catalog's `sourceUrl`.
+
+**Signature**
+
+```ts
+eGovAiApi.catalog: typeof egovAiCatalog
+```
+
+**Parameters**
+
+None. `catalog` is a property, not a function.
+
+**Value**
+
+| Field       | Value                                                                   |
+| ----------- | ----------------------------------------------------------------------- |
+| `id`        | `"egov-ai"`                                                             |
+| `name`      | `"eGov AI"`                                                             |
+| `slug`      | `"egov-ai"`                                                             |
+| `sourceUrl` | `"https://platforms.e.gov.ph/dashboard/api-catalogs/egov-ai"`           |
+| `summary`   | `"Document intelligence, translation, and conversational AI services."` |
+
+The `endpoints` array contains these eight entries:
+
+| ID                      | Method and path                                               | Authentication | Cataloged statuses |
+| ----------------------- | ------------------------------------------------------------- | -------------- | ------------------ |
+| `generate-access-token` | `POST /api/v1/egov/integration/token`                         | None cataloged | `200`, `401`       |
+| `ai-assistant`          | `POST /api/v1/egov/integration/ai_assistant/generate`         | Bearer token   | `200`, `401`       |
+| `speech-maker`          | `POST /api/v1/egov/integration/speech_maker/generate`         | Bearer token   | `200`, `401`       |
+| `tourism`               | `POST /api/v1/egov/integration/tourism/generate`              | Bearer token   | `200`, `401`       |
+| `laws-and-regulations`  | `POST /api/v1/egov/integration/laws_and_regulations/generate` | Bearer token   | `200`, `401`       |
+| `translator`            | `POST /api/v1/egov/integration/translator/generate`           | Bearer token   | `200`, `401`       |
+| `document-extractor`    | `POST /api/v1/egov/integration/document_extractor/generate`   | Bearer token   | `200`, `401`       |
+| `token-credits`         | `GET /api/v1/egov/integration/credits`                        | Bearer token   | `200`, `401`       |
+
+## `generateAccessToken`
+
+Exchanges an access code for the bearer token used by all other eGov AI client
+methods.
+
+**Signature**
+
+The direct and environment clients intentionally have different signatures:
+
+```ts
+// EgovAiClient returned by create
+generateAccessToken(
+  accessCode: string,
+  options?: EgovCallOptions,
+): Promise<EgovAiAccessTokenResponse>
+
+// EgovAiEnvironmentClient returned by fromEnv
+generateAccessToken(
+  options?: EgovCallOptions,
+): Promise<EgovAiAccessTokenResponse>
+```
+
+**Parameters**
+
+| Parameter    | Type              | Required                                | Wire mapping                                                                            |
+| ------------ | ----------------- | --------------------------------------- | --------------------------------------------------------------------------------------- |
+| `accessCode` | `string`          | Direct client: Yes; env client: omitted | JSON body field `access_code`; the env client uses the bound `EGOVAI_ACCESS_CODE` value |
+| `options`    | `EgovCallOptions` | No                                      | Final call options argument                                                             |
+
+**Returns**
+
+`Promise<EgovAiAccessTokenResponse>` with these required TypeScript fields:
+
+| Field                | Type     | Description                                              |
+| -------------------- | -------- | -------------------------------------------------------- |
+| `access_token`       | `string` | Bearer token to pass to subsequent authenticated methods |
+| `credits_remaining`  | `number` | Initial remaining credit balance                         |
+| `credits_total`      | `number` | Total credit allocation                                  |
+| `expires_in_seconds` | `number` | Provider-reported lifetime in seconds                    |
+
+**Behavior and errors**
+
+Sends `POST /api/v1/egov/integration/token` with a JSON body of
+`{ "access_code": string }`. The SDK does not add bearer authentication to this
+request and does not retain the returned token.
+
+| Status | Catalog meaning        |
+| ------ | ---------------------- |
+| `200`  | Access token generated |
+| `401`  | Invalid access code    |
+
+Other non-success statuses follow common error behavior.
+
+## `generateAssistant`
+
+Generates general assistant content from a category and prompt.
+
+**Signature**
+
+```ts
+generateAssistant(
+  accessToken: string,
+  request: EgovAiPromptRequest,
+  options?: EgovCallOptions,
+): Promise<EgovAiGeneratedTextResponse>
+```
+
+**Parameters**
+
+| Parameter          | Type                  | Required | Wire mapping                          |
+| ------------------ | --------------------- | -------- | ------------------------------------- |
+| `accessToken`      | `string`              | Yes      | `Authorization: Bearer <accessToken>` |
+| `request`          | `EgovAiPromptRequest` | Yes      | JSON request body                     |
+| `request.category` | `string`              | Yes      | JSON field `category`                 |
+| `request.prompt`   | `string`              | Yes      | JSON field `prompt`                   |
+| `options`          | `EgovCallOptions`     | No       | Final call options argument           |
+
+**Returns**
+
+`Promise<EgovAiGeneratedTextResponse>`:
+
+| Field        | Type     | Required |
+| ------------ | -------- | -------- |
+| `data`       | `string` | Yes      |
+| `session_id` | `string` | Yes      |
+
+**Behavior and errors**
+
+Sends `POST /api/v1/egov/integration/ai_assistant/generate` as JSON with bearer
+authentication. The catalog defines `200` as generated content and `401` as an
+invalid or expired access token. Category values are not enumerated or
+validated by the SDK.
+
+## `generateLawsAndRegulations`
+
+Generates laws and regulations content from a category and prompt.
+
+**Signature**
+
+```ts
+generateLawsAndRegulations(
+  accessToken: string,
+  request: EgovAiPromptRequest,
+  options?: EgovCallOptions,
+): Promise<EgovAiGeneratedTextResponse>
+```
+
+**Parameters**
+
+| Parameter          | Type                  | Required | Wire mapping                          |
+| ------------------ | --------------------- | -------- | ------------------------------------- |
+| `accessToken`      | `string`              | Yes      | `Authorization: Bearer <accessToken>` |
+| `request`          | `EgovAiPromptRequest` | Yes      | JSON request body                     |
+| `request.category` | `string`              | Yes      | JSON field `category`                 |
+| `request.prompt`   | `string`              | Yes      | JSON field `prompt`                   |
+| `options`          | `EgovCallOptions`     | No       | Final call options argument           |
+
+**Returns**
+
+`Promise<EgovAiGeneratedTextResponse>`:
+
+| Field        | Type     | Required |
+| ------------ | -------- | -------- |
+| `data`       | `string` | Yes      |
+| `session_id` | `string` | Yes      |
+
+**Behavior and errors**
+
+Sends `POST /api/v1/egov/integration/laws_and_regulations/generate` as JSON with
+bearer authentication. The catalog defines `200` as generated content and
+`401` as an invalid or expired access token. Category values are not enumerated
+or validated by the SDK.
+
+## `generateSpeech`
+
+Generates Speech Maker text. Despite its name, this method returns the same text
+response shape as the other generators; it is not speech-to-text,
+text-to-audio, or transcription.
+
+**Signature**
+
+```ts
+generateSpeech(
+  accessToken: string,
+  request: EgovAiPromptRequest,
+  options?: EgovCallOptions,
+): Promise<EgovAiGeneratedTextResponse>
+```
+
+**Parameters**
+
+| Parameter          | Type                  | Required | Wire mapping                          |
+| ------------------ | --------------------- | -------- | ------------------------------------- |
+| `accessToken`      | `string`              | Yes      | `Authorization: Bearer <accessToken>` |
+| `request`          | `EgovAiPromptRequest` | Yes      | JSON request body                     |
+| `request.category` | `string`              | Yes      | JSON field `category`                 |
+| `request.prompt`   | `string`              | Yes      | JSON field `prompt`                   |
+| `options`          | `EgovCallOptions`     | No       | Final call options argument           |
+
+**Returns**
+
+`Promise<EgovAiGeneratedTextResponse>`:
+
+| Field        | Type     | Required |
+| ------------ | -------- | -------- |
+| `data`       | `string` | Yes      |
+| `session_id` | `string` | Yes      |
+
+**Behavior and errors**
+
+Sends `POST /api/v1/egov/integration/speech_maker/generate` as JSON with bearer
+authentication. The catalog defines `200` as generated content and `401` as an
+invalid or expired access token. Category values are not enumerated or
+validated by the SDK.
+
+## `generateTourism`
+
+Generates tourism content from a category and prompt.
+
+**Signature**
+
+```ts
+generateTourism(
+  accessToken: string,
+  request: EgovAiPromptRequest,
+  options?: EgovCallOptions,
+): Promise<EgovAiGeneratedTextResponse>
+```
+
+**Parameters**
+
+| Parameter          | Type                  | Required | Wire mapping                          |
+| ------------------ | --------------------- | -------- | ------------------------------------- |
+| `accessToken`      | `string`              | Yes      | `Authorization: Bearer <accessToken>` |
+| `request`          | `EgovAiPromptRequest` | Yes      | JSON request body                     |
+| `request.category` | `string`              | Yes      | JSON field `category`                 |
+| `request.prompt`   | `string`              | Yes      | JSON field `prompt`                   |
+| `options`          | `EgovCallOptions`     | No       | Final call options argument           |
+
+**Returns**
+
+`Promise<EgovAiGeneratedTextResponse>`:
+
+| Field        | Type     | Required |
+| ------------ | -------- | -------- |
+| `data`       | `string` | Yes      |
+| `session_id` | `string` | Yes      |
+
+**Behavior and errors**
+
+Sends `POST /api/v1/egov/integration/tourism/generate` as JSON with bearer
+authentication. The catalog defines `200` as generated content and `401` as an
+invalid or expired access token. Category values are not enumerated or
+validated by the SDK.
+
+## `translate`
+
+Translates and transliterates text between provider-supported languages.
+
+**Signature**
+
+```ts
+translate(
+  accessToken: string,
+  request: EgovAiTranslationRequest,
+  options?: EgovCallOptions,
+): Promise<EgovAiTranslationResponse>
+```
+
+**Parameters**
+
+| Parameter                | Type                       | Required | Wire mapping or format                                          |
+| ------------------------ | -------------------------- | -------- | --------------------------------------------------------------- |
+| `accessToken`            | `string`                   | Yes      | `Authorization: Bearer <accessToken>`                           |
+| `request`                | `EgovAiTranslationRequest` | Yes      | JSON request body                                               |
+| `request.prompt`         | `string`                   | Yes      | JSON field `prompt`                                             |
+| `request.sourceLanguage` | `string`                   | Yes      | JSON field `source_lang`; cataloged as an ISO 639 language code |
+| `request.targetLanguage` | `string`                   | Yes      | JSON field `target_lang`; cataloged as an ISO 639 language code |
+| `options`                | `EgovCallOptions`          | No       | Final call options argument                                     |
+
+**Returns**
+
+`Promise<EgovAiTranslationResponse>` with all fields required by its TypeScript
+interface:
+
+| Field                   | Type                              | Description                       |
+| ----------------------- | --------------------------------- | --------------------------------- |
+| `original_prompt`       | `string`                          | Provider-returned original text   |
+| `source_lang`           | `string`                          | Provider-returned source language |
+| `target_lang`           | `string`                          | Provider-returned target language |
+| `translate_from`        | `{ code: string; label: string }` | Nested source-language metadata   |
+| `translate_from.code`   | `string`                          | Language code                     |
+| `translate_from.label`  | `string`                          | Language label                    |
+| `translated_prompt`     | `string`                          | Translated text                   |
+| `transliterated_prompt` | `string`                          | Transliterated text               |
+
+**Behavior and errors**
+
+Sends `POST /api/v1/egov/integration/translator/generate` as JSON with bearer
+authentication. The catalog defines `200` as translated and transliterated text
+and `401` as an invalid or expired access token. The SDK does not verify ISO 639
+syntax, provider language support, or the relationship between response
+language fields and the request.
 
 ```ts
 const translation = await ai.translate(token.access_token, {
@@ -34,27 +436,137 @@ const translation = await ai.translate(token.access_token, {
   sourceLanguage: "fil",
   targetLanguage: "en",
 });
-
-const credits = await ai.getTokenCredits(token.access_token);
 ```
 
-<Note>
-  `generateSpeech(...)` is **speech generation, not speech-to-text**. The API does not provide
-  transcription, embeddings, or streamed tool calls.
-</Note>
+## `extractDocument`
 
-## Extract a document
+Uploads one `Blob` to the document extraction endpoint.
 
-**Document extraction** sends multipart form data and accepts any runtime `Blob`
-supported by the provider.
+**Signature**
 
 ```ts
-const result = await ai.extractDocument(token.access_token, {
-  file: pdfBlob,
-  fileName: "application.pdf",
-});
+extractDocument(
+  accessToken: string,
+  request: EgovAiDocumentRequest,
+  options?: EgovCallOptions,
+): Promise<EgovAiDocumentResponse>
 ```
 
-**Cache repeated transformations** where policy permits and inspect credits
-before starting large jobs. Validate Filipino and Taglish quality against your
-own representative data before relying on generated output.
+**Parameters**
+
+| Parameter          | Type                    | Required | Wire mapping or format                                                                           |
+| ------------------ | ----------------------- | -------- | ------------------------------------------------------------------------------------------------ |
+| `accessToken`      | `string`                | Yes      | `Authorization: Bearer <accessToken>`                                                            |
+| `request`          | `EgovAiDocumentRequest` | Yes      | Used to build a `FormData` body                                                                  |
+| `request.file`     | `Blob`                  | Yes      | Multipart field `file`                                                                           |
+| `request.fileName` | `string`                | No       | Filename passed as the third argument to `FormData.append`; it is not a separate multipart field |
+| `options`          | `EgovCallOptions`       | No       | Final call options argument                                                                      |
+
+**Returns**
+
+`Promise<EgovAiDocumentResponse>`:
+
+| Field  | Type     | Required |
+| ------ | -------- | -------- |
+| `data` | `string` | Yes      |
+
+**Behavior and errors**
+
+Sends `POST /api/v1/egov/integration/document_extractor/generate` with bearer
+authentication and a raw `FormData` body. The fetch runtime supplies the
+`multipart/form-data` boundary when no caller or default `Content-Type` header
+overrides it. Do not set `Content-Type` manually unless you also provide a
+correct boundary.
+
+The catalog describes document images and PDFs, but the SDK accepts any `Blob`
+and does not validate MIME type, filename, size, or content. If `fileName` is
+omitted, native `FormData` filename behavior applies. The catalog defines `200`
+as extracted document content and `401` as an invalid or expired access token.
+
+```ts
+async function extractPdf(pdfBytes: Uint8Array<ArrayBuffer>) {
+  return ai.extractDocument(token.access_token, {
+    file: new Blob([pdfBytes], { type: "application/pdf" }),
+    fileName: "application.pdf",
+  });
+}
+```
+
+## `getTokenCredits`
+
+Reads credit usage for the supplied bearer token.
+
+**Signature**
+
+```ts
+getTokenCredits(
+  accessToken: string,
+  options?: EgovCallOptions,
+): Promise<EgovAiCreditsResponse>
+```
+
+**Parameters**
+
+| Parameter     | Type              | Required | Wire mapping                          |
+| ------------- | ----------------- | -------- | ------------------------------------- |
+| `accessToken` | `string`          | Yes      | `Authorization: Bearer <accessToken>` |
+| `options`     | `EgovCallOptions` | No       | Final call options argument           |
+
+**Returns**
+
+`Promise<EgovAiCreditsResponse>`:
+
+| Field               | Type     | Required | Description                                                                    |
+| ------------------- | -------- | -------- | ------------------------------------------------------------------------------ |
+| `credits_remaining` | `number` | Yes      | Remaining credits                                                              |
+| `credits_total`     | `number` | Yes      | Total allocated credits                                                        |
+| `credits_used`      | `number` | Yes      | Consumed credits                                                               |
+| `expires_at`        | `string` | Yes      | Provider-returned expiry string; the SDK does not parse or validate its format |
+
+**Behavior and errors**
+
+Sends `GET /api/v1/egov/integration/credits` with bearer authentication and no
+request body. The catalog defines `200` as credit usage and remaining balance
+and `401` as an invalid or expired access token.
+
+**Call options**
+
+Every method's final optional argument is `EgovCallOptions`, exported from
+`egov.js/core`:
+
+```ts
+import type { EgovCallOptions } from "egov.js/core";
+```
+
+| Field     | Type          | Required | Behavior                                     |
+| --------- | ------------- | -------- | -------------------------------------------- |
+| `headers` | `HeadersInit` | No       | Per-call headers merged over client defaults |
+| `signal`  | `AbortSignal` | No       | Passed to `fetch` for cancellation           |
+
+Authenticated methods set `Authorization` after reading per-call headers, so an
+`options.headers` value cannot replace the bearer token argument. The transport
+adds `Accept: application/json` when absent. JSON methods stringify their body
+and add `Content-Type: application/json` when absent.
+
+**Errors and runtime validation**
+
+Any HTTP response for which `Response.ok` is false throws `EgovApiError`,
+exported from `egov.js/core`. It exposes `body`, `headers`, `method`, `status`,
+`statusText`, and `url`. JSON and structured `+json` error bodies are parsed;
+other bodies remain text, and empty bodies become `undefined`. Fetch, network,
+and abort errors propagate unchanged. The SDK performs no retries.
+
+The cataloged statuses above describe known provider responses, not every
+status the server or network can return.
+
+<Warning>
+  Request and response types are compile-time contracts only. The SDK does not validate request
+  strings, language codes, categories, blobs, successful response status codes, response field
+  presence, field types, or nesting at runtime. A successful body is parsed and cast to the declared
+  response type; malformed JSON may be returned as text under that type, while an empty successful
+  body becomes `undefined`.
+</Warning>
+
+Service-specific interfaces are exported from `egov.js/eGovAi`. The core
+`EgovCallOptions`, `EgovEnvironment`, `EgovFetch`, and `EgovTransportOptions`
+types are exported from `egov.js/core`.
