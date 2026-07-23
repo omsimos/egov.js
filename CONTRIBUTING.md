@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for helping improve `@omsimos/egov`.
+Thank you for helping improve `egov.js`.
 
 ## Development
 

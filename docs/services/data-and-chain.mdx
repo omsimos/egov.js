@@ -13,7 +13,7 @@ description: Read structured Philippine budget records with eGov Compass and acc
 records and dashboards.
 
 ```ts
-import { eGovCompassApi } from "@omsimos/egov/eGovCompass";
+import { eGovCompassApi } from "egov.js/eGovCompass";
 
 const compass = eGovCompassApi.fromEnv({
   baseUrl: "https://dbm-ws.oueg.info",
@@ -36,7 +36,7 @@ unit, and source metadata when presenting figures to users.
 raw signed transaction submission.
 
 ```ts
-import { eGovChainApi } from "@omsimos/egov/eGovChain";
+import { eGovChainApi } from "egov.js/eGovChain";
 
 const chain = eGovChainApi.create();
 const [chainId, blockNumber] = await Promise.all([chain.chainId(), chain.blockNumber()]);

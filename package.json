@@ -1,5 +1,5 @@
 {
-  "name": "@omsimos/egov",
+  "name": "egov.js",
   "version": "0.1.0",
   "description": "Typed JavaScript and TypeScript SDK for Philippine eGov APIs.",
   "keywords": [

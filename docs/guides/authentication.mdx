@@ -14,7 +14,7 @@ secret manager. Use them when secrets come from a vault, platform binding, or
 request-scoped credential provider.
 
 ```ts
-import { eMessageApi } from "@omsimos/egov/eMessage";
+import { eMessageApi } from "egov.js/eMessage";
 
 const client = eMessageApi.create({
   accessToken: await secrets.get("EMESSAGE_ACCESS_TOKEN"),

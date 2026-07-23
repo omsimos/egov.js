@@ -13,7 +13,7 @@ description: Combine eGov SSO, eVerify, and Face Liveness clients for server-sid
 profile from the partner authentication endpoint.
 
 ```ts
-import { eGovSsoApi } from "@omsimos/egov/eGovSso";
+import { eGovSsoApi } from "egov.js/eGovSso";
 
 const sso = eGovSsoApi.fromEnv({
   baseUrl: "https://hackathon-sso.e.gov.ph",
@@ -32,7 +32,7 @@ const citizen = await sso.authenticate(token.access_token);
 verification. The environment client also exposes the configured public key.
 
 ```ts
-import { eVerifyApi } from "@omsimos/egov/eVerify";
+import { eVerifyApi } from "egov.js/eVerify";
 
 const verify = eVerifyApi.fromEnv({
   baseUrl: "https://hackathon-everify-api.e.gov.ph",
@@ -47,7 +47,7 @@ const token = await verify.authenticate();
 the resulting session token.
 
 ```ts
-import { eGovFaceLivenessApi } from "@omsimos/egov/eGovFaceLiveness";
+import { eGovFaceLivenessApi } from "egov.js/eGovFaceLiveness";
 
 const liveness = eGovFaceLivenessApi.fromEnv({
   baseUrl: "https://hackathon-face-liveness-api.e.gov.ph",

@@ -1,5 +1,5 @@
 {
-  "name": "@omsimos/egov-docs",
+  "name": "egov.js-docs",
   "private": true,
   "type": "module",
   "scripts": {

@@ -13,7 +13,7 @@ description: Understand root and service subpath imports, dual ESM and CommonJS 
 module.
 
 ```ts
-import { eGovAiApi, eGovSsoApi } from "@omsimos/egov";
+import { eGovAiApi, eGovSsoApi } from "egov.js";
 ```
 
 ## Service subpaths
@@ -22,15 +22,15 @@ import { eGovAiApi, eGovSsoApi } from "@omsimos/egov";
 and give bundlers the smallest possible graph.
 
 ```ts
-import { eGovSsoApi } from "@omsimos/egov/eGovSso";
-import type { EgovSsoCitizenProfile } from "@omsimos/egov/eGovSso";
+import { eGovSsoApi } from "egov.js/eGovSso";
+import type { EgovSsoCitizenProfile } from "egov.js/eGovSso";
 ```
 
 **Dedicated type subpaths remain available** for consumers that separate runtime
 and contract imports.
 
 ```ts
-import type { EgovSsoCitizenProfile } from "@omsimos/egov/eGovSso/types";
+import type { EgovSsoCitizenProfile } from "egov.js/eGovSso/types";
 ```
 
 ## Module formats
@@ -40,7 +40,7 @@ map routes `import` to `.js` and `require` to `.cjs` while keeping private build
 files inaccessible.
 
 ```js
-const { eGovChainApi } = require("@omsimos/egov/eGovChain");
+const { eGovChainApi } = require("egov.js/eGovChain");
 ```
 
 <Note>

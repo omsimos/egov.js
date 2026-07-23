@@ -13,7 +13,7 @@ description: Use eMessage, eReport, and eGovPay for typed citizen notifications,
 E.164 format.
 
 ```ts
-import { eMessageApi } from "@omsimos/egov/eMessage";
+import { eMessageApi } from "egov.js/eMessage";
 
 const messaging = eMessageApi.fromEnv({
   baseUrl: "https://ws-message.e.gov.ph",
@@ -31,7 +31,7 @@ await messaging.sendSms({
 region-to-barangay location datasets.
 
 ```ts
-import { eReportApi } from "@omsimos/egov/eReport";
+import { eReportApi } from "egov.js/eReport";
 
 const reports = eReportApi.fromEnv({
   baseUrl: "https://stg-ereport-ws.oueg.info",
@@ -47,7 +47,7 @@ const types = await reports.listReportTypes(token.access_token);
 creation, lookup, and voiding.
 
 ```ts
-import { eGovPayApi } from "@omsimos/egov/eGovPay";
+import { eGovPayApi } from "egov.js/eGovPay";
 
 const payments = eGovPayApi.fromEnv({
   baseUrl: "https://egovpay-pgi-ws-dev.oueg.info",

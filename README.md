@@ -2,7 +2,7 @@
 
 Typed JavaScript and TypeScript SDK for Philippine eGov APIs.
 
-`@omsimos/egov` provides dependency-free clients for nine eGov partner
+`egov.js` provides dependency-free clients for nine eGov partner
 services. It ships ESM and CommonJS builds, TypeScript declarations, explicit
 service subpaths, and a shared fetch-based transport.
 
@@ -12,17 +12,17 @@ service subpaths, and a shared fetch-based transport.
 
 ## Services
 
-| Import                           | Service       | Capability                                                             |
-| -------------------------------- | ------------- | ---------------------------------------------------------------------- |
-| `@omsimos/egov/eGovAi`           | eGov AI       | Text generation, translation, document extraction, and credit tracking |
-| `@omsimos/egov/eGovCompass`      | eGov Compass  | Budget releases, allocations, obligations, and disbursements           |
-| `@omsimos/egov/eMessage`         | eMessage      | SMS delivery                                                           |
-| `@omsimos/egov/eGovChain`        | eGovChain     | EVM-compatible JSON-RPC reads and signed transaction submission        |
-| `@omsimos/egov/eReport`          | eReport       | Complaint submission, OTP verification, reports, and location datasets |
-| `@omsimos/egov/eGovSso`          | eGov SSO      | Citizen sign-in token exchange and profile retrieval                   |
-| `@omsimos/egov/eVerify`          | eVerify       | Identity and QR verification                                           |
-| `@omsimos/egov/eGovPay`          | eGovPay       | Payment creation, lookup, and voiding                                  |
-| `@omsimos/egov/eGovFaceLiveness` | Face Liveness | Liveness sessions and verification results                             |
+| Import                     | Service       | Capability                                                             |
+| -------------------------- | ------------- | ---------------------------------------------------------------------- |
+| `egov.js/eGovAi`           | eGov AI       | Text generation, translation, document extraction, and credit tracking |
+| `egov.js/eGovCompass`      | eGov Compass  | Budget releases, allocations, obligations, and disbursements           |
+| `egov.js/eMessage`         | eMessage      | SMS delivery                                                           |
+| `egov.js/eGovChain`        | eGovChain     | EVM-compatible JSON-RPC reads and signed transaction submission        |
+| `egov.js/eReport`          | eReport       | Complaint submission, OTP verification, reports, and location datasets |
+| `egov.js/eGovSso`          | eGov SSO      | Citizen sign-in token exchange and profile retrieval                   |
+| `egov.js/eVerify`          | eVerify       | Identity and QR verification                                           |
+| `egov.js/eGovPay`          | eGovPay       | Payment creation, lookup, and voiding                                  |
+| `egov.js/eGovFaceLiveness` | Face Liveness | Liveness sessions and verification results                             |
 
 ## Installation
 
@@ -33,13 +33,13 @@ that tarball in your application:
 ```bash
 pnpm install
 pnpm pack
-pnpm add /path/to/omsimos-egov-0.1.0.tgz
+pnpm add /path/to/egov.js-0.1.0.tgz
 ```
 
 Once public npm publishing is enabled, installation will be:
 
 ```bash
-pnpm add @omsimos/egov
+pnpm add egov.js
 ```
 
 Node.js 22.18 or newer is supported. Explicitly configured clients also work in
@@ -50,7 +50,7 @@ modern runtimes that provide Fetch, Web Crypto, `Blob`, and `FormData`.
 Import a service subpath so applications only load the API surface they use:
 
 ```ts
-import { eGovAiApi } from "@omsimos/egov/eGovAi";
+import { eGovAiApi } from "egov.js/eGovAi";
 
 const ai = eGovAiApi.fromEnv({
   baseUrl: "https://egov-ai-core-ws.oueg.info",
@@ -71,7 +71,7 @@ staging and production endpoints cannot be confused silently.
 Use `create(...)` when credentials come from another secret provider:
 
 ```ts
-import { eMessageApi } from "@omsimos/egov/eMessage";
+import { eMessageApi } from "egov.js/eMessage";
 
 const messaging = eMessageApi.create({
   accessToken: secrets.emessageToken,
@@ -93,7 +93,7 @@ All non-successful HTTP responses throw `EgovApiError` with the normalized
 status, headers, parsed body, method, and URL:
 
 ```ts
-import { EgovApiError } from "@omsimos/egov/core";
+import { EgovApiError } from "egov.js/core";
 
 try {
   await client.getTransaction(transactionUuid);
