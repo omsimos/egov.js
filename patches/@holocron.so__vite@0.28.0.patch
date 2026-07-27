@@ -1,0 +1,246 @@
+diff --git a/dist/lib/openapi/curl-generator.d.ts b/dist/lib/openapi/curl-generator.d.ts
+index 7f087579e674428ad9e83fafa86e2ba70db0759a..6adb604d3aecf4defdb0558aeb22c86d51eba2bc 100644
+--- a/dist/lib/openapi/curl-generator.d.ts
++++ b/dist/lib/openapi/curl-generator.d.ts
+@@ -4,6 +4,6 @@
+  * Takes an extracted operation + server base URL and produces a formatted
+  * cURL command string with headers, auth, query params, and request body.
+  */
+-import type { ExtractedOperation } from './process.ts';
+-export declare function generateCurl(op: ExtractedOperation, baseUrl?: string): string;
++import type { DereferencedDocument, ExtractedOperation } from './process.ts';
++export declare function generateCurl(op: ExtractedOperation, baseUrl?: string, document?: DereferencedDocument): string;
+ //# sourceMappingURL=curl-generator.d.ts.map
+diff --git a/dist/lib/openapi/curl-generator.js b/dist/lib/openapi/curl-generator.js
+index cf9bed248f8dc2b624a09318718f32f01bd574b6..eb4fa306e091ab9c496fb15c9fe722839acf0236 100644
+--- a/dist/lib/openapi/curl-generator.js
++++ b/dist/lib/openapi/curl-generator.js
+@@ -30,7 +30,7 @@ function sampleParam(param) {
+     }
+     return `<${param.name}>`;
+ }
+-export function generateCurl(op, baseUrl) {
++export function generateCurl(op, baseUrl, document) {
+     const base = baseUrl ?? op.servers[0]?.url ?? 'https://api.example.com';
+     // Build URL with path params substituted
+     let urlPath = op.path;
+@@ -55,15 +55,27 @@ export function generateCurl(op, baseUrl) {
+     for (const p of headerParams) {
+         parts.push(`  -H ${quote(`${p.name}: ${sampleParam(p)}`)}`);
+     }
+-    // Auth headers from security
+-    if (op.security.length > 0) {
+-        // Just add a placeholder Authorization header for bearer/apiKey
+-        parts.push(`  -H ${quote('Authorization: Bearer <token>')}`);
++    // Auth headers from the first alternative security requirement
++    const securitySchemes = document?.dereferenced.components?.securitySchemes;
++    for (const schemeName of Object.keys(op.security[0] ?? {})) {
++        const scheme = securitySchemes?.[schemeName];
++        if (scheme?.type === 'apiKey' && scheme.in === 'header') {
++            parts.push(`  -H ${quote(`${scheme.name}: <token>`)}`);
++        }
++        else if (scheme?.type === 'http' && scheme.scheme === 'basic') {
++            parts.push(`  -H ${quote('Authorization: Basic <credentials>')}`);
++        }
++        else if ((scheme?.type === 'http' && scheme.scheme === 'bearer') ||
++            scheme?.type === 'oauth2' ||
++            scheme?.type === 'openIdConnect') {
++            parts.push(`  -H ${quote('Authorization: Bearer <token>')}`);
++        }
+     }
+     // Request body
+     const requestBody = op.operation.requestBody;
+     if (requestBody?.content) {
+         const jsonContent = requestBody.content['application/json'];
++        const multipartContent = requestBody.content['multipart/form-data'];
+         if (jsonContent) {
+             parts.push(`  -H ${quote('Content-Type: application/json')}`);
+             const schema = jsonContent.schema;
+@@ -77,6 +89,14 @@ export function generateCurl(op, baseUrl) {
+                 }
+             }
+         }
++        else if (multipartContent) {
++            const schema = multipartContent.schema;
++            for (const [name, property] of Object.entries(schema?.properties ?? {})) {
++                const field = property;
++                const value = field.format === 'binary' ? `@<${name}>` : sample(field);
++                parts.push(`  -F ${quote(`${name}=${String(value ?? `<${name}>`)}`)}`);
++            }
++        }
+         else {
+             // Use first available content type
+             const [contentType, mediaObj] = Object.entries(requestBody.content)[0] ?? [];
+diff --git a/dist/lib/openapi/generate.js b/dist/lib/openapi/generate.js
+index 3b45f84bffbeb2499ba4fe6a6e3b52bf5bb50baa..e1650aad8d208382fe47cc5f6ae201dc31961d59 100644
+--- a/dist/lib/openapi/generate.js
++++ b/dist/lib/openapi/generate.js
+@@ -62,7 +62,7 @@ export async function generateOpenAPIPages({ spec, slugPrefix = 'api', }) {
+             doc,
+             title: operationTitle(op),
+             sidebarTitle: operationSidebarTitle(op),
+-            curl: generateCurl(op),
++            curl: generateCurl(op, undefined, doc),
+         });
+         return slug;
+     };
+@@ -265,7 +265,9 @@ function extractSecurityInfo(op, doc) {
+             if (!scheme)
+                 continue;
+             result.push({
+-                name: schemeName,
++                name: scheme.type === 'apiKey' && typeof scheme.name === 'string'
++                    ? scheme.name
++                    : schemeName,
+                 type: scheme.type,
+                 scheme: scheme.scheme,
+                 in: scheme.type === 'apiKey' ? scheme.in : scheme.type === 'http' ? 'header' : undefined,
+diff --git a/dist/lib/openapi/provider.js b/dist/lib/openapi/provider.js
+index 40d5fa07006b07e38b214ddd0d7646b74059fb9f..8f9e79ba9340febab3027480e958386a58bd730c 100644
+--- a/dist/lib/openapi/provider.js
++++ b/dist/lib/openapi/provider.js
+@@ -86,7 +86,7 @@ export const openapiProvider = {
+                 doc,
+                 title: operationTitle(op),
+                 sidebarTitle: operationSidebarTitle(op),
+-                curl: generateCurl(op),
++                curl: generateCurl(op, undefined, doc),
+             });
+             return slug;
+         };
+@@ -458,7 +458,9 @@ function extractSecurityInfo(op, doc) {
+             if (!scheme)
+                 continue;
+             result.push({
+-                name: schemeName,
++                name: scheme.type === 'apiKey' && typeof scheme.name === 'string'
++                    ? scheme.name
++                    : schemeName,
+                 type: scheme.type,
+                 scheme: scheme.scheme,
+                 in: scheme.type === 'apiKey' ? scheme.in : scheme.type === 'http' ? 'header' : undefined,
+diff --git a/src/lib/openapi/curl-generator.ts b/src/lib/openapi/curl-generator.ts
+index 81866a61990d9352d8f88eaf8b1feb6288b5859a..df51f0aeb73b0feb2f88ca7a3aad3a5c32cae5c5 100644
+--- a/src/lib/openapi/curl-generator.ts
++++ b/src/lib/openapi/curl-generator.ts
+@@ -6,7 +6,7 @@
+  */
+ 
+ import type { OpenAPIV3 } from 'openapi-types'
+-import type { ExtractedOperation } from './process.ts'
++import type { DereferencedDocument, ExtractedOperation } from './process.ts'
+ import { sample } from '../sample.ts'
+ 
+ function quote(s: string): string {
+@@ -31,7 +31,11 @@ function sampleParam(param: OpenAPIV3.ParameterObject): string {
+   return `<${param.name}>`
+ }
+ 
+-export function generateCurl(op: ExtractedOperation, baseUrl?: string): string {
++export function generateCurl(
++  op: ExtractedOperation,
++  baseUrl?: string,
++  document?: DereferencedDocument,
++): string {
+   const base = baseUrl ?? op.servers[0]?.url ?? 'https://api.example.com'
+ 
+   // Build URL with path params substituted
+@@ -61,16 +65,30 @@ export function generateCurl(op: ExtractedOperation, baseUrl?: string): string {
+     parts.push(`  -H ${quote(`${p.name}: ${sampleParam(p)}`)}`)
+   }
+ 
+-  // Auth headers from security
+-  if (op.security.length > 0) {
+-    // Just add a placeholder Authorization header for bearer/apiKey
+-    parts.push(`  -H ${quote('Authorization: Bearer <token>')}`)
++  // Auth headers from the first alternative security requirement
++  const securitySchemes = (document?.dereferenced.components as
++    | Record<string, unknown>
++    | undefined)?.securitySchemes as Record<string, OpenAPIV3.SecuritySchemeObject> | undefined
++  for (const schemeName of Object.keys(op.security[0] ?? {})) {
++    const scheme = securitySchemes?.[schemeName]
++    if (scheme?.type === 'apiKey' && scheme.in === 'header') {
++      parts.push(`  -H ${quote(`${scheme.name}: <token>`)}`)
++    } else if (scheme?.type === 'http' && scheme.scheme === 'basic') {
++      parts.push(`  -H ${quote('Authorization: Basic <credentials>')}`)
++    } else if (
++      (scheme?.type === 'http' && scheme.scheme === 'bearer') ||
++      scheme?.type === 'oauth2' ||
++      scheme?.type === 'openIdConnect'
++    ) {
++      parts.push(`  -H ${quote('Authorization: Bearer <token>')}`)
++    }
+   }
+ 
+   // Request body
+   const requestBody = op.operation.requestBody as OpenAPIV3.RequestBodyObject | undefined
+   if (requestBody?.content) {
+     const jsonContent = requestBody.content['application/json']
++    const multipartContent = requestBody.content['multipart/form-data']
+     if (jsonContent) {
+       parts.push(`  -H ${quote('Content-Type: application/json')}`)
+       const schema = jsonContent.schema as OpenAPIV3.SchemaObject | undefined
+@@ -82,6 +100,13 @@ export function generateCurl(op: ExtractedOperation, baseUrl?: string): string {
+           parts.push(`  -d ${singleQuote(JSON.stringify(sampleBody, null, 2))}`)
+         }
+       }
++    } else if (multipartContent) {
++      const schema = multipartContent.schema as OpenAPIV3.SchemaObject | undefined
++      for (const [name, property] of Object.entries(schema?.properties ?? {})) {
++        const field = property as OpenAPIV3.SchemaObject
++        const value = field.format === 'binary' ? `@<${name}>` : sample(field as Record<string, unknown>)
++        parts.push(`  -F ${quote(`${name}=${String(value ?? `<${name}>`)}`)}`)
++      }
+     } else {
+       // Use first available content type
+       const [contentType, mediaObj] = Object.entries(requestBody.content)[0] ?? []
+diff --git a/src/lib/openapi/generate.ts b/src/lib/openapi/generate.ts
+index d2ea051be2a84d6c9c9b91195e247e46eae64f63..c6dc3372ce2bdb0cb59002649b0f9c8a2bd6d545 100644
+--- a/src/lib/openapi/generate.ts
++++ b/src/lib/openapi/generate.ts
+@@ -92,7 +92,7 @@ export async function generateOpenAPIPages({
+       doc,
+       title: operationTitle(op),
+       sidebarTitle: operationSidebarTitle(op),
+-      curl: generateCurl(op),
++      curl: generateCurl(op, undefined, doc),
+     })
+     return slug
+   }
+@@ -329,7 +329,10 @@ function extractSecurityInfo(
+       const scheme = schemes[schemeName]
+       if (!scheme) continue
+       result.push({
+-        name: schemeName,
++        name:
++          scheme.type === 'apiKey' && typeof scheme.name === 'string'
++            ? scheme.name
++            : schemeName,
+         type: scheme.type as string,
+         scheme: scheme.scheme as string | undefined,
+         in: scheme.type === 'apiKey' ? (scheme.in as string) : scheme.type === 'http' ? 'header' : undefined,
+diff --git a/src/lib/openapi/provider.ts b/src/lib/openapi/provider.ts
+index cee832ac006fa49dafb8ccddb98f13f8db21c926..168f0f50bacdfb1e09ff796c0650379125690ea1 100644
+--- a/src/lib/openapi/provider.ts
++++ b/src/lib/openapi/provider.ts
+@@ -108,7 +108,7 @@ export const openapiProvider: VirtualTabProvider = {
+         doc,
+         title: operationTitle(op),
+         sidebarTitle: operationSidebarTitle(op),
+-        curl: generateCurl(op),
++        curl: generateCurl(op, undefined, doc),
+       })
+       return slug
+     }
+@@ -530,7 +530,10 @@ function extractSecurityInfo(
+       const scheme = schemes[schemeName]
+       if (!scheme) continue
+       result.push({
+-        name: schemeName,
++        name:
++          scheme.type === 'apiKey' && typeof scheme.name === 'string'
++            ? scheme.name
++            : schemeName,
+         type: scheme.type as string,
+         scheme: scheme.scheme as string | undefined,
+         in: scheme.type === 'apiKey' ? (scheme.in as string) : scheme.type === 'http' ? 'header' : undefined,

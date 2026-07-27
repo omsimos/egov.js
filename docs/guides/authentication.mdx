@@ -2,58 +2,59 @@
 $schema: https://holocron.so/frontmatter.json
 title: Configure eGov credentials safely
 sidebarTitle: Authentication
-description: Choose explicit or environment-backed clients, keep partner secrets server-side, and handle short-lived service tokens safely.
+description: Configure generated clients with bearer tokens and provider-specific API-key headers.
 ---
 
 # Configure credentials safely
 
-## Choose a constructor
+## Bearer tokens
 
-**Explicit clients** accept credentials either in `create(...)` or in a token or
-authentication method, depending on the service. They work with any secret
-manager and are appropriate when credentials come from a vault, platform
-binding, or request-scoped provider.
+Pass the raw token through an operation's `auth` option. The generated SDK adds
+the bearer scheme declared in OpenAPI.
 
 ```ts
-import { eMessageApi } from "egov.js/eMessage";
+import { egovSso } from "egov.js";
 
-const client = eMessageApi.create({
-  accessToken: await secrets.get("EMESSAGE_ACCESS_TOKEN"),
-  baseUrl: "https://ws-message.e.gov.ph",
+const profile = await egovSso.authenticate({
+  client,
+  auth: accessToken,
+  throwOnError: true,
 });
 ```
 
-**Environment-backed clients** use `fromEnv(...)` and fail fast when a required
-value is missing. You can pass a custom environment object for runtimes without
-Node's `process.env`.
+For several calls with the same token, configure it on a dedicated client:
 
 ```ts
-const client = eMessageApi.fromEnv({
-  baseUrl: "https://ws-message.e.gov.ph",
-  env: { EMESSAGE_ACCESS_TOKEN: platform.env.EMESSAGE_ACCESS_TOKEN },
+const authenticatedClient = createClient({
+  auth: accessToken,
+  baseUrl: serviceBaseUrl,
 });
 ```
+
+## API keys
+
+Configure API-key headers when creating a service client. Header names differ
+between providers and are documented by each operation in `openapi.json`.
+
+```ts
+const compass = createClient({
+  baseUrl: compassBaseUrl,
+  headers: {
+    "X-API-Key": process.env.EGOVCOMPASS_API_KEY!,
+  },
+});
+```
+
+Other provider headers include `X-EMESSAGE-Auth`, `X-eGovPay-Token`, and
+`X-EReport-View-Token`.
+
+## Credential ownership
+
+The generated SDK does not load environment variables or secrets. Applications
+must obtain credentials from their environment, vault, or platform binding and
+pass them through `auth` or `headers`.
 
 <Warning>
   Never expose **partner secrets, API keys, or access tokens** in browser code, public logs,
   screenshots, issue reports, or client-visible error payloads.
 </Warning>
-
-## Handle token exchanges
-
-**eGov AI, eGov SSO, eReport, and eVerify** exchange a long-lived partner
-credential or one-time code for a shorter-lived token. Store that token only as
-long as its workflow requires and honor expiry metadata when the service returns
-it. The eGov SSO token response does not expose an expiry field.
-
-**eGov SSO exchange codes** should be treated as single-use values. Perform the
-exchange and citizen-profile request on the server, then issue your own secure
-application session.
-
-## Separate hosts from secrets
-
-**Every `fromEnv(...)` call still requires `baseUrl`**. Keeping the host explicit
-lets deployment configuration distinguish sandbox, staging, and production
-without overloading the credential lookup.
-
-See the [service overview](../services/overview.mdx) for every credential name.

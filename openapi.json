@@ -1,0 +1,2861 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "egov.js API Wire Contract",
+    "version": "0.1.0",
+    "description": "Wire-level OpenAPI contract for the Philippine eGov services implemented by egov.js. Each operation declares the documented provider host used by generated API examples; consumers can override it when targeting another environment."
+  },
+  "tags": [
+    {
+      "name": "eGov AI",
+      "description": "Document intelligence, translation, and conversational AI services.",
+      "externalDocs": {
+        "description": "Provider API catalog",
+        "url": "https://platforms.e.gov.ph/dashboard/api-catalogs/egov-ai"
+      }
+    },
+    {
+      "name": "eGovChain",
+      "description": "Zero-fee Hyperledger Besu JSON-RPC government blockchain.",
+      "externalDocs": {
+        "description": "Provider API catalog",
+        "url": "https://platforms.e.gov.ph/dashboard/api-catalogs/egovchain"
+      }
+    },
+    {
+      "name": "Compass",
+      "description": "Public DBM appropriations, allotment, release, and spending records.",
+      "externalDocs": {
+        "description": "Provider API catalog",
+        "url": "https://platforms.e.gov.ph/dashboard/api-catalogs/compass"
+      }
+    },
+    {
+      "name": "Face Liveness",
+      "description": "Liveness sessions and verification results.",
+      "externalDocs": {
+        "description": "Provider API catalog",
+        "url": "https://platforms.e.gov.ph/dashboard/api-catalogs/face-liveness"
+      }
+    },
+    {
+      "name": "eGovPay",
+      "description": "Government payment transactions.",
+      "externalDocs": {
+        "description": "Provider API catalog",
+        "url": "https://platforms.e.gov.ph/dashboard/api-catalogs/egovpay"
+      }
+    },
+    {
+      "name": "eGov SSO",
+      "description": "Single Sign-On integration for eGov partners.",
+      "externalDocs": {
+        "description": "Provider API catalog",
+        "url": "https://platforms.e.gov.ph/dashboard/api-catalogs/egov-sso"
+      }
+    },
+    {
+      "name": "eMessage",
+      "description": "SMS delivery through eMessage.",
+      "externalDocs": {
+        "description": "Provider API catalog",
+        "url": "https://platforms.e.gov.ph/dashboard/api-catalogs/emessage"
+      }
+    },
+    {
+      "name": "eReport",
+      "description": "Citizen complaint submission, verification, and tracking.",
+      "externalDocs": {
+        "description": "Provider API catalog",
+        "url": "https://platforms.e.gov.ph/dashboard/api-catalogs/ereport"
+      }
+    },
+    {
+      "name": "eVerify",
+      "description": "PhilSys identity verification with consent and face liveness.",
+      "externalDocs": {
+        "description": "Provider API catalog",
+        "url": "https://platforms.e.gov.ph/dashboard/api-catalogs/everify"
+      }
+    }
+  ],
+  "paths": {
+    "/api/v1/egov/integration/token": {
+      "servers": [
+        {
+          "url": "https://egov-ai-core-ws.oueg.info",
+          "description": "Documented eGov AI provider host."
+        }
+      ],
+      "post": {
+        "tags": ["eGov AI"],
+        "summary": "Generate an access token",
+        "operationId": "egovAiGenerateAccessToken",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EgovAiAccessTokenRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Access token generated.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EgovAiAccessTokenResponse" }
+              }
+            }
+          },
+          "401": { "description": "Invalid access code." }
+        }
+      }
+    },
+    "/api/v1/egov/integration/ai_assistant/generate": {
+      "servers": [
+        {
+          "url": "https://egov-ai-core-ws.oueg.info",
+          "description": "Documented eGov AI provider host."
+        }
+      ],
+      "post": {
+        "tags": ["eGov AI"],
+        "summary": "Generate AI assistant content",
+        "operationId": "egovAiGenerateAssistant",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EgovAiPromptRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generated content.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EgovAiGeneratedTextResponse" }
+              }
+            }
+          },
+          "401": { "description": "Invalid or expired access token." }
+        }
+      }
+    },
+    "/api/v1/egov/integration/speech_maker/generate": {
+      "servers": [
+        {
+          "url": "https://egov-ai-core-ws.oueg.info",
+          "description": "Documented eGov AI provider host."
+        }
+      ],
+      "post": {
+        "tags": ["eGov AI"],
+        "summary": "Generate speech content",
+        "operationId": "egovAiGenerateSpeech",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EgovAiPromptRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generated content.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EgovAiGeneratedTextResponse" }
+              }
+            }
+          },
+          "401": { "description": "Invalid or expired access token." }
+        }
+      }
+    },
+    "/api/v1/egov/integration/tourism/generate": {
+      "servers": [
+        {
+          "url": "https://egov-ai-core-ws.oueg.info",
+          "description": "Documented eGov AI provider host."
+        }
+      ],
+      "post": {
+        "tags": ["eGov AI"],
+        "summary": "Generate tourism content",
+        "operationId": "egovAiGenerateTourism",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EgovAiPromptRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generated content.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EgovAiGeneratedTextResponse" }
+              }
+            }
+          },
+          "401": { "description": "Invalid or expired access token." }
+        }
+      }
+    },
+    "/api/v1/egov/integration/laws_and_regulations/generate": {
+      "servers": [
+        {
+          "url": "https://egov-ai-core-ws.oueg.info",
+          "description": "Documented eGov AI provider host."
+        }
+      ],
+      "post": {
+        "tags": ["eGov AI"],
+        "summary": "Generate laws and regulations content",
+        "operationId": "egovAiGenerateLawsAndRegulations",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EgovAiPromptRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generated content.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EgovAiGeneratedTextResponse" }
+              }
+            }
+          },
+          "401": { "description": "Invalid or expired access token." }
+        }
+      }
+    },
+    "/api/v1/egov/integration/translator/generate": {
+      "servers": [
+        {
+          "url": "https://egov-ai-core-ws.oueg.info",
+          "description": "Documented eGov AI provider host."
+        }
+      ],
+      "post": {
+        "tags": ["eGov AI"],
+        "summary": "Translate text",
+        "operationId": "egovAiTranslate",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EgovAiTranslationRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Translated and transliterated text.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EgovAiTranslationResponse" }
+              }
+            }
+          },
+          "401": { "description": "Invalid or expired access token." }
+        }
+      }
+    },
+    "/api/v1/egov/integration/document_extractor/generate": {
+      "servers": [
+        {
+          "url": "https://egov-ai-core-ws.oueg.info",
+          "description": "Documented eGov AI provider host."
+        }
+      ],
+      "post": {
+        "tags": ["eGov AI"],
+        "summary": "Extract document content",
+        "operationId": "egovAiExtractDocument",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": { "$ref": "#/components/schemas/EgovAiDocumentRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Extracted document content.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EgovAiDocumentResponse" }
+              }
+            }
+          },
+          "401": { "description": "Invalid or expired access token." }
+        }
+      }
+    },
+    "/api/v1/egov/integration/credits": {
+      "servers": [
+        {
+          "url": "https://egov-ai-core-ws.oueg.info",
+          "description": "Documented eGov AI provider host."
+        }
+      ],
+      "get": {
+        "tags": ["eGov AI"],
+        "summary": "Get token credits",
+        "operationId": "egovAiGetTokenCredits",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Credit usage and remaining balance.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EgovAiCreditsResponse" }
+              }
+            }
+          },
+          "401": { "description": "Invalid or expired access token." }
+        }
+      }
+    },
+    "/": {
+      "servers": [
+        {
+          "url": "https://hackathon-blockchain.e.gov.ph",
+          "description": "Documented eGovChain hackathon RPC host."
+        }
+      ],
+      "post": {
+        "tags": ["eGovChain"],
+        "summary": "Call an eGovChain JSON-RPC method",
+        "operationId": "egovChainJsonRpc",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EgovChainRpcRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON-RPC result or error object.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    { "$ref": "#/components/schemas/EgovChainRpcSuccess" },
+                    { "$ref": "#/components/schemas/EgovChainRpcFailure" }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-egov-rpc-catalog": [
+          { "id": "rpc-modules", "name": "rpc_modules", "rpcMethod": "rpc_modules" },
+          {
+            "id": "web3-client-version",
+            "name": "web3_clientVersion",
+            "rpcMethod": "web3_clientVersion"
+          },
+          { "id": "web3-sha3", "name": "web3_sha3", "rpcMethod": "web3_sha3" },
+          { "id": "net-version", "name": "net_version", "rpcMethod": "net_version" },
+          { "id": "net-listening", "name": "net_listening", "rpcMethod": "net_listening" },
+          { "id": "net-peer-count", "name": "net_peerCount", "rpcMethod": "net_peerCount" },
+          { "id": "net-enode", "name": "net_enode", "rpcMethod": "net_enode" },
+          { "id": "net-services", "name": "net_services", "rpcMethod": "net_services" },
+          { "id": "eth-chain-id", "name": "eth_chainId", "rpcMethod": "eth_chainId" },
+          {
+            "id": "eth-protocol-version",
+            "name": "eth_protocolVersion",
+            "rpcMethod": "eth_protocolVersion"
+          },
+          { "id": "eth-syncing", "name": "eth_syncing", "rpcMethod": "eth_syncing" },
+          { "id": "eth-coinbase", "name": "eth_coinbase", "rpcMethod": "eth_coinbase" },
+          { "id": "eth-mining", "name": "eth_mining", "rpcMethod": "eth_mining" },
+          { "id": "eth-hashrate", "name": "eth_hashrate", "rpcMethod": "eth_hashrate" },
+          { "id": "eth-gas-price", "name": "eth_gasPrice", "rpcMethod": "eth_gasPrice" },
+          {
+            "id": "eth-max-priority-fee",
+            "name": "eth_maxPriorityFeePerGas",
+            "rpcMethod": "eth_maxPriorityFeePerGas"
+          },
+          { "id": "eth-fee-history", "name": "eth_feeHistory", "rpcMethod": "eth_feeHistory" },
+          {
+            "id": "eth-blob-base-fee",
+            "name": "eth_blobBaseFee",
+            "rpcMethod": "eth_blobBaseFee"
+          },
+          {
+            "id": "eth-block-number",
+            "name": "eth_blockNumber",
+            "rpcMethod": "eth_blockNumber"
+          },
+          { "id": "eth-accounts", "name": "eth_accounts", "rpcMethod": "eth_accounts" },
+          {
+            "id": "eth-get-balance",
+            "name": "eth_getBalance",
+            "rpcMethod": "eth_getBalance"
+          },
+          {
+            "id": "eth-get-balance-at-block",
+            "name": "eth_getBalance (at block)",
+            "rpcMethod": "eth_getBalance"
+          },
+          {
+            "id": "eth-get-transaction-count",
+            "name": "eth_getTransactionCount",
+            "rpcMethod": "eth_getTransactionCount"
+          },
+          {
+            "id": "eth-get-transaction-count-pending",
+            "name": "eth_getTransactionCount (pending)",
+            "rpcMethod": "eth_getTransactionCount"
+          },
+          { "id": "eth-get-code", "name": "eth_getCode", "rpcMethod": "eth_getCode" },
+          {
+            "id": "eth-get-storage-at",
+            "name": "eth_getStorageAt",
+            "rpcMethod": "eth_getStorageAt"
+          },
+          { "id": "eth-get-proof", "name": "eth_getProof", "rpcMethod": "eth_getProof" },
+          {
+            "id": "eth-get-block-latest",
+            "name": "eth_getBlockByNumber (latest)",
+            "rpcMethod": "eth_getBlockByNumber"
+          },
+          {
+            "id": "eth-get-block-full",
+            "name": "eth_getBlockByNumber (full txs)",
+            "rpcMethod": "eth_getBlockByNumber"
+          },
+          {
+            "id": "eth-get-block-by-hash",
+            "name": "eth_getBlockByHash",
+            "rpcMethod": "eth_getBlockByHash"
+          },
+          {
+            "id": "eth-block-tx-count-number",
+            "name": "eth_getBlockTransactionCountByNumber",
+            "rpcMethod": "eth_getBlockTransactionCountByNumber"
+          },
+          {
+            "id": "eth-block-tx-count-hash",
+            "name": "eth_getBlockTransactionCountByHash",
+            "rpcMethod": "eth_getBlockTransactionCountByHash"
+          },
+          {
+            "id": "eth-get-block-receipts",
+            "name": "eth_getBlockReceipts",
+            "rpcMethod": "eth_getBlockReceipts"
+          },
+          {
+            "id": "eth-uncle-count-number",
+            "name": "eth_getUncleCountByBlockNumber",
+            "rpcMethod": "eth_getUncleCountByBlockNumber"
+          },
+          {
+            "id": "eth-uncle-count-hash",
+            "name": "eth_getUncleCountByBlockHash",
+            "rpcMethod": "eth_getUncleCountByBlockHash"
+          },
+          {
+            "id": "eth-get-uncle",
+            "name": "eth_getUncleByBlockNumberAndIndex",
+            "rpcMethod": "eth_getUncleByBlockNumberAndIndex"
+          },
+          {
+            "id": "eth-get-transaction",
+            "name": "eth_getTransactionByHash",
+            "rpcMethod": "eth_getTransactionByHash"
+          },
+          {
+            "id": "eth-get-receipt",
+            "name": "eth_getTransactionReceipt",
+            "rpcMethod": "eth_getTransactionReceipt"
+          },
+          {
+            "id": "eth-get-tx-number-index",
+            "name": "eth_getTransactionByBlockNumberAndIndex",
+            "rpcMethod": "eth_getTransactionByBlockNumberAndIndex"
+          },
+          {
+            "id": "eth-get-tx-hash-index",
+            "name": "eth_getTransactionByBlockHashAndIndex",
+            "rpcMethod": "eth_getTransactionByBlockHashAndIndex"
+          },
+          {
+            "id": "eth-send-raw-transaction",
+            "name": "eth_sendRawTransaction",
+            "rpcMethod": "eth_sendRawTransaction"
+          },
+          {
+            "id": "eth-new-block-filter",
+            "name": "eth_newBlockFilter",
+            "rpcMethod": "eth_newBlockFilter"
+          },
+          {
+            "id": "eth-new-pending-filter",
+            "name": "eth_newPendingTransactionFilter",
+            "rpcMethod": "eth_newPendingTransactionFilter"
+          },
+          { "id": "eth-new-filter", "name": "eth_newFilter", "rpcMethod": "eth_newFilter" },
+          {
+            "id": "eth-get-filter-changes",
+            "name": "eth_getFilterChanges",
+            "rpcMethod": "eth_getFilterChanges"
+          },
+          {
+            "id": "eth-get-filter-logs",
+            "name": "eth_getFilterLogs",
+            "rpcMethod": "eth_getFilterLogs"
+          },
+          {
+            "id": "eth-uninstall-filter",
+            "name": "eth_uninstallFilter",
+            "rpcMethod": "eth_uninstallFilter"
+          },
+          { "id": "eth-get-logs", "name": "eth_getLogs", "rpcMethod": "eth_getLogs" },
+          { "id": "eth-call", "name": "eth_call", "rpcMethod": "eth_call" },
+          {
+            "id": "eth-estimate-gas",
+            "name": "eth_estimateGas",
+            "rpcMethod": "eth_estimateGas"
+          },
+          {
+            "id": "eth-create-access-list",
+            "name": "eth_createAccessList",
+            "rpcMethod": "eth_createAccessList"
+          },
+          {
+            "id": "qbft-validators-number",
+            "name": "qbft_getValidatorsByBlockNumber",
+            "rpcMethod": "qbft_getValidatorsByBlockNumber"
+          },
+          {
+            "id": "qbft-validators-hash",
+            "name": "qbft_getValidatorsByBlockHash",
+            "rpcMethod": "qbft_getValidatorsByBlockHash"
+          },
+          {
+            "id": "qbft-pending-votes",
+            "name": "qbft_getPendingVotes",
+            "rpcMethod": "qbft_getPendingVotes"
+          },
+          {
+            "id": "qbft-signer-metrics",
+            "name": "qbft_getSignerMetrics",
+            "rpcMethod": "qbft_getSignerMetrics"
+          },
+          {
+            "id": "txpool-statistics",
+            "name": "txpool_besuStatistics",
+            "rpcMethod": "txpool_besuStatistics"
+          },
+          {
+            "id": "txpool-transactions",
+            "name": "txpool_besuTransactions",
+            "rpcMethod": "txpool_besuTransactions"
+          },
+          {
+            "id": "txpool-pending",
+            "name": "txpool_besuPendingTransactions",
+            "rpcMethod": "txpool_besuPendingTransactions"
+          },
+          {
+            "id": "guestbook-code",
+            "name": "eth_getCode (HackathonGuestbook)",
+            "rpcMethod": "eth_getCode"
+          },
+          {
+            "id": "guestbook-team-count",
+            "name": "eth_call — teamCount()",
+            "rpcMethod": "eth_call"
+          },
+          {
+            "id": "guestbook-list-teams",
+            "name": "eth_call — listTeams()",
+            "rpcMethod": "eth_call"
+          },
+          {
+            "id": "guestbook-get-team",
+            "name": "eth_call — getTeam(0)",
+            "rpcMethod": "eth_call"
+          },
+          {
+            "id": "guestbook-entry-count",
+            "name": "eth_call — entryCount()",
+            "rpcMethod": "eth_call"
+          },
+          {
+            "id": "guestbook-get-entry",
+            "name": "eth_call — getEntry(0)",
+            "rpcMethod": "eth_call"
+          },
+          {
+            "id": "guestbook-create-team-simulation",
+            "name": "eth_call — createTeam simulation",
+            "rpcMethod": "eth_call"
+          },
+          {
+            "id": "guestbook-post-simulation",
+            "name": "eth_call — post simulation",
+            "rpcMethod": "eth_call"
+          },
+          {
+            "id": "guestbook-post-for-team-simulation",
+            "name": "eth_call — postForTeam simulation",
+            "rpcMethod": "eth_call"
+          },
+          {
+            "id": "guestbook-estimate-create-team",
+            "name": "eth_estimateGas — createTeam",
+            "rpcMethod": "eth_estimateGas"
+          },
+          {
+            "id": "guestbook-team-created-logs",
+            "name": "eth_getLogs — TeamCreated events",
+            "rpcMethod": "eth_getLogs"
+          },
+          {
+            "id": "guestbook-message-posted-logs",
+            "name": "eth_getLogs — MessagePosted events",
+            "rpcMethod": "eth_getLogs"
+          }
+        ]
+      }
+    },
+    "/api/v1/records/saaodb": {
+      "servers": [
+        { "url": "https://dbm-ws.oueg.info", "description": "Documented Compass provider host." }
+      ],
+      "get": {
+        "tags": ["Compass"],
+        "summary": "Get SAAODB records",
+        "operationId": "egovCompassGetSaaodbRecords",
+        "security": [{ "XApiKey": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/CompassReportYear" },
+          {
+            "name": "period",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/CompassPeriod" }
+          },
+          {
+            "name": "class",
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/CompassExpenseClass" }
+          },
+          {
+            "name": "sheetScope",
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/CompassSheetScope" }
+          },
+          { "name": "entityName", "in": "query", "schema": { "type": "string" } },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": {
+            "description": "SAAODB records returned.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompassSaaodbRecordsResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/records/saaodb/dashboard": {
+      "servers": [
+        { "url": "https://dbm-ws.oueg.info", "description": "Documented Compass provider host." }
+      ],
+      "get": {
+        "tags": ["Compass"],
+        "summary": "Get the SAAODB dashboard",
+        "operationId": "egovCompassGetSaaodbDashboard",
+        "security": [{ "XApiKey": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/CompassReportYear" },
+          {
+            "name": "sheetScope",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/CompassSheetScope" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SAAODB dashboard returned.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompassSaaodbDashboardResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/records/saaodb/entities": {
+      "servers": [
+        { "url": "https://dbm-ws.oueg.info", "description": "Documented Compass provider host." }
+      ],
+      "get": {
+        "tags": ["Compass"],
+        "summary": "Get SAAODB entities",
+        "operationId": "egovCompassGetSaaodbEntities",
+        "security": [{ "XApiKey": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/CompassReportYear" },
+          {
+            "name": "sheetScope",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "enum": ["agency", "sucs"] }
+          },
+          { "name": "expandParent", "in": "query", "schema": { "type": "string" } },
+          { "name": "expandEntity", "in": "query", "schema": { "type": "string" } },
+          { "name": "expandEntityParent", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Entity hierarchy returned.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OpenRecord" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/records/nca": {
+      "servers": [
+        { "url": "https://dbm-ws.oueg.info", "description": "Documented Compass provider host." }
+      ],
+      "get": {
+        "tags": ["Compass"],
+        "summary": "Get NCA records",
+        "operationId": "egovCompassGetNcaRecords",
+        "security": [{ "XApiKey": [] }],
+        "parameters": [
+          {
+            "name": "budgetYear",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer" }
+          },
+          { "name": "deptCode", "in": "query", "schema": { "type": "string" } },
+          { "name": "agencyCode", "in": "query", "schema": { "type": "string" } },
+          { "name": "operatingUnitCode", "in": "query", "schema": { "type": "string" } },
+          { "name": "expenseClass", "in": "query", "schema": { "type": "string" } },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": {
+            "description": "NCA records returned.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompassNcaRecordsResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/records/saro": {
+      "servers": [
+        { "url": "https://dbm-ws.oueg.info", "description": "Documented Compass provider host." }
+      ],
+      "get": {
+        "tags": ["Compass"],
+        "summary": "Get SARO records",
+        "operationId": "egovCompassGetSaroRecords",
+        "security": [{ "XApiKey": [] }],
+        "parameters": [
+          { "name": "saroNo", "in": "query", "schema": { "type": "string" } },
+          { "name": "deptCode", "in": "query", "schema": { "type": "string" } },
+          { "name": "agencyCode", "in": "query", "schema": { "type": "string" } },
+          { "name": "expenseClass", "in": "query", "schema": { "type": "string" } },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": {
+            "description": "SARO records returned.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompassSaroRecordsResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/records/lgsf": {
+      "servers": [
+        { "url": "https://dbm-ws.oueg.info", "description": "Documented Compass provider host." }
+      ],
+      "get": {
+        "tags": ["Compass"],
+        "summary": "Get LGSF records",
+        "operationId": "egovCompassGetLgsfRecords",
+        "security": [{ "XApiKey": [] }],
+        "parameters": [
+          { "name": "fiscalYear", "in": "query", "schema": { "type": "integer" } },
+          {
+            "name": "programCode",
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/CompassLgsfProgramCode" }
+          },
+          { "name": "regionCode", "in": "query", "schema": { "type": "string" } },
+          { "name": "province", "in": "query", "schema": { "type": "string" } },
+          { "name": "cityMunicipality", "in": "query", "schema": { "type": "string" } },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": {
+            "description": "LGSF records returned.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompassLgsfRecordsResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/records/lgsf/dashboard": {
+      "servers": [
+        { "url": "https://dbm-ws.oueg.info", "description": "Documented Compass provider host." }
+      ],
+      "get": {
+        "tags": ["Compass"],
+        "summary": "Get the LGSF dashboard",
+        "operationId": "egovCompassGetLgsfDashboard",
+        "security": [{ "XApiKey": [] }],
+        "parameters": [
+          {
+            "name": "programCode",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/CompassLgsfProgramCode" }
+          },
+          { "name": "reportYear", "in": "query", "schema": { "type": "integer" } },
+          { "name": "region", "in": "query", "schema": { "type": "string" } },
+          { "name": "province", "in": "query", "schema": { "type": "string" } },
+          { "name": "municipality", "in": "query", "schema": { "type": "string" } },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": {
+            "description": "LGSF dashboard returned.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompassLgsfDashboardResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/liveness/session": {
+      "servers": [
+        {
+          "url": "https://hackathon-face-liveness-api.e.gov.ph",
+          "description": "Documented Face Liveness hackathon host."
+        }
+      ],
+      "post": {
+        "tags": ["Face Liveness"],
+        "summary": "Create a liveness session",
+        "operationId": "egovFaceLivenessCreateSession",
+        "security": [{ "XApiKey": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/FaceLivenessCreateSessionRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Session and verification URL created.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FaceLivenessCreateSessionResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/liveness/result/{sessionToken}": {
+      "servers": [
+        {
+          "url": "https://hackathon-face-liveness-api.e.gov.ph",
+          "description": "Documented Face Liveness hackathon host."
+        }
+      ],
+      "get": {
+        "tags": ["Face Liveness"],
+        "summary": "Get a liveness result",
+        "operationId": "egovFaceLivenessGetVerificationResult",
+        "security": [{ "XApiKey": [] }],
+        "parameters": [
+          {
+            "name": "sessionToken",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Verification result returned.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FaceLivenessVerificationResult" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/transaction": {
+      "servers": [
+        {
+          "url": "https://egovpay-pgi-ws-dev.oueg.info",
+          "description": "Documented eGovPay development host."
+        }
+      ],
+      "post": {
+        "tags": ["eGovPay"],
+        "summary": "Generate a payment",
+        "description": "The digest is the lowercase hexadecimal HMAC-SHA256 of `amount|txnid`. Use the X-eGovPay-Token value as the HMAC key, but remove a leading `test_` staging prefix before signing; production tokens are used unchanged.",
+        "operationId": "egovPayGeneratePayment",
+        "security": [{ "EgovPayApiKey": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EgovPayGeneratePaymentRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transaction and payment URL created.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EgovPayGeneratePaymentResponse" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized merchant token." },
+          "422": { "description": "Invalid payment request." }
+        }
+      }
+    },
+    "/api/v1/transaction/{uuid}": {
+      "servers": [
+        {
+          "url": "https://egovpay-pgi-ws-dev.oueg.info",
+          "description": "Documented eGovPay development host."
+        }
+      ],
+      "get": {
+        "tags": ["eGovPay"],
+        "summary": "Get transaction details",
+        "operationId": "egovPayGetTransaction",
+        "security": [{ "EgovPayApiKey": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/TransactionUuid" }],
+        "responses": {
+          "200": {
+            "description": "Transaction details.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EgovPayTransactionResponse" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized merchant token." },
+          "404": { "description": "Transaction not found." }
+        }
+      }
+    },
+    "/api/v1/transaction/{uuid}/void": {
+      "servers": [
+        {
+          "url": "https://egovpay-pgi-ws-dev.oueg.info",
+          "description": "Documented eGovPay development host."
+        }
+      ],
+      "put": {
+        "tags": ["eGovPay"],
+        "summary": "Void a transaction",
+        "operationId": "egovPayVoidTransaction",
+        "security": [{ "EgovPayApiKey": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/TransactionUuid" }],
+        "responses": {
+          "200": {
+            "description": "Transaction voided.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EgovPayVoidResponse" }
+              }
+            }
+          },
+          "400": { "description": "Transaction cannot be voided." },
+          "401": { "description": "Unauthorized merchant token." },
+          "404": { "description": "Transaction not found." }
+        }
+      }
+    },
+    "/api/token": {
+      "servers": [
+        {
+          "url": "https://hackathon-sso.e.gov.ph",
+          "description": "Documented eGov SSO hackathon host."
+        }
+      ],
+      "post": {
+        "tags": ["eGov SSO"],
+        "summary": "Generate an SSO access token",
+        "operationId": "egovSsoGenerateAccessToken",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EgovSsoTokenRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Access token generated.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EgovSsoTokenResponse" }
+              }
+            }
+          },
+          "403": { "description": "Partner credentials are invalid or unauthorized." },
+          "422": { "description": "Exchange code is invalid, used, or expired." }
+        }
+      }
+    },
+    "/api/partner/sso_authentication": {
+      "servers": [
+        {
+          "url": "https://hackathon-sso.e.gov.ph",
+          "description": "Documented eGov SSO hackathon host."
+        }
+      ],
+      "post": {
+        "tags": ["eGov SSO"],
+        "summary": "Authenticate an SSO citizen",
+        "operationId": "egovSsoAuthenticate",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Authenticated citizen profile.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EgovSsoAuthenticationResponse" }
+              }
+            }
+          },
+          "401": { "description": "Access token is missing, invalid, or expired." }
+        }
+      }
+    },
+    "/messaging/v1/sms/push": {
+      "servers": [
+        {
+          "url": "https://ws-message.e.gov.ph",
+          "description": "Documented eMessage provider host."
+        }
+      ],
+      "post": {
+        "tags": ["eMessage"],
+        "summary": "Send an SMS",
+        "operationId": "eMessageSendSms",
+        "security": [{ "EMessageApiKey": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EMessageSmsRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "SMS created successfully.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EMessageSmsResponse" }
+              }
+            }
+          },
+          "400": { "description": "Invalid request." },
+          "422": { "description": "Request validation failed." }
+        }
+      }
+    },
+    "/api/integration/datasets/report_types": {
+      "servers": [
+        {
+          "url": "https://stg-ereport-ws.oueg.info",
+          "description": "Documented eReport staging host."
+        }
+      ],
+      "get": {
+        "tags": ["eReport"],
+        "summary": "List report types",
+        "operationId": "eReportListReportTypes",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Report types returned.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EReportReportTypeListResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/datasets/regions": {
+      "servers": [
+        {
+          "url": "https://stg-ereport-ws.oueg.info",
+          "description": "Documented eReport staging host."
+        }
+      ],
+      "get": {
+        "tags": ["eReport"],
+        "summary": "List regions",
+        "operationId": "eReportListRegions",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Regions returned.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EReportLocationListResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/datasets/provinces": {
+      "servers": [
+        {
+          "url": "https://stg-ereport-ws.oueg.info",
+          "description": "Documented eReport staging host."
+        }
+      ],
+      "get": {
+        "tags": ["eReport"],
+        "summary": "List provinces",
+        "operationId": "eReportListProvinces",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "region_code",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Provinces returned.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EReportLocationListResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/datasets/municipalities": {
+      "servers": [
+        {
+          "url": "https://stg-ereport-ws.oueg.info",
+          "description": "Documented eReport staging host."
+        }
+      ],
+      "get": {
+        "tags": ["eReport"],
+        "summary": "List municipalities",
+        "operationId": "eReportListMunicipalities",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "province_code",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Municipalities returned.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EReportLocationListResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/datasets/barangays": {
+      "servers": [
+        {
+          "url": "https://stg-ereport-ws.oueg.info",
+          "description": "Documented eReport staging host."
+        }
+      ],
+      "get": {
+        "tags": ["eReport"],
+        "summary": "List barangays",
+        "operationId": "eReportListBarangays",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "municipality_code",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Barangays returned.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EReportLocationListResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/token": {
+      "servers": [
+        {
+          "url": "https://stg-ereport-ws.oueg.info",
+          "description": "Documented eReport staging host."
+        }
+      ],
+      "post": {
+        "tags": ["eReport"],
+        "summary": "Generate an integration token",
+        "operationId": "eReportGenerateToken",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EReportGenerateTokenRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Integration token generated.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EReportGenerateTokenResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/submit_complaint": {
+      "servers": [
+        {
+          "url": "https://stg-ereport-ws.oueg.info",
+          "description": "Documented eReport staging host."
+        }
+      ],
+      "post": {
+        "tags": ["eReport"],
+        "summary": "Submit a complaint",
+        "operationId": "eReportSubmitComplaint",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EReportSubmitComplaintRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Complaint accepted.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EReportSubmitComplaintResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/verify/request": {
+      "servers": [
+        {
+          "url": "https://stg-ereport-ws.oueg.info",
+          "description": "Documented eReport staging host."
+        }
+      ],
+      "post": {
+        "tags": ["eReport"],
+        "summary": "Request a verification OTP",
+        "operationId": "eReportRequestOtp",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EReportRequestOtpRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP dispatched.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EReportRequestOtpResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/verify/confirm": {
+      "servers": [
+        {
+          "url": "https://stg-ereport-ws.oueg.info",
+          "description": "Documented eReport staging host."
+        }
+      ],
+      "post": {
+        "tags": ["eReport"],
+        "summary": "Confirm a verification OTP",
+        "operationId": "eReportConfirmOtp",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EReportConfirmOtpRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP confirmed and view token returned.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EReportConfirmOtpResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/reports": {
+      "servers": [
+        {
+          "url": "https://stg-ereport-ws.oueg.info",
+          "description": "Documented eReport staging host."
+        }
+      ],
+      "get": {
+        "tags": ["eReport"],
+        "summary": "List reports",
+        "operationId": "eReportListReports",
+        "security": [{ "EReportViewApiKey": [] }],
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "number" } },
+          { "name": "limit", "in": "query", "schema": { "type": "number" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reports returned.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EReportReportsResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/reports/{case_number}": {
+      "servers": [
+        {
+          "url": "https://stg-ereport-ws.oueg.info",
+          "description": "Documented eReport staging host."
+        }
+      ],
+      "get": {
+        "tags": ["eReport"],
+        "summary": "Get a report",
+        "operationId": "eReportGetReport",
+        "security": [{ "EReportViewApiKey": [] }],
+        "parameters": [
+          {
+            "name": "case_number",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Report returned.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EReportReportResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth": {
+      "servers": [
+        {
+          "url": "https://hackathon-everify-api.e.gov.ph",
+          "description": "Documented eVerify hackathon host."
+        }
+      ],
+      "post": {
+        "tags": ["eVerify"],
+        "summary": "Generate an eVerify access token",
+        "operationId": "eVerifyAuthenticate",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EverifyCredentials" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Access token generated.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EverifyAuthenticationResponse" }
+              }
+            }
+          },
+          "403": { "description": "Invalid client credentials." }
+        }
+      }
+    },
+    "/api/query": {
+      "servers": [
+        {
+          "url": "https://hackathon-everify-api.e.gov.ph",
+          "description": "Documented eVerify hackathon host."
+        }
+      ],
+      "post": {
+        "tags": ["eVerify"],
+        "summary": "Verify personal information",
+        "operationId": "eVerifyVerifyPersonalInformation",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EverifyPersonalInformationRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verification result.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EverifyVerificationResponse" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired access token." }
+        }
+      }
+    },
+    "/api/query/qr/check": {
+      "servers": [
+        {
+          "url": "https://hackathon-everify-api.e.gov.ph",
+          "description": "Documented eVerify hackathon host."
+        }
+      ],
+      "post": {
+        "tags": ["eVerify"],
+        "summary": "Check a National ID QR value",
+        "operationId": "eVerifyCheckQr",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EverifyQrCheckRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Decoded QR profile data.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EverifyQrCheckResponse" }
+              }
+            }
+          },
+          "422": { "description": "Invalid QR code format." }
+        }
+      }
+    },
+    "/api/query/qr": {
+      "servers": [
+        {
+          "url": "https://hackathon-everify-api.e.gov.ph",
+          "description": "Documented eVerify hackathon host."
+        }
+      ],
+      "post": {
+        "tags": ["eVerify"],
+        "summary": "Verify a National ID QR value",
+        "operationId": "eVerifyVerifyQr",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EverifyQrVerifyRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Matched or unverified identity result.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EverifyVerificationResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Bearer token issued by the relevant service."
+      },
+      "XApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "API key used by Compass and Face Liveness."
+      },
+      "EMessageApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-EMESSAGE-Auth",
+        "description": "eMessage authentication token."
+      },
+      "EgovPayApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-eGovPay-Token",
+        "description": "eGovPay merchant token. Send the complete token in this header. Only digest computation strips a leading `test_` prefix."
+      },
+      "EReportViewApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-EReport-View-Token",
+        "description": "Report view token returned by OTP confirmation."
+      }
+    },
+    "parameters": {
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "schema": { "type": "integer" }
+      },
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "schema": { "type": "integer" }
+      },
+      "CompassReportYear": {
+        "name": "reportYear",
+        "in": "query",
+        "required": true,
+        "schema": { "type": "integer" }
+      },
+      "TransactionUuid": {
+        "name": "uuid",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      }
+    },
+    "schemas": {
+      "OpenRecord": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "EgovAiAccessTokenRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["access_code"],
+        "properties": { "access_code": { "type": "string" } }
+      },
+      "EgovAiAccessTokenResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["access_token", "credits_remaining", "credits_total", "expires_in_seconds"],
+        "properties": {
+          "access_token": { "type": "string" },
+          "credits_remaining": { "type": "number" },
+          "credits_total": { "type": "number" },
+          "expires_in_seconds": { "type": "number" }
+        }
+      },
+      "EgovAiPromptRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["category", "prompt"],
+        "properties": {
+          "category": { "type": "string" },
+          "prompt": { "type": "string" }
+        }
+      },
+      "EgovAiGeneratedTextResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["data", "session_id"],
+        "properties": {
+          "data": { "type": "string" },
+          "session_id": { "type": "string" }
+        }
+      },
+      "EgovAiTranslationRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["prompt", "source_lang", "target_lang"],
+        "properties": {
+          "prompt": { "type": "string" },
+          "source_lang": { "type": "string", "description": "ISO 639 language code." },
+          "target_lang": { "type": "string", "description": "ISO 639 language code." }
+        }
+      },
+      "EgovAiTranslationResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "original_prompt",
+          "source_lang",
+          "target_lang",
+          "translate_from",
+          "translated_prompt",
+          "transliterated_prompt"
+        ],
+        "properties": {
+          "original_prompt": { "type": "string" },
+          "source_lang": { "type": "string" },
+          "target_lang": { "type": "string" },
+          "translate_from": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["code", "label"],
+            "properties": {
+              "code": { "type": "string" },
+              "label": { "type": "string" }
+            }
+          },
+          "translated_prompt": { "type": "string" },
+          "transliterated_prompt": { "type": "string" }
+        }
+      },
+      "EgovAiDocumentRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["file"],
+        "properties": {
+          "file": { "type": "string", "format": "binary" }
+        }
+      },
+      "EgovAiDocumentResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["data"],
+        "properties": { "data": { "type": "string" } }
+      },
+      "EgovAiCreditsResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["credits_remaining", "credits_total", "credits_used", "expires_at"],
+        "properties": {
+          "credits_remaining": { "type": "number" },
+          "credits_total": { "type": "number" },
+          "credits_used": { "type": "number" },
+          "expires_at": { "type": "string" }
+        }
+      },
+      "EgovChainRpcId": {
+        "oneOf": [{ "type": "number" }, { "type": "string" }]
+      },
+      "EgovChainRpcRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "jsonrpc", "method", "params"],
+        "properties": {
+          "id": { "$ref": "#/components/schemas/EgovChainRpcId" },
+          "jsonrpc": { "type": "string", "const": "2.0" },
+          "method": { "type": "string" },
+          "params": { "type": "array", "items": {} }
+        }
+      },
+      "EgovChainRpcSuccess": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "jsonrpc", "result"],
+        "properties": {
+          "id": { "$ref": "#/components/schemas/EgovChainRpcId" },
+          "jsonrpc": { "type": "string", "const": "2.0" },
+          "result": {}
+        }
+      },
+      "EgovChainRpcFailure": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["error", "id", "jsonrpc"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["code", "message"],
+            "properties": {
+              "code": { "type": "number" },
+              "data": {},
+              "message": { "type": "string" }
+            }
+          },
+          "id": {
+            "oneOf": [{ "$ref": "#/components/schemas/EgovChainRpcId" }, { "type": "null" }]
+          },
+          "jsonrpc": { "type": "string", "const": "2.0" }
+        }
+      },
+      "CompassPeriod": {
+        "type": "string",
+        "enum": ["FY", "Q1", "Q2", "Q3", "Q4"]
+      },
+      "CompassExpenseClass": {
+        "type": "string",
+        "enum": ["CO", "FINEX", "MOOE", "PS"]
+      },
+      "CompassSheetScope": {
+        "type": "string",
+        "enum": ["agency", "sucs", "summary"]
+      },
+      "CompassLgsfProgramCode": {
+        "type": "string",
+        "enum": ["FALGU", "GEF", "GGG", "SAFPB", "SBDP"]
+      },
+      "CompassSaaodbRecord": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "adjustments": { "type": "number" },
+          "allotments": { "type": "number" },
+          "appropriations": { "type": "number" },
+          "class": { "$ref": "#/components/schemas/CompassExpenseClass" },
+          "disbursements": { "type": "number" },
+          "entityName": { "type": "string" },
+          "id": { "type": "string" },
+          "obligations": { "type": "number" },
+          "period": { "$ref": "#/components/schemas/CompassPeriod" },
+          "reportYear": { "type": "number" },
+          "sheetScope": { "$ref": "#/components/schemas/CompassSheetScope" }
+        }
+      },
+      "CompassSaaodbRecordsResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["items", "limit", "page", "total"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CompassSaaodbRecord" }
+          },
+          "limit": { "type": "number" },
+          "page": { "type": "number" },
+          "total": { "type": "number" }
+        }
+      },
+      "CompassSaaodbDashboardResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "appropriationSplit",
+          "cascade",
+          "classBreakdown",
+          "rates",
+          "reportYear",
+          "sheetScope",
+          "topEntities"
+        ],
+        "properties": {
+          "appropriationSplit": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["continuing", "currentYear", "hasSplit"],
+            "properties": {
+              "continuing": { "type": "number" },
+              "currentYear": { "type": "number" },
+              "hasSplit": { "type": "boolean" }
+            }
+          },
+          "cascade": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "adjustments",
+              "allotments",
+              "appropriations",
+              "disbursements",
+              "obligations",
+              "totalAvailable",
+              "unobligated",
+              "unreleased"
+            ],
+            "properties": {
+              "adjustments": { "type": "number" },
+              "allotments": { "type": "number" },
+              "appropriations": { "type": "number" },
+              "disbursements": { "type": "number" },
+              "obligations": { "type": "number" },
+              "totalAvailable": { "type": "number" },
+              "unobligated": { "type": "number" },
+              "unreleased": { "type": "number" }
+            }
+          },
+          "classBreakdown": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["amount", "class"],
+              "properties": {
+                "amount": { "type": "number" },
+                "class": { "$ref": "#/components/schemas/CompassExpenseClass" }
+              }
+            }
+          },
+          "rates": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["disbRateAppro", "disbRateOblig", "obligationRate"],
+            "properties": {
+              "disbRateAppro": { "type": "number" },
+              "disbRateOblig": { "type": "number" },
+              "obligationRate": { "type": "number" }
+            }
+          },
+          "reportYear": { "type": "number" },
+          "sheetScope": { "$ref": "#/components/schemas/CompassSheetScope" },
+          "topEntities": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OpenRecord" }
+          }
+        }
+      },
+      "CompassNcaRecordsResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["items", "limit", "page", "total"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OpenRecord" }
+          },
+          "limit": { "type": "number" },
+          "page": { "type": "number" },
+          "total": { "type": "number" }
+        }
+      },
+      "CompassSaroRecord": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "agencyCode": { "type": "string" },
+          "amount": { "type": "number" },
+          "dateIssued": { "type": "string" },
+          "deptCode": { "type": "string" },
+          "expenseClass": { "type": "string" },
+          "saroNo": { "type": "string" }
+        }
+      },
+      "CompassSaroRecordsResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["items", "limit", "page", "total"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CompassSaroRecord" }
+          },
+          "limit": { "type": "number" },
+          "page": { "type": "number" },
+          "total": { "type": "number" }
+        }
+      },
+      "CompassLgsfRecordsResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["items", "limit", "page", "total"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OpenRecord" }
+          },
+          "limit": { "type": "number" },
+          "page": { "type": "number" },
+          "total": { "type": "number" }
+        }
+      },
+      "CompassLgsfDashboardResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kpis", "programCode", "projects", "reportYear", "trend"],
+        "properties": {
+          "kpis": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "barangayCount",
+              "fiscalYearCount",
+              "lguCount",
+              "projectCount",
+              "provinceCount",
+              "regionCount",
+              "totalReleased"
+            ],
+            "properties": {
+              "barangayCount": { "type": "number" },
+              "fiscalYearCount": { "type": "number" },
+              "lguCount": { "type": "number" },
+              "projectCount": { "type": "number" },
+              "provinceCount": { "type": "number" },
+              "regionCount": { "type": "number" },
+              "totalReleased": { "type": "number" }
+            }
+          },
+          "programCode": { "$ref": "#/components/schemas/CompassLgsfProgramCode" },
+          "projects": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["page", "pageSize", "rows", "total"],
+            "properties": {
+              "page": { "type": "number" },
+              "pageSize": { "type": "number" },
+              "rows": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/OpenRecord" }
+              },
+              "total": { "type": "number" }
+            }
+          },
+          "reportYear": { "type": ["number", "null"] },
+          "trend": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OpenRecord" }
+          }
+        }
+      },
+      "FaceLivenessCreateSessionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action"],
+        "properties": {
+          "action": { "type": "string", "enum": ["close", "post", "redirect"] },
+          "callback_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Required by the provider when action is redirect."
+          },
+          "delay": { "type": "integer" }
+        }
+      },
+      "FaceLivenessCreateSessionResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["token", "url"],
+        "properties": {
+          "token": { "type": "string" },
+          "url": { "type": "string" }
+        }
+      },
+      "FaceLivenessVerificationResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["confidence_score", "reference_image_url", "status"],
+        "properties": {
+          "confidence_score": { "type": "number" },
+          "reference_image_url": { "type": "string" },
+          "status": {
+            "type": "string",
+            "description": "Known values include FAILED, PENDING, and SUCCEEDED; providers may add values."
+          }
+        }
+      },
+      "EgovPayItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["amount", "name"],
+        "properties": {
+          "amount": { "type": "number" },
+          "name": { "type": "string" }
+        }
+      },
+      "EgovPayGeneratePaymentRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "amount",
+          "callback_url",
+          "digest",
+          "items",
+          "redirect_url",
+          "settlement_template_uuid",
+          "txnid"
+        ],
+        "properties": {
+          "amount": { "type": "number" },
+          "callback_url": { "type": "string", "format": "uri" },
+          "currency": { "type": "string" },
+          "description": { "$ref": "#/components/schemas/OpenRecord" },
+          "digest": {
+            "type": "string",
+            "description": "Lowercase hexadecimal HMAC-SHA256 of `amount|txnid`. The key is the merchant token with a leading `test_` prefix removed; production tokens are used unchanged."
+          },
+          "email": { "type": "string" },
+          "expires_at": { "type": "string", "format": "date-time" },
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/EgovPayItem" }
+          },
+          "link_expires_at": { "type": "string", "format": "date-time" },
+          "mobile": { "type": "string" },
+          "name": { "type": "string" },
+          "redirect_url": { "type": "string", "format": "uri" },
+          "settlement_template_uuid": { "type": "string", "format": "uuid" },
+          "txnid": { "type": "string" }
+        }
+      },
+      "EgovPayGeneratePaymentResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["channel", "url", "uuid"],
+            "properties": {
+              "channel": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["refno"],
+                "properties": { "refno": { "type": "string" } }
+              },
+              "url": { "type": "string" },
+              "uuid": { "type": "string" }
+            }
+          }
+        }
+      },
+      "EgovPayTransaction": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "amount",
+          "callback_url",
+          "channel_fee",
+          "created_at",
+          "currency",
+          "environment_type",
+          "expires_at",
+          "items",
+          "link_expires_at",
+          "paid_at",
+          "partner_fee",
+          "payment_channel",
+          "payment_channel_branch",
+          "payment_channel_uuid",
+          "payment_status",
+          "redirect_url",
+          "refno",
+          "system_fee",
+          "txnid",
+          "uuid"
+        ],
+        "properties": {
+          "amount": { "type": "string" },
+          "callback_url": { "type": "string" },
+          "channel_fee": { "type": "string" },
+          "created_at": { "type": "string" },
+          "currency": { "type": "string" },
+          "environment_type": { "type": "string" },
+          "expires_at": { "type": "string" },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["amount", "name"],
+              "properties": {
+                "amount": { "type": "string" },
+                "name": { "type": "string" }
+              }
+            }
+          },
+          "link_expires_at": { "type": "string" },
+          "paid_at": { "type": ["string", "null"] },
+          "partner_fee": { "type": "string" },
+          "payment_channel": { "type": ["string", "null"] },
+          "payment_channel_branch": { "type": ["string", "null"] },
+          "payment_channel_uuid": { "type": ["string", "null"] },
+          "payment_status": { "type": "string" },
+          "redirect_url": { "type": "string" },
+          "refno": { "type": "string" },
+          "system_fee": { "type": "string" },
+          "txnid": { "type": "string" },
+          "uuid": { "type": "string" }
+        }
+      },
+      "EgovPayTransactionResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["data"],
+        "properties": { "data": { "$ref": "#/components/schemas/EgovPayTransaction" } }
+      },
+      "EgovPayVoidResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["message"],
+            "properties": { "message": { "type": "string" } }
+          }
+        }
+      },
+      "EgovSsoTokenRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["exchange_code", "partner_code", "partner_secret", "scope"],
+        "properties": {
+          "exchange_code": { "type": "string" },
+          "partner_code": { "type": "string" },
+          "partner_secret": { "type": "string" },
+          "scope": {
+            "type": "string",
+            "description": "Known scope: SSO_AUTHENTICATION; providers may add values."
+          }
+        }
+      },
+      "EgovSsoTokenResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["access_token"],
+        "properties": { "access_token": { "type": "string" } }
+      },
+      "EgovSsoEducationalAttainment": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "educational_background": { "type": ["string", "null"] },
+          "from": { "type": ["string", "null"] },
+          "level": { "type": ["string", "null"] },
+          "school": { "type": ["string", "null"] },
+          "to": { "type": ["string", "null"] }
+        }
+      },
+      "EgovSsoAdditionalInformation": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "birth_place": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "birth_country": { "type": ["string", "null"] },
+                  "birth_municipality": { "type": ["string", "null"] },
+                  "birth_province": { "type": ["string", "null"] }
+                }
+              },
+              { "type": "null" }
+            ]
+          },
+          "educational_attainment": {
+            "oneOf": [
+              {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/EgovSsoEducationalAttainment" }
+              },
+              { "type": "null" }
+            ]
+          },
+          "emergency_information": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "emergency_contact": { "type": ["string", "null"] },
+                  "emergency_name": { "type": ["string", "null"] },
+                  "emergency_relationship": { "type": ["string", "null"] }
+                }
+              },
+              { "type": "null" }
+            ]
+          },
+          "expected_salary": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": { "expected_salary": { "type": ["string", "null"] } }
+              },
+              { "type": "null" }
+            ]
+          },
+          "father_details": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "father_birthdate": { "type": ["string", "null"] },
+                  "father_firstname": { "type": ["string", "null"] },
+                  "father_lastname": { "type": ["string", "null"] }
+                }
+              },
+              { "type": "null" }
+            ]
+          },
+          "health_data": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "complexion": { "type": ["string", "null"] },
+                  "eyes_color": { "type": ["string", "null"] },
+                  "height": { "type": ["string", "null"] },
+                  "weight": { "type": ["string", "null"] }
+                }
+              },
+              { "type": "null" }
+            ]
+          },
+          "industry": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": { "industry": { "type": ["string", "null"] } }
+              },
+              { "type": "null" }
+            ]
+          },
+          "mother_details": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "mother_birthdate": { "type": ["string", "null"] },
+                  "mother_maiden_firstname": { "type": ["string", "null"] },
+                  "mother_maiden_lastname": { "type": ["string", "null"] },
+                  "mother_maiden_middlename": { "type": ["string", "null"] }
+                }
+              },
+              { "type": "null" }
+            ]
+          },
+          "occupation": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": { "occupation": { "type": ["string", "null"] } }
+              },
+              { "type": "null" }
+            ]
+          },
+          "other_personal_information": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "marital_status": { "type": ["string", "null"] },
+                  "religion": { "type": ["string", "null"] }
+                }
+              },
+              { "type": "null" }
+            ]
+          }
+        }
+      },
+      "EgovSsoPassport": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "birth_date": { "type": ["string", "null"] },
+          "expiry_date": { "type": ["string", "null"] },
+          "first_name": { "type": ["string", "null"] },
+          "gender": { "type": ["string", "null"] },
+          "issued_date": { "type": ["string", "null"] },
+          "last_name": { "type": ["string", "null"] },
+          "middle_name": { "type": ["string", "null"] },
+          "passport_number": { "type": ["string", "null"] },
+          "place_issued": { "type": ["string", "null"] },
+          "suffix": { "type": ["string", "null"] }
+        }
+      },
+      "EgovSsoNationalId": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": { "type": ["string", "null"] },
+          "face_url": { "type": ["string", "null"] },
+          "pcn": { "type": ["string", "null"] },
+          "signature": { "type": ["string", "null"] }
+        }
+      },
+      "EgovSsoCitizenProfile": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "additional_information": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/EgovSsoAdditionalInformation" },
+              { "type": "null" }
+            ]
+          },
+          "address": { "type": ["string", "null"] },
+          "address_line_2": { "type": ["string", "null"] },
+          "barangay": { "type": ["string", "null"] },
+          "barangay_code": { "type": ["string", "null"] },
+          "birth_date": { "type": ["string", "null"] },
+          "country": { "type": ["string", "null"] },
+          "country_alpha_2_code": { "type": ["string", "null"] },
+          "country_alpha_3_code": { "type": ["string", "null"] },
+          "country_id": { "type": ["number", "null"] },
+          "email": { "type": ["string", "null"] },
+          "first_name": { "type": ["string", "null"] },
+          "foreign_address": {},
+          "gender": { "type": ["string", "null"] },
+          "last_name": { "type": ["string", "null"] },
+          "middle_name": { "type": ["string", "null"] },
+          "mobile": { "type": ["string", "null"] },
+          "municipality": { "type": ["string", "null"] },
+          "municipality_code": { "type": ["string", "null"] },
+          "national_id": {
+            "oneOf": [{ "$ref": "#/components/schemas/EgovSsoNationalId" }, { "type": "null" }]
+          },
+          "nationality": { "type": ["string", "null"] },
+          "passport": {
+            "oneOf": [{ "$ref": "#/components/schemas/EgovSsoPassport" }, { "type": "null" }]
+          },
+          "photo": { "type": ["string", "null"] },
+          "postal": { "type": ["string", "null"] },
+          "province": { "type": ["string", "null"] },
+          "province_code": { "type": ["string", "null"] },
+          "region": { "type": ["string", "null"] },
+          "region_code": { "type": ["string", "null"] },
+          "signature": { "type": ["string", "null"] },
+          "signature_url": { "type": ["string", "null"] },
+          "street": { "type": ["string", "null"] },
+          "suffix": { "type": ["string", "null"] },
+          "tin_id": {},
+          "uniqid": { "type": ["string", "null"] }
+        }
+      },
+      "EgovSsoAuthenticationResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["data", "message", "status"],
+        "properties": {
+          "data": { "$ref": "#/components/schemas/EgovSsoCitizenProfile" },
+          "message": { "type": "string" },
+          "status": { "type": "number" }
+        }
+      },
+      "EMessageSmsRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["message", "number"],
+        "properties": {
+          "message": { "type": "string" },
+          "number": { "type": "string", "description": "Recipient number in E.164 format." }
+        }
+      },
+      "EMessageSmsResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["message"],
+            "properties": { "message": { "type": "string" } }
+          }
+        }
+      },
+      "EReportPagination": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["current_page", "per_page", "total", "total_pages"],
+        "properties": {
+          "current_page": { "type": "number" },
+          "per_page": { "type": "number" },
+          "total": { "type": "number" },
+          "total_pages": { "type": "number" }
+        }
+      },
+      "EReportLocationAttributes": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["name"],
+        "properties": { "name": { "type": "string" } }
+      },
+      "EReportReportTypeAttributes": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["code", "name"],
+        "properties": {
+          "code": { "type": "string" },
+          "name": { "type": "string" }
+        }
+      },
+      "EReportLocationDatasetRecord": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["attributes", "id", "type"],
+        "properties": {
+          "attributes": { "$ref": "#/components/schemas/EReportLocationAttributes" },
+          "id": { "type": "string" },
+          "type": { "type": "string" }
+        }
+      },
+      "EReportReportTypeDatasetRecord": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["attributes", "id", "type"],
+        "properties": {
+          "attributes": { "$ref": "#/components/schemas/EReportReportTypeAttributes" },
+          "id": { "type": "string" },
+          "type": { "type": "string" }
+        }
+      },
+      "EReportLocationListResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/EReportLocationDatasetRecord" }
+          },
+          "jsonapi": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["version"],
+            "properties": { "version": { "type": "string" } }
+          },
+          "meta": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["pagination"],
+            "properties": {
+              "pagination": { "$ref": "#/components/schemas/EReportPagination" }
+            }
+          }
+        }
+      },
+      "EReportReportTypeListResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/EReportReportTypeDatasetRecord" }
+          },
+          "jsonapi": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["version"],
+            "properties": { "version": { "type": "string" } }
+          },
+          "meta": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["pagination"],
+            "properties": {
+              "pagination": { "$ref": "#/components/schemas/EReportPagination" }
+            }
+          }
+        }
+      },
+      "EReportGenerateTokenRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["access_code"],
+        "properties": { "access_code": { "type": "string" } }
+      },
+      "EReportGenerateTokenResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["access_token", "expires_at"],
+        "properties": {
+          "access_token": { "type": "string" },
+          "expires_at": { "type": "string" }
+        }
+      },
+      "EReportSubmitComplaintRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "barangay_code",
+          "complainant_email",
+          "first_name",
+          "gender",
+          "last_name",
+          "message",
+          "mobile",
+          "municipality_code",
+          "province_code",
+          "region_code",
+          "report_type",
+          "subject"
+        ],
+        "properties": {
+          "barangay_code": { "type": "string" },
+          "complainant_email": { "type": "string", "format": "email" },
+          "evidences": { "type": "array", "items": { "type": "string" } },
+          "first_name": { "type": "string" },
+          "gender": { "type": "string" },
+          "last_name": { "type": "string" },
+          "latitude": { "type": "string" },
+          "longitude": { "type": "string" },
+          "message": { "type": "string" },
+          "mobile": { "type": "string" },
+          "municipality_code": { "type": "string" },
+          "province_code": { "type": "string" },
+          "region_code": { "type": "string" },
+          "report_type": { "type": "string" },
+          "subject": { "type": "string" }
+        }
+      },
+      "EReportSubmitComplaintResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["case_number", "code", "message"],
+        "properties": {
+          "case_number": { "type": "string" },
+          "code": { "type": "number" },
+          "message": { "type": "string" }
+        }
+      },
+      "EReportRequestOtpRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["email"],
+        "properties": { "email": { "type": "string", "format": "email" } }
+      },
+      "EReportRequestOtpResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["already_verified", "code", "message"],
+        "properties": {
+          "already_verified": { "type": "boolean" },
+          "code": { "type": "number" },
+          "message": { "type": "string" }
+        }
+      },
+      "EReportConfirmOtpRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["email", "otp"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "otp": { "type": "string" }
+        }
+      },
+      "EReportConfirmOtpResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "expires_at", "report_view_token"],
+        "properties": {
+          "code": { "type": "number" },
+          "expires_at": { "type": "string" },
+          "report_view_token": { "type": "string" }
+        }
+      },
+      "EReportRecord": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": { "case_number": { "type": "string" } }
+      },
+      "EReportReportsResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/EReportRecord" }
+          },
+          "meta": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "pagination": { "$ref": "#/components/schemas/EReportPagination" }
+            }
+          }
+        }
+      },
+      "EReportReportResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["data"],
+        "properties": { "data": { "$ref": "#/components/schemas/EReportRecord" } }
+      },
+      "EverifyCredentials": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["client_id", "client_secret"],
+        "properties": {
+          "client_id": { "type": "string" },
+          "client_secret": { "type": "string" }
+        }
+      },
+      "EverifyAuthenticationResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["access_token", "expires_at", "token_type"],
+            "properties": {
+              "access_token": { "type": "string" },
+              "expires_at": { "type": "string" },
+              "token_type": { "type": "string" }
+            }
+          }
+        }
+      },
+      "EverifyPersonalInformationRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["birth_date", "face_liveness_session_id", "first_name", "last_name"],
+        "properties": {
+          "birth_date": { "type": "string", "format": "date" },
+          "face_liveness_session_id": { "type": "string", "format": "uuid" },
+          "first_name": { "type": "string" },
+          "last_name": { "type": "string" },
+          "middle_name": { "type": "string" },
+          "suffix": { "type": "string" }
+        }
+      },
+      "EverifyIdentityProfile": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "address_line_1",
+          "address_line_2",
+          "barangay",
+          "birth_date",
+          "blood_type",
+          "code",
+          "country",
+          "email",
+          "face_url",
+          "first_name",
+          "full_address",
+          "full_name",
+          "gender",
+          "last_name",
+          "marital_status",
+          "middle_name",
+          "mobile_number",
+          "municipality",
+          "place_of_birth",
+          "pob_country",
+          "pob_municipality",
+          "pob_province",
+          "postal_code",
+          "present_address_line_1",
+          "present_address_line_2",
+          "present_barangay",
+          "present_country",
+          "present_full_address",
+          "present_municipality",
+          "present_postal_code",
+          "present_province",
+          "province",
+          "reference",
+          "residency_status",
+          "suffix",
+          "token"
+        ],
+        "properties": {
+          "address_line_1": { "type": "string" },
+          "address_line_2": { "type": ["string", "null"] },
+          "barangay": { "type": "string" },
+          "birth_date": { "type": "string" },
+          "blood_type": { "type": "string" },
+          "code": { "type": "string" },
+          "country": { "type": "string" },
+          "email": { "type": "string" },
+          "face_url": { "type": "string" },
+          "first_name": { "type": "string" },
+          "full_address": { "type": "string" },
+          "full_name": { "type": "string" },
+          "gender": { "type": "string" },
+          "last_name": { "type": "string" },
+          "marital_status": { "type": "string" },
+          "middle_name": { "type": "string" },
+          "mobile_number": { "type": "string" },
+          "municipality": { "type": "string" },
+          "place_of_birth": { "type": "string" },
+          "pob_country": { "type": "string" },
+          "pob_municipality": { "type": "string" },
+          "pob_province": { "type": "string" },
+          "postal_code": { "type": "string" },
+          "present_address_line_1": { "type": "string" },
+          "present_address_line_2": { "type": ["string", "null"] },
+          "present_barangay": { "type": "string" },
+          "present_country": { "type": "string" },
+          "present_full_address": { "type": "string" },
+          "present_municipality": { "type": "string" },
+          "present_postal_code": { "type": "string" },
+          "present_province": { "type": "string" },
+          "province": { "type": "string" },
+          "reference": { "type": "string" },
+          "residency_status": { "type": "string" },
+          "suffix": { "type": ["string", "null"] },
+          "token": { "type": "string" }
+        }
+      },
+      "EverifyVerificationMeta": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["result_grade", "tier_level"],
+        "properties": {
+          "result_grade": { "type": "number" },
+          "tier_level": { "type": "string" }
+        }
+      },
+      "EverifyVerificationResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["data", "meta"],
+        "properties": {
+          "data": { "$ref": "#/components/schemas/EverifyIdentityProfile" },
+          "meta": { "$ref": "#/components/schemas/EverifyVerificationMeta" }
+        }
+      },
+      "EverifyQrCheckRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["value"],
+        "properties": { "value": { "type": "string" } }
+      },
+      "EverifyQrCheckResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["data", "meta"],
+        "properties": {
+          "data": { "$ref": "#/components/schemas/OpenRecord" },
+          "meta": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["qr_type"],
+            "properties": { "qr_type": { "type": "string" } }
+          }
+        }
+      },
+      "EverifyQrVerifyRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["face_liveness_session_id", "value"],
+        "properties": {
+          "face_liveness_session_id": { "type": "string", "format": "uuid" },
+          "value": { "type": "string" }
+        }
+      }
+    }
+  }
+}

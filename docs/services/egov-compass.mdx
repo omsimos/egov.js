@@ -1,797 +1,151 @@
 ---
 $schema: https://holocron.so/frontmatter.json
-title: Query Philippine budget data with eGov Compass
-sidebarTitle: eGov Compass
-description: Read SAAODB, SARO, NCA, and LGSF budget records and dashboards through the authenticated, typed eGov Compass client.
+title: Query Philippine budget data with Compass
+sidebarTitle: Compass
+description: Query Compass for SAAODB, NCA, SARO, and LGSF budget records, organizational entities, dashboards, and paginated public data.
+icon: lucide:chart-no-axes-combined
 ---
 
-# eGov Compass API reference
+# Use Compass
 
-The eGov Compass client reads SAAODB, SARO, NCA, and LGSF budget data. All seven
-client methods are read-only HTTP `GET` operations.
+**Compass** provides structured access to Philippine budget execution, allocation, release, and Local Government Support Fund records.
 
-<Note>
-  Only [`getSaaodbRecords`](#getsaaodbrecords) requires a `period`. `getSaaodbDashboard` and
-  `getSaaodbEntities` do not accept a `period` field.
-</Note>
+<Aside>
+  <Note>
+    Compass operations are **read-only queries**, but access still requires the API key issued to
+    your integration.
+  </Note>
+</Aside>
 
-**Factories**
+## Query model
 
-| Factory                      | Returns         | Credential source        |
-| ---------------------------- | --------------- | ------------------------ |
-| `eGovCompassApi.create`      | `CompassClient` | Explicit `apiKey` option |
-| `createCompassClient`        | `CompassClient` | Explicit `apiKey` option |
-| `eGovCompassApi.fromEnv`     | `CompassClient` | `EGOVCOMPASS_API_KEY`    |
-| `createCompassClientFromEnv` | `CompassClient` | `EGOVCOMPASS_API_KEY`    |
+Pass request filters under the operation's **`query` object**. Required year, period, scope, and program fields vary by dataset.
 
-**Catalog exports**
+## Methods
 
-| Runtime export           | Description                                                         |
-| ------------------------ | ------------------------------------------------------------------- |
-| `eGovCompassApi`         | Shallow-frozen facade containing `create`, `fromEnv`, and `catalog` |
-| `eGovCompassApi.catalog` | The same object as `compassCatalog`                                 |
-| `compassCatalog`         | Machine-readable metadata for the seven Compass endpoints           |
-| `COMPASS_SOURCE_URL`     | eGov API catalog source URL                                         |
+These examples assume the configured `client` from [the quickstart](../getting-started/quickstart.mdx).
 
-**Methods**
+The **API Reference tab** remains the source of truth for complete query parameters, response schemas, and cURL examples.
 
-The methods below are in `CompassClient` source order.
+### `compass.getSaaodbRecords`
 
-| Method                                    | Purpose                                           |
-| ----------------------------------------- | ------------------------------------------------- |
-| [getLgsfDashboard](#getlgsfdashboard)     | Return LGSF KPIs, projects, and trend records     |
-| [getLgsfRecords](#getlgsfrecords)         | Return paginated LGSF records                     |
-| [getNcaRecords](#getncarecords)           | Return paginated Notices of Cash Allocation       |
-| [getSaaodbDashboard](#getsaaodbdashboard) | Return aggregate SAAODB budget-execution figures  |
-| [getSaaodbEntities](#getsaaodbentities)   | Return SAAODB entity hierarchy data               |
-| [getSaaodbRecords](#getsaaodbrecords)     | Return paginated SAAODB budget-execution records  |
-| [getSaroRecords](#getsarorecords)         | Return paginated Special Allotment Release Orders |
-
-**Imports and type boundary**
-
-The `egov.js/eGovCompass` runtime entry exports the five runtime values shown
-below. It does not re-export the Compass interfaces and type aliases.
+**`GET /api/v1/records/saaodb`** returns paginated SAAODB budget-execution records filtered by year, period, scope, entity, or expense class.
 
 ```ts
-import {
-  COMPASS_SOURCE_URL,
-  compassCatalog,
-  createCompassClient,
-  createCompassClientFromEnv,
-  eGovCompassApi,
-} from "egov.js/eGovCompass";
-```
+import { compass } from "egov.js";
 
-The package root, `egov.js`, also re-exports these runtime values. Neither
-runtime entry re-exports the Compass type names.
-
-Import Compass types from the dedicated `egov.js/eGovCompass/types` subpath.
-Use `import type` because this entry contains type declarations, not Compass
-runtime factories.
-
-```ts
-import type {
-  CompassClient,
-  CompassClientOptions,
-  CompassEnvironmentClientOptions,
-  CompassExpenseClass,
-  CompassLgsfDashboardQuery,
-  CompassLgsfDashboardResponse,
-  CompassLgsfProgramCode,
-  CompassLgsfRecord,
-  CompassLgsfRecordsQuery,
-  CompassNcaRecord,
-  CompassNcaRecordsQuery,
-  CompassPaginatedResponse,
-  CompassPaginationQuery,
-  CompassPeriod,
-  CompassSaaodbDashboardQuery,
-  CompassSaaodbDashboardResponse,
-  CompassSaaodbEntitiesQuery,
-  CompassSaaodbEntitiesResponse,
-  CompassSaaodbRecord,
-  CompassSaaodbRecordsQuery,
-  CompassSaroRecord,
-  CompassSaroRecordsQuery,
-  CompassSheetScope,
-} from "egov.js/eGovCompass/types";
-```
-
-Shared transport types and `EgovApiError` come from `egov.js/core`.
-
-```ts
-import { EgovApiError } from "egov.js/core";
-import type {
-  EgovCallOptions,
-  EgovEnvironment,
-  EgovEnvironmentName,
-  EgovFetch,
-} from "egov.js/core";
-```
-
-The Compass unions are:
-
-```ts
-type CompassPeriod = "FY" | "Q1" | "Q2" | "Q3" | "Q4";
-type CompassExpenseClass = "CO" | "FINEX" | "MOOE" | "PS";
-type CompassSheetScope = "agency" | "sucs" | "summary";
-type CompassLgsfProgramCode = "FALGU" | "GEF" | "GGG" | "SAFPB" | "SBDP";
-```
-
-**`eGovCompassApi`**
-
-`eGovCompassApi` is a shallow-frozen runtime facade. Its properties refer to
-the same direct exports documented on this page.
-
-```ts
-const eGovCompassApi = Object.freeze({
-  catalog: compassCatalog,
-  create: createCompassClient,
-  fromEnv: createCompassClientFromEnv,
+const saaodb = await compass.getSaaodbRecords({
+  client,
+  query: {
+    period: "FY",
+    reportYear: 2026,
+    page: 1,
+    limit: 25,
+  },
+  throwOnError: true,
 });
 ```
 
-Freezing the facade prevents replacing its three properties. It does not add
-validation to factory options, requests, responses, or the separate
-`compassCatalog` object.
+### `compass.getSaaodbDashboard`
 
-**`createCompassClient`**
-
-**Signature**
+**`GET /api/v1/records/saaodb/dashboard`** returns aggregated SAAODB figures for the requested report year and sheet scope.
 
 ```ts
-function createCompassClient(options: CompassClientOptions): CompassClient;
-```
+import { compass } from "egov.js";
 
-`eGovCompassApi.create` is the same function.
-
-**Parameters**
-
-| Option    | Type          | Required | Behavior                                                                                                                             |
-| --------- | ------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `apiKey`  | `string`      | Yes      | Sent as `X-API-Key` on every client request. The factory does not explicitly trim or validate it before passing it to `Headers.set`. |
-| `baseUrl` | `string`      | Yes      | Base URL against which each endpoint path is resolved. There is no SDK default and it is not read from an environment variable.      |
-| `fetch`   | `EgovFetch`   | No       | Custom Fetch-compatible implementation. Defaults to `globalThis.fetch`.                                                              |
-| `headers` | `HeadersInit` | No       | Headers applied to every request before per-call headers and Compass authentication are applied.                                     |
-
-`EgovFetch` has this signature:
-
-```ts
-type EgovFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
-```
-
-**Returns**
-
-A `CompassClient` with the seven methods in the Methods table. The
-factory creates the transport synchronously and does not make a network request.
-
-**Behavior and errors**
-
-The factory supplies no API host, credential, timeout, retry, query, or
-pagination defaults. It performs no Compass-specific runtime validation. Header
-construction can surface native `Headers` errors; request-time URL and Fetch
-errors follow the shared error behavior.
-
-```ts
-import { eGovCompassApi } from "egov.js/eGovCompass";
-
-const compass = eGovCompassApi.create({
-  apiKey: await secrets.get("EGOVCOMPASS_API_KEY"),
-  baseUrl: "https://dbm-ws.oueg.info",
+const saaodbDashboard = await compass.getSaaodbDashboard({
+  client,
+  query: {
+    reportYear: 2026,
+    sheetScope: "summary",
+  },
+  throwOnError: true,
 });
 ```
 
-**`createCompassClientFromEnv`**
+### `compass.getSaaodbEntities`
 
-**Signature**
-
-```ts
-function createCompassClientFromEnv(options: CompassEnvironmentClientOptions): CompassClient;
-```
-
-`eGovCompassApi.fromEnv` is the same function.
-
-**Parameters**
-
-| Option    | Type              | Required | Behavior                                                                                                           |
-| --------- | ----------------- | -------- | ------------------------------------------------------------------------------------------------------------------ |
-| `baseUrl` | `string`          | Yes      | Explicit service base URL. No base URL environment variable is read.                                               |
-| `env`     | `EgovEnvironment` | No       | Complete environment object to use instead of runtime globals. Only `EGOVCOMPASS_API_KEY` is read by this factory. |
-| `fetch`   | `EgovFetch`       | No       | Custom Fetch-compatible implementation. Defaults to `globalThis.fetch`.                                            |
-| `headers` | `HeadersInit`     | No       | Headers applied to every request before per-call headers and Compass authentication.                               |
-
-The environment option has this shared core shape:
+**`GET /api/v1/records/saaodb/entities`** returns department, agency, and fund-source relationships for navigating SAAODB data.
 
 ```ts
-type EgovEnvironment = Readonly<
-  Partial<Record<EgovEnvironmentName, string>> & Record<string, string | undefined>
->;
-```
+import { compass } from "egov.js";
 
-It is structurally a readonly, string-keyed environment object. The known eGov
-environment names are optional; Compass reads only `EGOVCOMPASS_API_KEY`.
-
-Environment object selection occurs in this exact order:
-
-1. `options.env`, when provided
-2. `globalThis.Bun?.env`
-3. `globalThis.process?.env`
-4. An empty object
-
-The first available object is selected as a whole. The factory does not search
-later objects for a missing key: `options.env` prevents fallback to Bun or Node,
-and an available `Bun.env` prevents fallback to `process.env`. The selected
-`EGOVCOMPASS_API_KEY` value is trimmed. A missing, empty, or whitespace-only
-value throws a plain `Error` with this exact message:
-
-```text
-Missing required eGov environment variable: EGOVCOMPASS_API_KEY
-```
-
-**Returns**
-
-A `CompassClient` configured with the resolved API key and the explicit
-transport options.
-
-**Behavior and errors**
-
-Environment lookup and the missing-key error happen synchronously. No request
-is sent by the factory. After the key is resolved, request behavior and failures
-are the same as for `createCompassClient`.
-
-```ts
-import { eGovCompassApi } from "egov.js/eGovCompass";
-
-const compass = eGovCompassApi.fromEnv({
-  baseUrl: "https://dbm-ws.oueg.info",
+const entities = await compass.getSaaodbEntities({
+  client,
+  query: {
+    reportYear: 2026,
+    sheetScope: "agency",
+  },
+  throwOnError: true,
 });
 ```
 
-**`COMPASS_SOURCE_URL`**
+### `compass.getNcaRecords`
+
+**`GET /api/v1/records/nca`** returns paginated Notice of Cash Allocation records for a budget year and optional organization filters.
 
 ```ts
-const COMPASS_SOURCE_URL = "https://platforms.e.gov.ph/dashboard/api-catalogs/compass" as const;
-```
+import { compass } from "egov.js";
 
-This is the source URL stored in `compassCatalog`. It is not a default API
-`baseUrl` and is never used to send client requests.
-
-**`compassCatalog`**
-
-`compassCatalog` is runtime metadata, and `eGovCompassApi.catalog` refers to the
-same object.
-
-| Field       | Value                                                                          |
-| ----------- | ------------------------------------------------------------------------------ |
-| `id`        | `"compass"`                                                                    |
-| `name`      | `"Compass"`                                                                    |
-| `slug`      | `"compass"`                                                                    |
-| `sourceUrl` | `COMPASS_SOURCE_URL`                                                           |
-| `summary`   | `"Query public DBM appropriations, allotment, release, and spending records."` |
-
-Every catalog endpoint declares a required `X-API-Key` string header and one
-`200` response. The endpoint array has this catalog-specific order:
-
-| Catalog ID                         | Name                             | Wire route                             | Catalog response description |
-| ---------------------------------- | -------------------------------- | -------------------------------------- | ---------------------------- |
-| `get-saaodb-records`               | Get SAAODB Records               | `GET /api/v1/records/saaodb`           | SAAODB records returned.     |
-| `get-saaodb-dashboard-summary`     | Get SAAODB Dashboard Summary     | `GET /api/v1/records/saaodb/dashboard` | SAAODB dashboard returned.   |
-| `get-saaodb-hierarchical-entities` | Get SAAODB Hierarchical Entities | `GET /api/v1/records/saaodb/entities`  | Entity hierarchy returned.   |
-| `get-nca-records`                  | Get NCA Records                  | `GET /api/v1/records/nca`              | NCA records returned.        |
-| `get-saro-records`                 | Get SARO Records                 | `GET /api/v1/records/saro`             | SARO records returned.       |
-| `get-lgsf-records`                 | Get LGSF Records                 | `GET /api/v1/records/lgsf`             | LGSF records returned.       |
-| `get-lgsf-dashboard-summary`       | Get LGSF Dashboard Summary       | `GET /api/v1/records/lgsf/dashboard`   | LGSF dashboard returned.     |
-
-The catalog describes discovery metadata. The TypeScript query and response
-contracts in `egov.js/eGovCompass/types` are the client method contracts.
-
-**Shared request behavior**
-
-All Compass methods use the same transport behavior:
-
-- Each call sends one read-only `GET` request with no request body. The SDK does
-  not retry automatically.
-- The endpoint path is resolved against the configured `baseUrl`. A missing
-  trailing slash is normalized before the path is resolved.
-- Query values are serialized with `String(value)`. `undefined` values are
-  omitted. The core transport also omits `null`, although public Compass query
-  types do not accept `null`.
-- Factory-level headers are applied first, then per-call headers. The configured
-  API key is set last as `X-API-Key`, so neither header set can replace it.
-- `Accept: application/json` is added only when the merged headers do not
-  already contain an `Accept` header.
-- The SDK supplies no service query or pagination defaults. Type requirements,
-  integer annotations, and string unions are compile-time contracts only; the
-  SDK does not validate query values at runtime.
-- Successful response bodies are parsed as JSON only for `application/json` or
-  a media type ending in `+json`. Other bodies, including malformed declared
-  JSON, are returned as text. Empty bodies and status `204` or `205` produce
-  `undefined` at runtime.
-- Parsed successful bodies are cast to the documented TypeScript return type.
-  The SDK does not validate response fields, nesting, unions, or open record
-  contents at runtime.
-
-Bypassing TypeScript and omitting an individual required query field generally
-causes that field to be omitted from the URL. Omitting a required query object
-can instead cause a native property-access `TypeError` before Fetch is called.
-
-**Shared pagination**
-
-The record-list queries extend this shared query type:
-
-```ts
-interface CompassPaginationQuery {
-  limit?: number;
-  page?: number;
-}
-```
-
-Both fields are optional. The SDK does not assign a default, enforce an integer
-or range, or interpret the values. When provided, each is serialized as a query
-string value and sent to the provider.
-
-`getLgsfRecords`, `getNcaRecords`, `getSaaodbRecords`, and `getSaroRecords`
-return this shared envelope:
-
-```ts
-interface CompassPaginatedResponse<T> {
-  items: T[];
-  limit: number;
-  page: number;
-  total: number;
-}
-```
-
-All four response fields are required by the TypeScript contract. The LGSF
-dashboard accepts the shared `limit` and `page` query fields but uses its own
-`projects` response shape with `pageSize` rather than `limit`.
-
-**Shared call options**
-
-Every method accepts the same optional final argument. Import its type from
-`egov.js/core`.
-
-```ts
-interface EgovCallOptions {
-  headers?: HeadersInit;
-  signal?: AbortSignal;
-}
-```
-
-| Field     | Behavior                                                                                                                                                        |
-| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `headers` | Adds or replaces headers for this call after factory-level headers. `X-API-Key` is subsequently set to the configured credential and cannot be overridden here. |
-| `signal`  | Passed directly to Fetch as `RequestInit.signal`. The SDK does not create a timeout signal.                                                                     |
-
-For a method whose `query` argument is optional, pass `undefined` in the first
-position when supplying call options without filters:
-
-```ts
-await compass.getSaroRecords(undefined, {
-  signal: AbortSignal.timeout(10_000),
+const nca = await compass.getNcaRecords({
+  client,
+  query: {
+    budgetYear: 2026,
+    page: 1,
+    limit: 25,
+  },
+  throwOnError: true,
 });
 ```
 
-**Shared errors**
+### `compass.getSaroRecords`
 
-A non-successful HTTP response throws `EgovApiError` from `egov.js/core` after
-the response body is parsed according to the shared response
-behavior.
-
-| Property     | Type      | Value                                                                          |
-| ------------ | --------- | ------------------------------------------------------------------------------ |
-| `name`       | `string`  | `"EgovApiError"`                                                               |
-| `message`    | `string`  | `"GET <url> failed with <status> <statusText>"`, with outer whitespace trimmed |
-| `body`       | `unknown` | Parsed JSON, text, or `undefined` response body                                |
-| `headers`    | `Headers` | Response headers                                                               |
-| `method`     | `string`  | `"GET"` for every Compass method                                               |
-| `status`     | `number`  | HTTP status code                                                               |
-| `statusText` | `string`  | HTTP status text                                                               |
-| `url`        | `string`  | Fully resolved request URL, including serialized query fields                  |
-
-Fetch rejections, abort errors, URL construction errors, and other native
-runtime errors propagate unchanged; the SDK does not wrap them in
-`EgovApiError`.
-
-## `getLgsfDashboard`
-
-**Signature**
+**`GET /api/v1/records/saro`** returns paginated Special Allotment Release Order records with optional release and agency filters.
 
 ```ts
-getLgsfDashboard(
-  query: CompassLgsfDashboardQuery,
-  options?: EgovCallOptions,
-): Promise<CompassLgsfDashboardResponse>;
+import { compass } from "egov.js";
+
+const saro = await compass.getSaroRecords({
+  client,
+  query: { page: 1, limit: 25 },
+  throwOnError: true,
+});
 ```
 
-**Parameters**
+### `compass.getLgsfRecords`
 
-| Parameter | Type                        | Required | Description                                         |
-| --------- | --------------------------- | -------- | --------------------------------------------------- |
-| `query`   | `CompassLgsfDashboardQuery` | Yes      | LGSF dashboard filters and project-list pagination. |
-| `options` | `EgovCallOptions`           | No       | Per-call headers and abort signal.                  |
-
-| Query field    | Type                                             | Required | Wire name      |
-| -------------- | ------------------------------------------------ | -------- | -------------- |
-| `limit`        | `number` from shared pagination                  | No       | `limit`        |
-| `municipality` | `string`                                         | No       | `municipality` |
-| `page`         | `number` from shared pagination                  | No       | `page`         |
-| `programCode`  | `"FALGU" \| "GEF" \| "GGG" \| "SAFPB" \| "SBDP"` | Yes      | `programCode`  |
-| `province`     | `string`                                         | No       | `province`     |
-| `region`       | `string`                                         | No       | `region`       |
-| `reportYear`   | `number`                                         | No       | `reportYear`   |
-
-**Returns**
+**`GET /api/v1/records/lgsf`** returns paginated Local Government Support Fund records with optional program and location filters.
 
 ```ts
-interface CompassLgsfDashboardResponse {
-  kpis: {
-    barangayCount: number;
-    fiscalYearCount: number;
-    lguCount: number;
-    projectCount: number;
-    provinceCount: number;
-    regionCount: number;
-    totalReleased: number;
-  };
-  programCode: CompassLgsfProgramCode;
-  projects: {
-    page: number;
-    pageSize: number;
-    rows: CompassLgsfRecord[];
-    total: number;
-  };
-  reportYear: number | null;
-  trend: Array<Record<string, unknown>>;
-}
+import { compass } from "egov.js";
 
-type CompassLgsfRecord = Record<string, unknown>;
+const lgsf = await compass.getLgsfRecords({
+  client,
+  query: {
+    fiscalYear: 2026,
+    programCode: "FALGU",
+    page: 1,
+    limit: 25,
+  },
+  throwOnError: true,
+});
 ```
 
-Every displayed property is required by the response type. Each
-`projects.rows` item and each `trend` item is an open
-`Record<string, unknown>` with no guaranteed named fields.
+### `compass.getLgsfDashboard`
 
-**Behavior and errors**
-
-Sends an authenticated, read-only `GET /api/v1/records/lgsf/dashboard` request
-with `X-API-Key` and no body. Undefined optional filters are omitted. The SDK
-does not default `reportYear`, pagination, or filters and does not validate the
-query or response at runtime. See shared request behavior
-and shared errors.
-
-## `getLgsfRecords`
-
-**Signature**
+**`GET /api/v1/records/lgsf/dashboard`** returns LGSF KPIs, trends, and projects for the requested program and optional location filters.
 
 ```ts
-getLgsfRecords(
-  query?: CompassLgsfRecordsQuery,
-  options?: EgovCallOptions,
-): Promise<CompassPaginatedResponse<CompassLgsfRecord>>;
+import { compass } from "egov.js";
+
+const lgsfDashboard = await compass.getLgsfDashboard({
+  client,
+  query: {
+    programCode: "FALGU",
+    reportYear: 2026,
+  },
+  throwOnError: true,
+});
 ```
 
-**Parameters**
-
-| Parameter | Type                      | Required | Description                                                     |
-| --------- | ------------------------- | -------- | --------------------------------------------------------------- |
-| `query`   | `CompassLgsfRecordsQuery` | No       | LGSF filters and pagination. The whole argument may be omitted. |
-| `options` | `EgovCallOptions`         | No       | Per-call headers and abort signal.                              |
-
-| Query field        | Type                                             | Required | Wire name          |
-| ------------------ | ------------------------------------------------ | -------- | ------------------ |
-| `cityMunicipality` | `string`                                         | No       | `cityMunicipality` |
-| `fiscalYear`       | `number`                                         | No       | `fiscalYear`       |
-| `limit`            | `number` from shared pagination                  | No       | `limit`            |
-| `page`             | `number` from shared pagination                  | No       | `page`             |
-| `programCode`      | `"FALGU" \| "GEF" \| "GGG" \| "SAFPB" \| "SBDP"` | No       | `programCode`      |
-| `province`         | `string`                                         | No       | `province`         |
-| `regionCode`       | `string`                                         | No       | `regionCode`       |
-
-**Returns**
-
-`Promise<CompassPaginatedResponse<CompassLgsfRecord>>`. The response has the
-required `items`, `limit`, `page`, and `total` fields defined in shared
-pagination. Each item has this open shape:
-
-```ts
-type CompassLgsfRecord = Record<string, unknown>;
-```
-
-No named item fields are guaranteed by the SDK type.
-
-**Behavior and errors**
-
-Sends an authenticated, read-only `GET /api/v1/records/lgsf` request with
-`X-API-Key` and no body. Omitting `query` sends no Compass query fields. The SDK
-does not supply filter or pagination defaults and does not validate the query,
-open records, or pagination envelope at runtime. See shared request
-behavior and shared errors.
-
-## `getNcaRecords`
-
-**Signature**
-
-```ts
-getNcaRecords(
-  query: CompassNcaRecordsQuery,
-  options?: EgovCallOptions,
-): Promise<CompassPaginatedResponse<CompassNcaRecord>>;
-```
-
-**Parameters**
-
-| Parameter | Type                     | Required | Description                        |
-| --------- | ------------------------ | -------- | ---------------------------------- |
-| `query`   | `CompassNcaRecordsQuery` | Yes      | NCA filters and pagination.        |
-| `options` | `EgovCallOptions`        | No       | Per-call headers and abort signal. |
-
-| Query field         | Type                            | Required | Wire name           |
-| ------------------- | ------------------------------- | -------- | ------------------- |
-| `agencyCode`        | `string`                        | No       | `agencyCode`        |
-| `budgetYear`        | `number`                        | Yes      | `budgetYear`        |
-| `deptCode`          | `string`                        | No       | `deptCode`          |
-| `expenseClass`      | `string`                        | No       | `expenseClass`      |
-| `limit`             | `number` from shared pagination | No       | `limit`             |
-| `operatingUnitCode` | `string`                        | No       | `operatingUnitCode` |
-| `page`              | `number` from shared pagination | No       | `page`              |
-
-`expenseClass` is intentionally typed as `string`; this query does not use the
-`CompassExpenseClass` union.
-
-**Returns**
-
-`Promise<CompassPaginatedResponse<CompassNcaRecord>>`. The response has the
-required `items`, `limit`, `page`, and `total` fields defined in shared
-pagination. Each item has this open shape:
-
-```ts
-type CompassNcaRecord = Record<string, unknown>;
-```
-
-No named item fields are guaranteed by the SDK type.
-
-**Behavior and errors**
-
-Sends an authenticated, read-only `GET /api/v1/records/nca` request with
-`X-API-Key` and no body. Undefined optional filters are omitted. The SDK does
-not default `budgetYear`, filters, or pagination and does not validate the query,
-open records, or pagination envelope at runtime. See shared request
-behavior and shared errors.
-
-## `getSaaodbDashboard`
-
-**Signature**
-
-```ts
-getSaaodbDashboard(
-  query: CompassSaaodbDashboardQuery,
-  options?: EgovCallOptions,
-): Promise<CompassSaaodbDashboardResponse>;
-```
-
-**Parameters**
-
-| Parameter | Type                          | Required | Description                        |
-| --------- | ----------------------------- | -------- | ---------------------------------- |
-| `query`   | `CompassSaaodbDashboardQuery` | Yes      | Required year and sheet scope.     |
-| `options` | `EgovCallOptions`             | No       | Per-call headers and abort signal. |
-
-| Query field  | Type                              | Required | Wire name    |
-| ------------ | --------------------------------- | -------- | ------------ |
-| `reportYear` | `number`                          | Yes      | `reportYear` |
-| `sheetScope` | `"agency" \| "sucs" \| "summary"` | Yes      | `sheetScope` |
-
-This query has no `period` field.
-
-**Returns**
-
-```ts
-interface CompassSaaodbDashboardResponse {
-  appropriationSplit: {
-    continuing: number;
-    currentYear: number;
-    hasSplit: boolean;
-  };
-  cascade: {
-    adjustments: number;
-    allotments: number;
-    appropriations: number;
-    disbursements: number;
-    obligations: number;
-    totalAvailable: number;
-    unobligated: number;
-    unreleased: number;
-  };
-  classBreakdown: Array<{
-    amount: number;
-    class: CompassExpenseClass;
-  }>;
-  rates: {
-    disbRateAppro: number;
-    disbRateOblig: number;
-    obligationRate: number;
-  };
-  reportYear: number;
-  sheetScope: CompassSheetScope;
-  topEntities: Array<Record<string, unknown>>;
-}
-```
-
-Every displayed property is required by the response type. Each `topEntities`
-item is an open `Record<string, unknown>` with no guaranteed named fields.
-
-**Behavior and errors**
-
-Sends an authenticated, read-only `GET /api/v1/records/saaodb/dashboard`
-request with `X-API-Key` and no body. It sends only `reportYear` and
-`sheetScope`; it does not send or infer a period. The SDK supplies no defaults
-and does not validate the query or response at runtime. See shared request
-behavior and shared errors.
-
-## `getSaaodbEntities`
-
-**Signature**
-
-```ts
-getSaaodbEntities(
-  query: CompassSaaodbEntitiesQuery,
-  options?: EgovCallOptions,
-): Promise<CompassSaaodbEntitiesResponse>;
-```
-
-**Parameters**
-
-| Parameter | Type                         | Required | Description                                                      |
-| --------- | ---------------------------- | -------- | ---------------------------------------------------------------- |
-| `query`   | `CompassSaaodbEntitiesQuery` | Yes      | Required year and scope plus optional hierarchy expansion names. |
-| `options` | `EgovCallOptions`            | No       | Per-call headers and abort signal.                               |
-
-| Query field          | Type                 | Required | Wire name            |
-| -------------------- | -------------------- | -------- | -------------------- |
-| `expandEntity`       | `string`             | No       | `expandEntity`       |
-| `expandEntityParent` | `string`             | No       | `expandEntityParent` |
-| `expandParent`       | `string`             | No       | `expandParent`       |
-| `reportYear`         | `number`             | Yes      | `reportYear`         |
-| `sheetScope`         | `"agency" \| "sucs"` | Yes      | `sheetScope`         |
-
-This method does not accept `sheetScope: "summary"` and has no `period` field.
-
-**Returns**
-
-```ts
-type CompassSaaodbEntitiesResponse = Record<string, unknown>;
-```
-
-The entire response is open. The SDK guarantees no named top-level fields or
-nested shape in its TypeScript contract.
-
-**Behavior and errors**
-
-Sends an authenticated, read-only `GET /api/v1/records/saaodb/entities`
-request with `X-API-Key` and no body. Undefined expansion fields are omitted; no
-period is sent or inferred. The SDK supplies no defaults and does not validate
-the query or open response at runtime. See shared request
-behavior and shared errors.
-
-## `getSaaodbRecords`
-
-**Signature**
-
-```ts
-getSaaodbRecords(
-  query: CompassSaaodbRecordsQuery,
-  options?: EgovCallOptions,
-): Promise<CompassPaginatedResponse<CompassSaaodbRecord>>;
-```
-
-**Parameters**
-
-| Parameter | Type                        | Required | Description                                                           |
-| --------- | --------------------------- | -------- | --------------------------------------------------------------------- |
-| `query`   | `CompassSaaodbRecordsQuery` | Yes      | Required period and report year plus optional filters and pagination. |
-| `options` | `EgovCallOptions`           | No       | Per-call headers and abort signal.                                    |
-
-| Query field  | Type                                   | Required | Wire name    |
-| ------------ | -------------------------------------- | -------- | ------------ |
-| `class`      | `"CO" \| "FINEX" \| "MOOE" \| "PS"`    | No       | `class`      |
-| `entityName` | `string`                               | No       | `entityName` |
-| `limit`      | `number` from shared pagination        | No       | `limit`      |
-| `page`       | `number` from shared pagination        | No       | `page`       |
-| `period`     | `"FY" \| "Q1" \| "Q2" \| "Q3" \| "Q4"` | Yes      | `period`     |
-| `reportYear` | `number`                               | Yes      | `reportYear` |
-| `sheetScope` | `"agency" \| "sucs" \| "summary"`      | No       | `sheetScope` |
-
-**Returns**
-
-`Promise<CompassPaginatedResponse<CompassSaaodbRecord>>`. The response has the
-required `items`, `limit`, `page`, and `total` fields defined in shared
-pagination. Each item is open but has these optional known
-fields:
-
-```ts
-interface CompassSaaodbRecord extends Record<string, unknown> {
-  adjustments?: number;
-  allotments?: number;
-  appropriations?: number;
-  class?: CompassExpenseClass;
-  disbursements?: number;
-  entityName?: string;
-  id?: string;
-  obligations?: number;
-  period?: CompassPeriod;
-  reportYear?: number;
-  sheetScope?: CompassSheetScope;
-}
-```
-
-All named item fields are optional, and additional string-keyed fields may have
-unknown values.
-
-**Behavior and errors**
-
-Sends an authenticated, read-only `GET /api/v1/records/saaodb` request with
-`X-API-Key` and no body. `period` and `reportYear` are required by TypeScript;
-undefined optional filters are omitted. The SDK supplies no defaults and does
-not validate periods, years, filters, records, or the pagination envelope at
-runtime. See shared request behavior and shared
-errors.
-
-## `getSaroRecords`
-
-**Signature**
-
-```ts
-getSaroRecords(
-  query?: CompassSaroRecordsQuery,
-  options?: EgovCallOptions,
-): Promise<CompassPaginatedResponse<CompassSaroRecord>>;
-```
-
-**Parameters**
-
-| Parameter | Type                      | Required | Description                                                     |
-| --------- | ------------------------- | -------- | --------------------------------------------------------------- |
-| `query`   | `CompassSaroRecordsQuery` | No       | SARO filters and pagination. The whole argument may be omitted. |
-| `options` | `EgovCallOptions`         | No       | Per-call headers and abort signal.                              |
-
-| Query field    | Type                            | Required | Wire name      |
-| -------------- | ------------------------------- | -------- | -------------- |
-| `agencyCode`   | `string`                        | No       | `agencyCode`   |
-| `deptCode`     | `string`                        | No       | `deptCode`     |
-| `expenseClass` | `string`                        | No       | `expenseClass` |
-| `limit`        | `number` from shared pagination | No       | `limit`        |
-| `page`         | `number` from shared pagination | No       | `page`         |
-| `saroNo`       | `string`                        | No       | `saroNo`       |
-
-`expenseClass` is intentionally typed as `string`; this query does not use the
-`CompassExpenseClass` union.
-
-**Returns**
-
-`Promise<CompassPaginatedResponse<CompassSaroRecord>>`. The response has the
-required `items`, `limit`, `page`, and `total` fields defined in shared
-pagination. Each item is open but has these optional known
-fields:
-
-```ts
-interface CompassSaroRecord extends Record<string, unknown> {
-  agencyCode?: string;
-  amount?: number;
-  dateIssued?: string;
-  deptCode?: string;
-  expenseClass?: string;
-  saroNo?: string;
-}
-```
-
-All named item fields are optional, and additional string-keyed fields may have
-unknown values.
-
-**Behavior and errors**
-
-Sends an authenticated, read-only `GET /api/v1/records/saro` request with
-`X-API-Key` and no body. Omitting `query` sends no Compass query fields. The SDK
-does not supply filter or pagination defaults and does not validate the query,
-records, or pagination envelope at runtime. See shared request
-behavior and shared errors.
+[View the provider catalog](https://platforms.e.gov.ph/dashboard/api-catalogs/compass)

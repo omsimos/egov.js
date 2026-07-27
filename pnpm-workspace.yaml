@@ -9,4 +9,9 @@ onlyBuiltDependencies:
 
 overrides:
   "@hono/node-server": 2.0.11
+  "js-yaml@>=4.0.0 <4.3.0": 4.3.0
   sharp: 0.35.3
+
+# Remove once Holocron correctly renders API-key and multipart cURL examples.
+patchedDependencies:
+  "@holocron.so/vite@0.28.0": patches/@holocron.so__vite@0.28.0.patch

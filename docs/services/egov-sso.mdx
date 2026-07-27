@@ -2,343 +2,62 @@
 $schema: https://holocron.so/frontmatter.json
 title: Authenticate citizens with eGov SSO
 sidebarTitle: eGov SSO
-description: Exchange a one-time citizen login code for an eGov SSO token and retrieve the corresponding verified citizen profile server-side.
+description: Exchange partner credentials and a citizen authorization code for an eGov SSO token, then retrieve the authenticated profile.
+icon: lucide:log-in
 ---
 
-# eGov SSO API reference
+# Use eGov SSO
 
-**eGov SSO** exchanges a one-time authorization code and partner credentials for
-an access token, then resolves that token to a citizen profile. The SDK has no
-default service URL; pass the approved environment's URL explicitly.
+**eGov SSO** exchanges partner credentials and a citizen authorization code for an access token, then returns the authenticated citizen profile.
 
-**Imports**
+<Aside>
+  <Warning>
+    SSO responses contain **personally identifiable information**. Keep partner secrets, tokens, and
+    citizen profiles on trusted server infrastructure.
+  </Warning>
+</Aside>
 
-```ts
-import {
-  EGOV_SSO_SOURCE_URL,
-  createEgovSsoClient,
-  createEgovSsoClientFromEnv,
-  eGovSsoApi,
-  egovSsoCatalog,
-} from "egov.js/eGovSso";
-import type {
-  EgovSsoAuthenticationResponse,
-  EgovSsoCitizenProfile,
-  EgovSsoClient,
-  EgovSsoEnvironmentClient,
-} from "egov.js/eGovSso/types";
-import type { EgovCallOptions } from "egov.js/core";
-```
+## Authentication flow
 
-The same exports are available from the package root. `eGovSsoApi` is a frozen
-namespace whose members reference the corresponding named exports.
+Call **`egovSso.generateAccessToken`** with the partner code, partner secret, and exchange code. Pass the returned bearer token to `egovSso.authenticate` through `auth`.
 
-**Factories**
+## Methods
 
-| Factory or catalog   | Named export                 | Purpose                                                            |
-| -------------------- | ---------------------------- | ------------------------------------------------------------------ |
-| `eGovSsoApi.create`  | `createEgovSsoClient`        | Create a client that accepts partner credentials per token request |
-| `eGovSsoApi.fromEnv` | `createEgovSsoClientFromEnv` | Bind partner credentials from environment variables                |
-| `eGovSsoApi.catalog` | `egovSsoCatalog`             | Inspect static endpoint metadata                                   |
+These examples assume the configured `client` from [the quickstart](../getting-started/quickstart.mdx).
 
-**Create a client**
+The **API Reference tab** documents token-exchange errors, bearer authentication, request fields, and the citizen profile schema.
 
-**Signature**
+### `egovSso.generateAccessToken`
+
+**`POST /api/token`** exchanges the partner code, partner secret, and citizen authorization code for an access token.
 
 ```ts
-function createEgovSsoClient(options: EgovTransportOptions): EgovSsoClient;
-eGovSsoApi.create(options: EgovTransportOptions): EgovSsoClient;
-```
+import { egovSso } from "egov.js";
 
-**Parameters**
-
-| Parameter         | Type                                                                   | Required | Behavior                                                                                                                           |
-| ----------------- | ---------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `options`         | `EgovTransportOptions`                                                 | Yes      | Transport configuration.                                                                                                           |
-| `options.baseUrl` | `string`                                                               | Yes      | Service origin or base path. A trailing slash is optional.                                                                         |
-| `options.fetch`   | `(input: RequestInfo \| URL, init?: RequestInit) => Promise<Response>` | No       | Fetch implementation; defaults to `globalThis.fetch`.                                                                              |
-| `options.headers` | `HeadersInit`                                                          | No       | Default headers. Per-call headers replace defaults with the same name; SDK-controlled bearer authorization replaces either source. |
-
-**Behavior/Errors**
-
-Creating a client performs no network request and does not validate the URL.
-This direct client requires `partnerCode` and `partnerSecret` in every
-`generateAccessToken` request.
-
-**Create a client from environment variables**
-
-**Signature**
-
-```ts
-function createEgovSsoClientFromEnv(
-  options: EgovSsoEnvironmentClientOptions,
-): EgovSsoEnvironmentClient;
-eGovSsoApi.fromEnv(
-  options: EgovSsoEnvironmentClientOptions,
-): EgovSsoEnvironmentClient;
-
-interface EgovSsoEnvironmentClientOptions extends EgovTransportOptions {
-  env?: EgovEnvironment;
-}
-```
-
-**Parameters**
-
-| Parameter         | Type                                                                   | Required | Behavior                                                                                                                                                                                      |
-| ----------------- | ---------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `options`         | `EgovSsoEnvironmentClientOptions`                                      | Yes      | Environment and transport configuration.                                                                                                                                                      |
-| `options.env`     | `EgovEnvironment`                                                      | No       | Explicit read-only environment map whose values are `string \| undefined`. If omitted, resolution is `Bun.env`, then `process.env`, then `{}`. An explicit object is not merged with globals. |
-| `options.baseUrl` | `string`                                                               | Yes      | Service origin or base path.                                                                                                                                                                  |
-| `options.fetch`   | `(input: RequestInfo \| URL, init?: RequestInit) => Promise<Response>` | No       | Fetch implementation; defaults to `globalThis.fetch`.                                                                                                                                         |
-| `options.headers` | `HeadersInit`                                                          | No       | Default request headers.                                                                                                                                                                      |
-
-| Environment variable     | Required | Use                                                                 |
-| ------------------------ | -------- | ------------------------------------------------------------------- |
-| `EGOVSSO_PARTNER_CODE`   | Yes      | Injected as `partnerCode`/`partner_code` during token exchange.     |
-| `EGOVSSO_PARTNER_SECRET` | Yes      | Injected as `partnerSecret`/`partner_secret` during token exchange. |
-
-**Behavior/Errors**
-
-Environment values are trimmed and captured when the client is created. A
-missing, empty, or whitespace-only value throws an `Error` naming the required
-eGov environment variable. The returned client changes only the token method
-signature: callers provide `exchangeCode` and `scope`, while the factory supplies
-both partner credentials. `authenticate` is the direct client's same function.
-
-**Endpoint catalog**
-
-**Signature**
-
-```ts
-const egovSsoCatalog: EgovCatalogService;
-const EGOV_SSO_SOURCE_URL = "https://platforms.e.gov.ph/dashboard/api-catalogs/egov-sso" as const;
-
-const eGovSsoApi: Readonly<{
-  catalog: typeof egovSsoCatalog;
-  create: typeof createEgovSsoClient;
-  fromEnv: typeof createEgovSsoClientFromEnv;
-}>;
-```
-
-The catalog has `id` and `slug` `egov-sso`, name `eGov SSO`, summary
-`Single Sign-On integration for eGov partners.`, the source URL above, and these
-endpoints:
-
-| ID                      | Method and route                       | Authentication                                        | Cataloged statuses                                                                                                |
-| ----------------------- | -------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `generate-access-token` | `POST /api/token`                      | Partner code and secret in the JSON body              | `200` generated; `403` invalid or unauthorized partner credentials; `422` invalid, used, or expired exchange code |
-| `sso-authentication`    | `POST /api/partner/sso_authentication` | Required `Authorization: Bearer <accessToken>` header | `200` citizen profile; `401` missing, invalid, or expired access token                                            |
-
-Reading the catalog has no side effects and makes no request.
-
-**Methods**
-
-| Method                                                           | Purpose                                                 |
-| ---------------------------------------------------------------- | ------------------------------------------------------- |
-| [`generateAccessToken(request, options?)`](#generateaccesstoken) | Exchange an authorization code for an access token      |
-| [`authenticate(accessToken, options?)`](#authenticate)           | Resolve an access token to the citizen profile envelope |
-
-## `generateAccessToken`
-
-**Signature**
-
-The direct client accepts credentials in the request:
-
-```ts
-generateAccessToken(
-  request: EgovSsoTokenRequest,
-  options?: EgovCallOptions,
-): Promise<EgovSsoTokenResponse>;
-
-interface EgovSsoTokenRequest {
-  exchangeCode: string;
-  partnerCode: string;
-  partnerSecret: string;
-  scope: "SSO_AUTHENTICATION" | (string & {});
-}
-```
-
-The environment client injects credentials and therefore has this distinct
-signature:
-
-```ts
-generateAccessToken(
-  request: EgovSsoEnvironmentTokenRequest,
-  options?: EgovCallOptions,
-): Promise<EgovSsoTokenResponse>;
-
-interface EgovSsoEnvironmentTokenRequest {
-  exchangeCode: string;
-  scope: "SSO_AUTHENTICATION" | (string & {});
-}
-```
-
-**Parameters**
-
-| Parameter               | Type                                                      | Required           | Wire field and format                                                                                 |
-| ----------------------- | --------------------------------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------- |
-| `request`               | `EgovSsoTokenRequest` or `EgovSsoEnvironmentTokenRequest` | Yes                | JSON body.                                                                                            |
-| `request.exchangeCode`  | `string`                                                  | Yes                | `exchange_code`; documented as a single-use authorization code.                                       |
-| `request.partnerCode`   | `string`                                                  | Direct client only | `partner_code`. The environment client injects `EGOVSSO_PARTNER_CODE`.                                |
-| `request.partnerSecret` | `string`                                                  | Direct client only | `partner_secret`. The environment client injects `EGOVSSO_PARTNER_SECRET`.                            |
-| `request.scope`         | `"SSO_AUTHENTICATION" \| (string & {})`                   | Yes                | `scope`. The type suggests `SSO_AUTHENTICATION` but permits any string; the SDK does not validate it. |
-| `options`               | `EgovCallOptions`                                         | No                 | Final per-call options.                                                                               |
-| `options.headers`       | `HeadersInit`                                             | No                 | Merged over client default headers. No authorization header is added by this method.                  |
-| `options.signal`        | `AbortSignal`                                             | No                 | Passed to `fetch` for cancellation.                                                                   |
-
-**Returns**
-
-```ts
-interface EgovSsoTokenResponse {
-  access_token: string;
-}
-```
-
-`access_token` is required and non-null. The SDK does not add expiry or token
-type fields to this response model.
-
-**Behavior/Errors**
-
-Makes `POST /api/token` with JSON. Exchanging a single-use code can consume
-external authorization state, so do not retry blindly. The catalog lists `200`,
-`403`, and `422`. Any non-2xx response throws `EgovApiError` with parsed `body`,
-response `headers`, `method`, `status`, `statusText`, and `url`. Fetch, abort,
-URL, and serialization failures propagate unchanged.
-
-## `authenticate`
-
-**Signature**
-
-The direct and environment clients have the same signature:
-
-```ts
-authenticate(
-  accessToken: string,
-  options?: EgovCallOptions,
-): Promise<EgovSsoAuthenticationResponse>;
-```
-
-**Parameters**
-
-| Parameter         | Type              | Required | Wire field and format                                                                                     |
-| ----------------- | ----------------- | -------- | --------------------------------------------------------------------------------------------------------- |
-| `accessToken`     | `string`          | Yes      | Sent as `Authorization: Bearer <accessToken>`.                                                            |
-| `options`         | `EgovCallOptions` | No       | Final per-call options.                                                                                   |
-| `options.headers` | `HeadersInit`     | No       | Merged over client defaults. The method always overwrites `Authorization` with the supplied bearer token. |
-| `options.signal`  | `AbortSignal`     | No       | Passed to `fetch`.                                                                                        |
-
-**Returns**
-
-Authentication returns the envelope, not the profile directly:
-
-```ts
-interface EgovSsoAuthenticationResponse {
-  data: EgovSsoCitizenProfile;
-  message: string;
-  status: number;
-}
-```
-
-`data`, `message`, and `status` are required and non-null. `data` has the
-following optional profile properties. Every `null` shown is an explicit union
-in addition to the property being optional.
-
-| `data` field             | Type                                   |
-| ------------------------ | -------------------------------------- |
-| `additional_information` | `EgovSsoAdditionalInformation \| null` |
-| `address`                | `string \| null`                       |
-| `address_line_2`         | `string \| null`                       |
-| `barangay`               | `string \| null`                       |
-| `barangay_code`          | `string \| null`                       |
-| `birth_date`             | `string \| null`                       |
-| `country`                | `string \| null`                       |
-| `country_alpha_2_code`   | `string \| null`                       |
-| `country_alpha_3_code`   | `string \| null`                       |
-| `country_id`             | `number \| null`                       |
-| `email`                  | `string \| null`                       |
-| `first_name`             | `string \| null`                       |
-| `foreign_address`        | `unknown \| null`                      |
-| `gender`                 | `string \| null`                       |
-| `last_name`              | `string \| null`                       |
-| `middle_name`            | `string \| null`                       |
-| `mobile`                 | `string \| null`                       |
-| `municipality`           | `string \| null`                       |
-| `municipality_code`      | `string \| null`                       |
-| `national_id`            | `EgovSsoNationalId \| null`            |
-| `nationality`            | `string \| null`                       |
-| `passport`               | `EgovSsoPassport \| null`              |
-| `photo`                  | `string \| null`                       |
-| `postal`                 | `string \| null`                       |
-| `province`               | `string \| null`                       |
-| `province_code`          | `string \| null`                       |
-| `region`                 | `string \| null`                       |
-| `region_code`            | `string \| null`                       |
-| `signature`              | `string \| null`                       |
-| `signature_url`          | `string \| null`                       |
-| `street`                 | `string \| null`                       |
-| `suffix`                 | `string \| null`                       |
-| `tin_id`                 | `unknown \| null`                      |
-| `uniqid`                 | `string \| null`                       |
-
-When present and non-null, `data.additional_information` can contain these
-optional properties and any additional string-keyed field of type `unknown`:
-
-| Field                        | Type                                                                                                                                                                          |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `birth_place`                | `{ birth_country?: string \| null; birth_municipality?: string \| null; birth_province?: string \| null } \| null`                                                            |
-| `educational_attainment`     | `EgovSsoEducationalAttainment[] \| null`                                                                                                                                      |
-| `emergency_information`      | `{ emergency_contact?: string \| null; emergency_name?: string \| null; emergency_relationship?: string \| null } \| null`                                                    |
-| `expected_salary`            | `{ expected_salary?: string \| null } \| null`                                                                                                                                |
-| `father_details`             | `{ father_birthdate?: string \| null; father_firstname?: string \| null; father_lastname?: string \| null } \| null`                                                          |
-| `health_data`                | `{ complexion?: string \| null; eyes_color?: string \| null; height?: string \| null; weight?: string \| null } \| null`                                                      |
-| `industry`                   | `{ industry?: string \| null } \| null`                                                                                                                                       |
-| `mother_details`             | `{ mother_birthdate?: string \| null; mother_maiden_firstname?: string \| null; mother_maiden_lastname?: string \| null; mother_maiden_middlename?: string \| null } \| null` |
-| `occupation`                 | `{ occupation?: string \| null } \| null`                                                                                                                                     |
-| `other_personal_information` | `{ marital_status?: string \| null; religion?: string \| null } \| null`                                                                                                      |
-| `[key: string]`              | `unknown`                                                                                                                                                                     |
-
-Each `educational_attainment` array item has five optional fields:
-`educational_background`, `from`, `level`, `school`, and `to`; each value is
-`string | null`.
-
-When present and non-null, `data.passport` has these optional `string | null`
-fields: `birth_date`, `expiry_date`, `first_name`, `gender`, `issued_date`,
-`last_name`, `middle_name`, `passport_number`, `place_issued`, and `suffix`.
-
-When present and non-null, `data.national_id` has these optional `string | null`
-fields: `code`, `face_url`, `pcn`, and `signature`.
-
-Example returning only the citizen profile:
-
-```ts
-async function getCitizenProfile(exchangeCode: string) {
-  const token = await sso.generateAccessToken({
-    exchangeCode,
+const token = await egovSso.generateAccessToken({
+  client,
+  body: {
+    exchange_code: authorizationCode,
+    partner_code: process.env.EGOVSSO_PARTNER_CODE!,
+    partner_secret: process.env.EGOVSSO_PARTNER_SECRET!,
     scope: "SSO_AUTHENTICATION",
-  });
-  const authentication = await sso.authenticate(token.access_token);
-
-  return authentication.data;
-}
+  },
+  throwOnError: true,
+});
 ```
 
-**Behavior/Errors**
+### `egovSso.authenticate`
 
-Makes `POST /api/partner/sso_authentication` with the bearer header and no
-request body. It reads profile data and performs no SDK-side mutation. The
-catalog lists `200` and `401`. Any non-2xx response throws `EgovApiError`; fetch
-and abort failures propagate unchanged.
+**`POST /api/partner/sso_authentication`** uses the bearer token to return the authenticated citizen profile.
 
-**Validation and security**
+```ts
+import { egovSso } from "egov.js";
 
-The SDK does not validate exchange codes, scopes, tokens, profile formats,
-response envelopes, dates, URLs, or identifiers at runtime. Successful response
-bodies are cast to the declared TypeScript type. Profile properties can be
-absent or null, and the two `unknown` fields plus additional-information index
-signature require application-level narrowing.
+const citizen = await egovSso.authenticate({
+  client,
+  auth: token.access_token,
+  throwOnError: true,
+});
+```
 
-<Warning>
-  Partner credentials, access tokens, and citizen profiles belong on the server. Minimize retained
-  fields, redact logs, encrypt stored data, and enforce the applicable consent and data-sharing
-  requirements.
-</Warning>
+[View the provider catalog](https://platforms.e.gov.ph/dashboard/api-catalogs/egov-sso)

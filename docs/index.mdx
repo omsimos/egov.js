@@ -1,25 +1,20 @@
 ---
 $schema: https://holocron.so/frontmatter.json
-title: Typed access to Philippine eGov APIs
+title: Generated access to Philippine eGov APIs
 sidebarTitle: Home
-description: Build government integrations with typed clients for nine Philippine eGov partner services across Node.js and modern runtimes.
+description: Use a generated TypeScript SDK and canonical OpenAPI contract for nine Philippine eGov partner services.
 ---
 
-# Typed access to Philippine eGov APIs
+# Generated access to Philippine eGov APIs
 
-**egov.js** is a dependency-free JavaScript and TypeScript SDK for nine eGov
-partner services. It standardizes authentication, request construction, error
-handling, and public types without hiding the underlying API contracts.
+**egov.js** publishes an OpenAPI 3.1 contract and a TypeScript SDK generated
+from it with Hey API. The root package exports a Fetch client, tagged static
+service classes, and all request and response types.
 
 <Warning>
-  Most configured endpoints are **hackathon or staging services**. Confirm the correct production
-  host and access agreement with each service owner before serving real users.
+  Provider endpoints are **staging or hackathon services** unless confirmed otherwise. Keep
+  credentials and citizen data on trusted server infrastructure.
 </Warning>
-
-## Start with one service
-
-**Subpath imports** keep each integration explicit and tree-shakeable. Choose a
-service, create a client, and pass its base URL separately from credentials.
 
 <CardGroup cols={2}>
   <Card
@@ -27,31 +22,25 @@ service, create a client, and pass its base URL separately from credentials.
     icon="lucide:package-plus"
     href="./getting-started/installation.mdx"
   >
-    Review npm availability, package-manager commands, and runtime requirements.
+    Install the package and verify the generated root export.
   </Card>
   <Card title="Run the quickstart" icon="lucide:play" href="./getting-started/quickstart.mdx">
-    Create an eGov AI client and make a typed request.
+    Create a client and make a typed eGov AI request.
   </Card>
-  <Card title="Choose a service" icon="lucide:blocks" href="./services/overview.mdx">
-    Compare the nine supported services and their side effects.
+  <Card title="Configure authentication" icon="lucide:key-round" href="./guides/authentication.mdx">
+    Apply bearer tokens and provider API-key headers safely.
   </Card>
-  <Card title="Handle failures" icon="lucide:triangle-alert" href="./guides/error-handling.mdx">
-    Normalize API errors and add explicit request deadlines.
+  <Card title="Inspect package exports" icon="lucide:braces" href="./reference/package-exports.mdx">
+    Use service classes, generated types, and the packaged OpenAPI document.
   </Card>
 </CardGroup>
 
 ## Runtime model
 
-**Modern web standards** power the SDK: Fetch, `Headers`, `URL`, `FormData`,
-`Blob`, and Web Crypto. Node.js 22.18 or newer is the supported server runtime.
+The generated SDK uses Fetch, `Headers`, `URL`, `FormData`, and `Blob`. Node.js
+22.18 or newer is the supported server runtime. The package bundles its client
+and has no runtime dependencies.
 
-<Aside>
-  <Info>
-    Credential-bearing clients belong on the **server**, even when the runtime APIs also exist in a
-    browser.
-  </Info>
-</Aside>
-
-**No automatic retries** are performed. Payment, messaging, complaint, and
-biometric operations can have side effects, so retry policy belongs to the
-application that understands idempotency.
+The SDK does not retry automatically. Payment, messaging, complaint, blockchain,
+and biometric operations can have external side effects, so retry policy belongs
+to the application.

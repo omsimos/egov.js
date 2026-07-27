@@ -1,10 +1,13 @@
-export * from "./core/index.js";
-export * from "./eGovAi/index.js";
-export * from "./eGovChain/index.js";
-export * from "./eGovCompass/index.js";
-export * from "./eGovFaceLiveness/index.js";
-export * from "./eGovPay/index.js";
-export * from "./eGovSso/index.js";
-export * from "./eMessage/index.js";
-export * from "./eReport/index.js";
-export * from "./eVerify/index.js";
+export { createClient } from "./generated/client/index.js";
+export type {
+  Auth,
+  Client,
+  Config,
+  CreateClientConfig,
+  RequestOptions,
+  RequestResult,
+  ResolvedRequestOptions,
+  ResponseStyle,
+} from "./generated/client/index.js";
+export * from "./generated/sdk.gen.js";
+export type * from "./generated/types.gen.js";

@@ -1,248 +1,47 @@
 ---
 $schema: https://holocron.so/frontmatter.json
-title: eMessage API reference
+title: Send government SMS notifications with eMessage
 sidebarTitle: eMessage
-description: Create an authenticated eMessage client and send SMS messages through the typed Push SMS endpoint.
+description: Send authenticated SMS notifications through eMessage using the generated TypeScript service method and provider-issued access token.
+icon: lucide:message-square-text
 ---
 
-# eMessage API reference
+# Use eMessage
 
-eMessage exposes one client operation, Push SMS. The SDK constructs and sends
-the authenticated request but does not queue, deduplicate, retry, or track
-delivery.
+**eMessage** sends authenticated SMS notifications to a mobile number through the Philippine eGov messaging service.
 
-**Factories**
+<Aside>
+  <Warning>
+    Sending an SMS creates an **external side effect** and may expose citizen contact data. Keep the
+    provider token in server-side code.
+  </Warning>
+</Aside>
 
-| Namespace member | Direct export                 | Purpose                                                        |
-| ---------------- | ----------------------------- | -------------------------------------------------------------- |
-| `create`         | `createEMessageClient`        | Create a client with a directly supplied eMessage access token |
-| `fromEnv`        | `createEMessageClientFromEnv` | Create a client from `EMESSAGE_ACCESS_TOKEN`                   |
-| `catalog`        | `emessageCatalog`             | Read the SDK's static eMessage endpoint catalog                |
+## Delivery policy
 
-**Methods**
+Apply **retry and duplicate-suppression policy** in the application because the generated client does not retry automatically.
 
-| Method                | Purpose                                         |
-| --------------------- | ----------------------------------------------- |
-| [`sendSms`](#sendsms) | Submit one SMS message for one recipient number |
+## Methods
 
-**Quick start**
+These examples assume the configured `client` from [the quickstart](../getting-started/quickstart.mdx).
+
+The **API Reference tab** documents the complete message body, authentication header, validation errors, and success response.
+
+### `eMessage.sendSms`
+
+**`POST /messaging/v1/sms/push`** sends an SMS message to the supplied mobile number using the configured eMessage token.
 
 ```ts
-import { eMessageApi } from "egov.js/eMessage";
+import { eMessage } from "egov.js";
 
-const messaging = eMessageApi.fromEnv({
-  baseUrl: "https://ws-message.e.gov.ph",
+const message = await eMessage.sendSms({
+  client,
+  body: {
+    message: "Your application is ready for review.",
+    number: "+639171234567",
+  },
+  throwOnError: true,
 });
-
-const response = await messaging.sendSms({
-  message: "Your application is ready for review.",
-  number: "+639171234567",
-});
-
-console.log(response.data.message);
 ```
 
-The SDK has no default base URL. Keep the eMessage access token in a server-side
-runtime.
-
-**`eMessageApi.create`**
-
-Creates an `EMessageClient`. This namespace function is the same function as
-the public `createEMessageClient` export.
-
-**Signature**
-
-```ts
-eMessageApi.create(options: EMessageClientOptions): EMessageClient
-```
-
-**Parameters**
-
-| Parameter             | Type                    | Required | Description                                                                                            |
-| --------------------- | ----------------------- | -------- | ------------------------------------------------------------------------------------------------------ |
-| `options`             | `EMessageClientOptions` | Yes      | Authentication and transport configuration                                                             |
-| `options.accessToken` | `string`                | Yes      | Value sent in `X-EMESSAGE-Auth` on every SMS request                                                   |
-| `options.baseUrl`     | `string`                | Yes      | Service origin or base path; no default is supplied                                                    |
-| `options.fetch`       | `EgovFetch`             | No       | `(input: RequestInfo \| URL, init?: RequestInit) => Promise<Response>`; defaults to `globalThis.fetch` |
-| `options.headers`     | `HeadersInit`           | No       | Default headers merged into every request                                                              |
-
-**Returns and behavior**
-
-Returns an `EMessageClient`. The access token is captured when the client is
-created. The base URL is normalized with a trailing slash before the endpoint
-path is resolved. Per-call headers override matching default headers, except
-that `sendSms` always replaces `X-EMESSAGE-Auth` with `options.accessToken`.
-
-**`eMessageApi.fromEnv`**
-
-Creates an `EMessageClient` from an environment access token. This namespace
-function is the same function as the public `createEMessageClientFromEnv`
-export.
-
-**Signature**
-
-```ts
-eMessageApi.fromEnv(
-  options: EMessageEnvironmentClientOptions,
-): EMessageClient
-```
-
-**Parameters**
-
-| Parameter                           | Type                               | Required                                  | Description                                                                          |
-| ----------------------------------- | ---------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------ |
-| `options`                           | `EMessageEnvironmentClientOptions` | Yes                                       | Environment and transport configuration                                              |
-| `options.baseUrl`                   | `string`                           | Yes                                       | Service origin or base path; no default is supplied                                  |
-| `options.fetch`                     | `EgovFetch`                        | No                                        | Custom fetch implementation; defaults to `globalThis.fetch`                          |
-| `options.headers`                   | `HeadersInit`                      | No                                        | Default headers merged into every request                                            |
-| `options.env`                       | `EgovEnvironment`                  | No                                        | Explicit string environment map; when present, it is used instead of runtime globals |
-| `options.env.EMESSAGE_ACCESS_TOKEN` | `string \| undefined`              | No at the type level; required at runtime | Value bound to `X-EMESSAGE-Auth`                                                     |
-
-**Returns and behavior**
-
-Returns an `EMessageClient` with the same `sendSms` signature as a direct
-client. The factory resolves the environment immediately in this order:
-
-1. `options.env`, when supplied
-2. `Bun.env`
-3. `process.env`
-4. An empty object
-
-It trims `EMESSAGE_ACCESS_TOKEN`. A missing, empty, or whitespace-only value
-throws
-`Error("Missing required eGov environment variable: EMESSAGE_ACCESS_TOKEN")`
-synchronously while creating the client. It does not read a base URL from the
-environment.
-
-**`eMessageApi.catalog`**
-
-Exposes the same object as the public `emessageCatalog` export. It is a static
-SDK description, not a network discovery call. `EMESSAGE_SOURCE_URL` is also
-exported and equals the catalog's `sourceUrl`.
-
-**Signature**
-
-```ts
-eMessageApi.catalog: typeof emessageCatalog
-```
-
-**Parameters**
-
-None. `catalog` is a property, not a function.
-
-**Value**
-
-| Field       | Value                                                          |
-| ----------- | -------------------------------------------------------------- |
-| `id`        | `"emessage"`                                                   |
-| `name`      | `"eMessage"`                                                   |
-| `slug`      | `"emessage"`                                                   |
-| `sourceUrl` | `"https://platforms.e.gov.ph/dashboard/api-catalogs/emessage"` |
-| `summary`   | `"Send SMS messages through the eMessage API."`                |
-
-The `endpoints` array contains one entry:
-
-| ID         | Method and path               | Authentication                           | Cataloged statuses  |
-| ---------- | ----------------------------- | ---------------------------------------- | ------------------- |
-| `push-sms` | `POST /messaging/v1/sms/push` | Required `X-EMESSAGE-Auth` string header | `201`, `400`, `422` |
-
-## `sendSms`
-
-Submits an SMS message to one recipient.
-
-**Signature**
-
-```ts
-sendSms(
-  request: EMessageSmsRequest,
-  options?: EgovCallOptions,
-): Promise<EMessageSmsResponse>
-```
-
-**Parameters**
-
-| Parameter         | Type                 | Required | Wire mapping or format                                      |
-| ----------------- | -------------------- | -------- | ----------------------------------------------------------- |
-| `request`         | `EMessageSmsRequest` | Yes      | JSON request body                                           |
-| `request.message` | `string`             | Yes      | JSON field `message`; SMS message body                      |
-| `request.number`  | `string`             | Yes      | JSON field `number`; cataloged as an E.164 recipient number |
-| `options`         | `EgovCallOptions`    | No       | Final call options argument                                 |
-
-**Returns**
-
-`Promise<EMessageSmsResponse>` with this required nesting:
-
-| Field          | Type                  | Required | Description             |
-| -------------- | --------------------- | -------- | ----------------------- |
-| `data`         | `{ message: string }` | Yes      | Response wrapper        |
-| `data.message` | `string`              | Yes      | Provider result message |
-
-The response type contains no message ID, provider status code, queue state,
-delivery receipt, or recipient delivery state.
-
-**Behavior and errors**
-
-Sends `POST /messaging/v1/sms/push` by serializing the supplied request object
-as JSON; its typed wire fields are `message` and `number`. Authentication is
-`X-EMESSAGE-Auth: <accessToken>`, using the token captured by `create` or
-`fromEnv`. HTTP header names are case-insensitive.
-
-| Status | Catalog meaning           |
-| ------ | ------------------------- |
-| `201`  | SMS created successfully  |
-| `400`  | Invalid request           |
-| `422`  | Request validation failed |
-
-Any other non-success status follows common error behavior.
-
-<Warning>
-  Calling `sendSms` initiates a real external side effect. A `201` response says the SMS was
-  created, but the source contract does not establish that it was delivered. A timeout, abort, or
-  network failure can also leave the caller unable to know whether the provider accepted the SMS.
-  Because the SDK and catalog expose no idempotency key, queue, deduplication, status lookup, or
-  delivery receipt, an automatic retry can send a duplicate message.
-</Warning>
-
-The SDK does not validate E.164 syntax, message length, character encoding, or
-provider limits before sending.
-
-**Call options**
-
-The final optional `sendSms` argument is `EgovCallOptions`, exported from
-`egov.js/core`:
-
-```ts
-import type { EgovCallOptions } from "egov.js/core";
-```
-
-| Field     | Type          | Required | Behavior                                     |
-| --------- | ------------- | -------- | -------------------------------------------- |
-| `headers` | `HeadersInit` | No       | Per-call headers merged over client defaults |
-| `signal`  | `AbortSignal` | No       | Passed to `fetch` for cancellation           |
-
-`sendSms` sets `X-EMESSAGE-Auth` after reading per-call headers, so
-`options.headers` cannot replace the configured token. The transport adds
-`Accept: application/json` and `Content-Type: application/json` when those
-headers are absent, then serializes the request with `JSON.stringify`.
-
-**Errors and runtime validation**
-
-Any HTTP response for which `Response.ok` is false throws `EgovApiError`,
-exported from `egov.js/core`. It exposes `body`, `headers`, `method`, `status`,
-`statusText`, and `url`. JSON and structured `+json` error bodies are parsed;
-other bodies remain text, and empty bodies become `undefined`. Fetch, network,
-and abort errors propagate unchanged. The SDK performs no retries.
-
-The cataloged statuses above describe known provider responses, not every
-status the server or network can return.
-
-<Warning>
-  Request and response types are compile-time contracts only. The SDK does not validate request
-  fields, E.164 syntax, successful response status codes, response field presence, field types, or
-  nesting at runtime. A successful body is parsed and cast to `EMessageSmsResponse`; malformed JSON
-  may be returned as text under that type, while an empty successful body becomes `undefined`.
-</Warning>
-
-Service-specific interfaces are exported from `egov.js/eMessage`. The core
-`EgovCallOptions`, `EgovEnvironment`, and `EgovFetch` types are exported from
-`egov.js/core`.
+[View the provider catalog](https://platforms.e.gov.ph/dashboard/api-catalogs/emessage)

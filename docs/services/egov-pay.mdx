@@ -1,367 +1,80 @@
 ---
 $schema: https://holocron.so/frontmatter.json
-title: Create and manage government payments with eGovPay
+title: Create and manage payments with eGovPay
 sidebarTitle: eGovPay
-description: Generate signed eGovPay checkout transactions, inspect payment status, and void transactions through the typed payment client.
+description: Create hosted eGovPay transactions, retrieve payment details, and void eligible transactions through the documented development service.
+icon: lucide:credit-card
 ---
 
-# eGovPay API reference
+# Use eGovPay
 
-**eGovPay** creates hosted payment transactions, retrieves transaction state, and
-voids eligible transactions. The SDK has no default service URL, so every client
-requires an explicit `baseUrl`.
+**eGovPay** creates hosted payment transactions, returns transaction details, and voids eligible payments through a merchant integration.
 
-**Imports**
+<Aside>
+  <Warning>
+    Payment operations can cause **external financial side effects**. Do not retry create or void
+    calls without an application-level idempotency decision.
+  </Warning>
+</Aside>
 
-```ts
-import {
-  EGOV_PAY_SOURCE_URL,
-  createEgovPayClient,
-  createEgovPayClientFromEnv,
-  createEgovPayDigest,
-  eGovPayApi,
-  egovPayCatalog,
-} from "egov.js/eGovPay";
-import type {
-  EgovPayClient,
-  EgovPayGeneratePaymentRequest,
-  EgovPayGeneratePaymentResponse,
-  EgovPayTransactionResponse,
-  EgovPayVoidResponse,
-} from "egov.js/eGovPay/types";
-import type { EgovCallOptions } from "egov.js/core";
-```
+## Sign requests
 
-The same values and types are also exported by the package root. The
-`eGovPayApi` namespace is frozen and groups the catalog and both factories; its
-members are the same functions and object as the corresponding named exports.
+Payment creation requires a **lowercase HMAC-SHA256 digest** of `amount|txnid`. Remove a leading `test_` prefix from the merchant token only when computing the digest.
 
-**Factories**
+## Methods
 
-| Factory or catalog    | Named export                 | Purpose                                            |
-| --------------------- | ---------------------------- | -------------------------------------------------- |
-| `eGovPayApi.create`   | `createEgovPayClient`        | Create a client from explicit credentials          |
-| `eGovPayApi.fromEnv`  | `createEgovPayClientFromEnv` | Create a client from eGovPay environment variables |
-| `eGovPayApi.catalog`  | `egovPayCatalog`             | Inspect static endpoint metadata                   |
-| `createEgovPayDigest` | `createEgovPayDigest`        | Compute the payment HMAC used by `generatePayment` |
+These examples assume the configured `client` from [the quickstart](../getting-started/quickstart.mdx).
 
-**Create a client**
+The **API Reference tab** remains the source of truth for complete payment parameters, schemas, responses, and cURL examples.
 
-**Signature**
+### `egovPay.generatePayment`
+
+**`POST /api/v1/transaction`** creates a payment transaction and returns its reference, UUID, channel, and hosted payment URL.
 
 ```ts
-function createEgovPayClient(options: EgovPayClientOptions): EgovPayClient;
-eGovPayApi.create(options: EgovPayClientOptions): EgovPayClient;
+import { egovPay } from "egov.js";
 
-interface EgovPayClientOptions extends EgovTransportOptions {
-  apiKey: string;
-  settlementTemplateUuid: string;
-}
+const payment = await egovPay.generatePayment({
+  client,
+  body: {
+    amount: 1_000,
+    callback_url: "https://example.gov.ph/payments/callback",
+    digest,
+    items: [{ amount: 1_000, name: "Permit fee" }],
+    redirect_url: "https://example.gov.ph/payments/complete",
+    settlement_template_uuid: process.env.EGOVPAY_SETTLEMENT_TEMPLATE_UUID!,
+    txnid: "PERMIT-2026-0001",
+  },
+  throwOnError: true,
+});
 ```
 
-**Parameters**
+### `egovPay.getTransaction`
 
-| Parameter                        | Type                                                                   | Required | Behavior                                                                                                                                                            |
-| -------------------------------- | ---------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `options`                        | `EgovPayClientOptions`                                                 | Yes      | Client credentials and transport configuration.                                                                                                                     |
-| `options.apiKey`                 | `string`                                                               | Yes      | Sent unchanged as `X-eGovPay-Token` on every request. It is also the HMAC key, except that `generatePayment` removes a leading `test_` only for digest calculation. |
-| `options.settlementTemplateUuid` | `string`                                                               | Yes      | Sent as `settlement_template_uuid` by `generatePayment`. The SDK does not validate UUID syntax.                                                                     |
-| `options.baseUrl`                | `string`                                                               | Yes      | Service origin or base path. A trailing slash is optional. Method paths are resolved below this URL.                                                                |
-| `options.fetch`                  | `(input: RequestInfo \| URL, init?: RequestInit) => Promise<Response>` | No       | Fetch implementation. Defaults to `globalThis.fetch`.                                                                                                               |
-| `options.headers`                | `HeadersInit`                                                          | No       | Default headers merged into every request. Method call headers override these; the SDK-controlled eGovPay token overrides both.                                     |
-
-**Behavior/Errors**
-
-Creating a client performs no network request. No option is validated at
-runtime. An invalid URL fails later when a method constructs its request URL.
-
-**Create a client from environment variables**
-
-**Signature**
+**`GET /api/v1/transaction/{uuid}`** retrieves transaction details for the supplied payment UUID.
 
 ```ts
-function createEgovPayClientFromEnv(
-  options: EgovPayEnvironmentClientOptions,
-): EgovPayClient;
-eGovPayApi.fromEnv(options: EgovPayEnvironmentClientOptions): EgovPayClient;
+import { egovPay } from "egov.js";
 
-interface EgovPayEnvironmentClientOptions extends EgovTransportOptions {
-  env?: EgovEnvironment;
-}
+const transaction = await egovPay.getTransaction({
+  client,
+  path: { uuid: payment.data.uuid },
+  throwOnError: true,
+});
 ```
 
-**Parameters**
+### `egovPay.voidTransaction`
 
-| Parameter         | Type                                                                   | Required | Behavior                                                                                                                                                                                                        |
-| ----------------- | ---------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `options`         | `EgovPayEnvironmentClientOptions`                                      | Yes      | Environment and transport configuration.                                                                                                                                                                        |
-| `options.env`     | `EgovEnvironment`                                                      | No       | Explicit read-only environment map whose values are `string \| undefined`. If omitted, the SDK uses `Bun.env`, then `process.env`, then an empty object. An explicit object is not merged with runtime globals. |
-| `options.baseUrl` | `string`                                                               | Yes      | Service origin or base path.                                                                                                                                                                                    |
-| `options.fetch`   | `(input: RequestInfo \| URL, init?: RequestInit) => Promise<Response>` | No       | Fetch implementation; defaults to `globalThis.fetch`.                                                                                                                                                           |
-| `options.headers` | `HeadersInit`                                                          | No       | Default request headers.                                                                                                                                                                                        |
-
-| Environment variable               | Required | Use                               |
-| ---------------------------------- | -------- | --------------------------------- |
-| `EGOVPAY_API_KEY`                  | Yes      | Becomes `apiKey`.                 |
-| `EGOVPAY_SETTLEMENT_TEMPLATE_UUID` | Yes      | Becomes `settlementTemplateUuid`. |
-
-**Behavior/Errors**
-
-Values are trimmed. Construction throws an `Error` naming the missing required
-eGov environment variable if either value is absent, empty, or whitespace-only.
-No network request is made.
-
-**Endpoint catalog**
-
-**Signature**
+**`PUT /api/v1/transaction/{uuid}/void`** voids an eligible transaction and returns the updated payment state.
 
 ```ts
-const egovPayCatalog: EgovCatalogService;
-const EGOV_PAY_SOURCE_URL = "https://platforms.e.gov.ph/dashboard/api-catalogs/egovpay" as const;
+import { egovPay } from "egov.js";
 
-const eGovPayApi: Readonly<{
-  catalog: typeof egovPayCatalog;
-  create: typeof createEgovPayClient;
-  fromEnv: typeof createEgovPayClientFromEnv;
-}>;
+const voided = await egovPay.voidTransaction({
+  client,
+  path: { uuid: payment.data.uuid },
+  throwOnError: true,
+});
 ```
 
-`egovPayCatalog` is static metadata with `id` and `slug` set to `egovpay`, name
-`eGovPay`, summary `Create, inspect, and void government payment transactions.`,
-the source URL above, and these endpoints:
-
-| ID                          | Method and route                      | Authentication                    | Cataloged statuses                                                                                   |
-| --------------------------- | ------------------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `generate-payment`          | `POST /api/v1/transaction`            | Required `X-eGovPay-Token` header | `201` created; `401` unauthorized merchant token; `422` invalid payment request                      |
-| `check-transaction-details` | `GET /api/v1/transaction/{uuid}`      | Required `X-eGovPay-Token` header | `200` details; `401` unauthorized merchant token; `404` transaction not found                        |
-| `void-transaction`          | `PUT /api/v1/transaction/{uuid}/void` | Required `X-eGovPay-Token` header | `200` voided; `400` cannot be voided; `401` unauthorized merchant token; `404` transaction not found |
-
-The catalog is descriptive data. Reading it has no side effects and does not
-make a request.
-
-**Create a payment digest**
-
-**Signature**
-
-```ts
-function createEgovPayDigest(
-  amount: number,
-  transactionId: string,
-  apiKey: string,
-): Promise<string>;
-```
-
-**Parameters**
-
-| Parameter       | Type     | Required | Behavior                                                                      |
-| --------------- | -------- | -------- | ----------------------------------------------------------------------------- |
-| `amount`        | `number` | Yes      | Interpolated using JavaScript string conversion.                              |
-| `transactionId` | `string` | Yes      | Appended after one vertical-bar separator.                                    |
-| `apiKey`        | `string` | Yes      | Used exactly as supplied as the HMAC key. This helper does not strip `test_`. |
-
-**Returns**
-
-A promise for a 64-character lowercase hexadecimal HMAC-SHA256 digest. The
-signed message is only:
-
-```ts
-`${amount}|${transactionId}`;
-```
-
-Items, URLs, currency, settlement template, and all other request fields are not
-part of the signed message.
-
-**Behavior/Errors**
-
-The helper uses `TextEncoder` and Web Crypto `crypto.subtle`. It makes no network
-request. Missing Web Crypto support or a Web Crypto operation failure rejects the
-promise. The helper does not validate finite amounts, transaction IDs, or key
-contents.
-
-`generatePayment` calls this helper after removing a leading `test_` from the key
-used for the digest. The original API key, including `test_`, remains unchanged
-in the request header. Production keys are used unchanged for both purposes.
-
-**Methods**
-
-| Method                                                           | Purpose                                            |
-| ---------------------------------------------------------------- | -------------------------------------------------- |
-| [`generatePayment(request, options?)`](#generatepayment)         | Create a signed transaction and hosted payment URL |
-| [`getTransaction(transactionUuid, options?)`](#gettransaction)   | Retrieve all transaction details                   |
-| [`voidTransaction(transactionUuid, options?)`](#voidtransaction) | Void an eligible transaction                       |
-
-## `generatePayment`
-
-**Signature**
-
-```ts
-generatePayment(
-  request: EgovPayGeneratePaymentRequest,
-  options?: EgovCallOptions,
-): Promise<EgovPayGeneratePaymentResponse>;
-```
-
-**Parameters**
-
-| Parameter                | Type                            | Required | Wire field and format                                                                                                |
-| ------------------------ | ------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------- |
-| `request`                | `EgovPayGeneratePaymentRequest` | Yes      | JSON request body.                                                                                                   |
-| `request.amount`         | `number`                        | Yes      | `amount`; catalog format `double`. Also used in the digest.                                                          |
-| `request.callbackUrl`    | `string`                        | Yes      | `callback_url`; catalog format `URL`.                                                                                |
-| `request.currency`       | `string`                        | No       | `currency`.                                                                                                          |
-| `request.description`    | `Record<string, unknown>`       | No       | `description`; arbitrary string-keyed object at the type level. Its values are not checked for JSON serializability. |
-| `request.email`          | `string`                        | No       | `email`.                                                                                                             |
-| `request.expiresAt`      | `string`                        | No       | `expires_at`; catalog format `datetime`, with no more specific syntax enforced by the SDK.                           |
-| `request.items`          | `EgovPayItem[]`                 | Yes      | `items`; array of line items.                                                                                        |
-| `request.items[].amount` | `number`                        | Yes      | `items[].amount`.                                                                                                    |
-| `request.items[].name`   | `string`                        | Yes      | `items[].name`.                                                                                                      |
-| `request.linkExpiresAt`  | `string`                        | No       | `link_expires_at`; catalog format `datetime`, with no runtime format check.                                          |
-| `request.mobile`         | `string`                        | No       | `mobile`.                                                                                                            |
-| `request.name`           | `string`                        | No       | `name`.                                                                                                              |
-| `request.redirectUrl`    | `string`                        | Yes      | `redirect_url`; catalog format `URL`.                                                                                |
-| `request.transactionId`  | `string`                        | Yes      | `txnid`. Also used in the digest.                                                                                    |
-| `options`                | `EgovCallOptions`               | No       | Final per-call options.                                                                                              |
-| `options.headers`        | `HeadersInit`                   | No       | Merged over client defaults. `X-eGovPay-Token` is then forced to the client API key.                                 |
-| `options.signal`         | `AbortSignal`                   | No       | Passed to `fetch` for cancellation.                                                                                  |
-
-The client also sends `settlement_template_uuid` from its factory options and a
-computed `digest`. Optional properties whose values are `undefined` are omitted
-by JSON serialization.
-
-**Returns**
-
-```ts
-interface EgovPayGeneratePaymentResponse {
-  data: {
-    channel: {
-      refno: string;
-    };
-    url: string;
-    uuid: string;
-  };
-}
-```
-
-All fields are required and non-null in the TypeScript contract. `data.url` is
-the hosted payment URL, `data.uuid` is the transaction UUID used by the other
-methods, and `data.channel.refno` is the channel reference number.
-
-**Behavior/Errors**
-
-Makes `POST /api/v1/transaction` with JSON and `X-eGovPay-Token`. This creates
-external payment state. The catalog lists `201`, `401`, and `422` as described
-above. Any non-2xx response throws `EgovApiError`; its `body` is parsed JSON,
-text, or `undefined`, and it also exposes `headers`, `method`, `status`,
-`statusText`, and `url`. Fetch, abort, URL, JSON serialization, and Web Crypto
-errors propagate unchanged.
-
-<Warning>
-  Do not retry payment creation blindly. The SDK does not add an idempotency key or reconcile an
-  uncertain response. Check provider state using your transaction identifiers before attempting
-  another financial operation.
-</Warning>
-
-## `getTransaction`
-
-**Signature**
-
-```ts
-getTransaction(
-  transactionUuid: string,
-  options?: EgovCallOptions,
-): Promise<EgovPayTransactionResponse>;
-```
-
-**Parameters**
-
-| Parameter         | Type              | Required | Wire field and format                                                                              |
-| ----------------- | ----------------- | -------- | -------------------------------------------------------------------------------------------------- |
-| `transactionUuid` | `string`          | Yes      | URL-encoded into `{uuid}` in the route. The catalog calls this a UUID; the SDK accepts any string. |
-| `options`         | `EgovCallOptions` | No       | Final per-call options.                                                                            |
-| `options.headers` | `HeadersInit`     | No       | Merged over client defaults; the SDK forces `X-eGovPay-Token`.                                     |
-| `options.signal`  | `AbortSignal`     | No       | Passed to `fetch`.                                                                                 |
-
-**Returns**
-
-`Promise<{ data: EgovPayTransaction }>` with every `data` field below:
-
-| Field                    | Type                                      | Meaning/format                                                                         |
-| ------------------------ | ----------------------------------------- | -------------------------------------------------------------------------------------- |
-| `amount`                 | `string`                                  | Transaction amount, returned as a string.                                              |
-| `callback_url`           | `string`                                  | Callback URL.                                                                          |
-| `channel_fee`            | `string`                                  | Channel fee, returned as a string.                                                     |
-| `created_at`             | `string`                                  | Provider creation timestamp; not parsed by the SDK.                                    |
-| `currency`               | `string`                                  | Currency value.                                                                        |
-| `environment_type`       | `string`                                  | Provider environment label.                                                            |
-| `expires_at`             | `string`                                  | Transaction expiration value; not parsed.                                              |
-| `items`                  | `Array<{ amount: string; name: string }>` | Required line-item array. Each item has required, non-null string `amount` and `name`. |
-| `link_expires_at`        | `string`                                  | Hosted-link expiration value; not parsed.                                              |
-| `paid_at`                | `string \| null`                          | Payment timestamp, or `null` when not paid.                                            |
-| `partner_fee`            | `string`                                  | Partner fee, returned as a string.                                                     |
-| `payment_channel`        | `string \| null`                          | Payment channel, or `null`.                                                            |
-| `payment_channel_branch` | `string \| null`                          | Payment channel branch, or `null`.                                                     |
-| `payment_channel_uuid`   | `string \| null`                          | Payment channel UUID, or `null`.                                                       |
-| `payment_status`         | `string`                                  | Provider status string. The SDK does not narrow known values.                          |
-| `redirect_url`           | `string`                                  | Redirect URL.                                                                          |
-| `refno`                  | `string`                                  | Transaction reference number.                                                          |
-| `system_fee`             | `string`                                  | System fee, returned as a string.                                                      |
-| `txnid`                  | `string`                                  | Caller-provided transaction ID.                                                        |
-| `uuid`                   | `string`                                  | Provider transaction UUID.                                                             |
-
-Every field other than the four explicitly nullable fields is required and
-non-null in the declared response type.
-
-**Behavior/Errors**
-
-Makes `GET /api/v1/transaction/{uuid}` with `X-eGovPay-Token` and no body. It is
-a read operation and has no SDK-side mutation. The catalog lists `200`, `401`,
-and `404`. Any non-2xx response throws `EgovApiError`; fetch and abort failures
-propagate unchanged.
-
-## `voidTransaction`
-
-**Signature**
-
-```ts
-voidTransaction(
-  transactionUuid: string,
-  options?: EgovCallOptions,
-): Promise<EgovPayVoidResponse>;
-```
-
-**Parameters**
-
-| Parameter         | Type              | Required | Wire field and format                                             |
-| ----------------- | ----------------- | -------- | ----------------------------------------------------------------- |
-| `transactionUuid` | `string`          | Yes      | URL-encoded into `{uuid}`. The SDK does not validate UUID syntax. |
-| `options`         | `EgovCallOptions` | No       | Final per-call options.                                           |
-| `options.headers` | `HeadersInit`     | No       | Merged over client defaults; the SDK forces `X-eGovPay-Token`.    |
-| `options.signal`  | `AbortSignal`     | No       | Passed to `fetch`.                                                |
-
-**Returns**
-
-```ts
-interface EgovPayVoidResponse {
-  data: {
-    message: string;
-  };
-}
-```
-
-`data` and `data.message` are required and non-null.
-
-**Behavior/Errors**
-
-Makes `PUT /api/v1/transaction/{uuid}/void` with
-`X-eGovPay-Token` and no body. This changes external financial state. The
-catalog lists `200`, `400`, `401`, and `404`. Any non-2xx response throws
-`EgovApiError`; fetch and abort failures propagate unchanged. The SDK does not
-pre-check payment status or make voiding idempotent.
-
-**Validation and security**
-
-The SDK performs TypeScript-only modeling. It does not validate URL, UUID,
-datetime, currency, amount, item-total, transaction-ID, status, or response
-shapes at runtime. Successful response bodies are cast to the declared type.
-Keep API keys and transaction data server-side, validate provider callbacks
-independently, and avoid logging credentials or payment details.
+[View the provider catalog](https://platforms.e.gov.ph/dashboard/api-catalogs/egovpay)

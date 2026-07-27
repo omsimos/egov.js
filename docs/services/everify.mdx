@@ -1,441 +1,100 @@
 ---
 $schema: https://holocron.so/frontmatter.json
-title: Verify identities and QR data with eVerify
+title: Verify Philippine identity data with eVerify
 sidebarTitle: eVerify
-description: Authenticate the eVerify client, verify personal information or National ID QR data, and connect checks to Face Liveness sessions.
+description: Authenticate with eVerify, compare personal information, and check or verify National ID QR payloads with liveness data.
+icon: lucide:badge-check
 ---
 
-# eVerify API reference
+# Use eVerify
 
-**eVerify** issues partner access tokens, decodes National ID QR values, and
-verifies identity data against a completed Face Liveness session. Every client
-requires an explicit `baseUrl`; the SDK does not choose staging or production.
+**eVerify** authenticates partner clients and verifies personal information or National ID QR payloads with face-liveness session data.
 
-**Imports**
+<Aside>
+  <Warning>
+    Identity profiles, QR payloads, and liveness identifiers are **sensitive personal data**.
+    Process them only on trusted infrastructure with appropriate consent.
+  </Warning>
+</Aside>
 
-```ts
-import {
-  EVERIFY_SOURCE_URL,
-  createEverifyClient,
-  createEverifyClientFromEnv,
-  eVerifyApi,
-  everifyCatalog,
-} from "egov.js/eVerify";
-import type {
-  EverifyAuthenticationResponse,
-  EverifyClient,
-  EverifyEnvironmentClient,
-  EverifyIdentityProfile,
-  EverifyQrCheckResponse,
-  EverifyVerificationResponse,
-} from "egov.js/eVerify/types";
-import type { EgovCallOptions } from "egov.js/core";
-```
+## Authenticate
 
-These exports are also available from the package root. `eVerifyApi` is frozen
-and its members reference the corresponding named exports.
+Call **`eVerify.authenticate`** with the client ID and client secret, then pass the returned bearer token through `auth`.
 
-**Factories**
+## Methods
 
-| Factory or catalog   | Named export                 | Purpose                                                                |
-| -------------------- | ---------------------------- | ---------------------------------------------------------------------- |
-| `eVerifyApi.create`  | `createEverifyClient`        | Create a direct client whose authentication method accepts credentials |
-| `eVerifyApi.fromEnv` | `createEverifyClientFromEnv` | Bind credentials and expose the configured public key                  |
-| `eVerifyApi.catalog` | `everifyCatalog`             | Inspect static endpoint metadata                                       |
+These examples assume the configured `client` from [the quickstart](../getting-started/quickstart.mdx).
 
-**Create a direct client**
+The **API Reference tab** remains the source of truth for complete identity parameters, schemas, responses, and cURL examples.
 
-**Signature**
+### `eVerify.authenticate`
+
+**`POST /api/auth`** exchanges the client ID and client secret for an eVerify bearer token.
 
 ```ts
-function createEverifyClient(options: EgovTransportOptions): EverifyClient;
-eVerifyApi.create(options: EgovTransportOptions): EverifyClient;
-```
-
-**Parameters**
-
-| Parameter         | Type                                                                   | Required | Behavior                                                                                                          |
-| ----------------- | ---------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------- |
-| `options`         | `EgovTransportOptions`                                                 | Yes      | Transport configuration.                                                                                          |
-| `options.baseUrl` | `string`                                                               | Yes      | Service origin or base path. A trailing slash is optional.                                                        |
-| `options.fetch`   | `(input: RequestInfo \| URL, init?: RequestInit) => Promise<Response>` | No       | Fetch implementation; defaults to `globalThis.fetch`.                                                             |
-| `options.headers` | `HeadersInit`                                                          | No       | Default headers. Per-call headers override matching defaults; SDK-controlled bearer authorization overrides both. |
-
-**Behavior/Errors**
-
-Creating a client makes no request and performs no validation. The direct client
-does not read environment variables, does not expose `publicKey`, and requires
-credentials as the first argument to `authenticate`.
-
-**Create an environment client**
-
-**Signature**
-
-```ts
-function createEverifyClientFromEnv(
-  options: EverifyEnvironmentClientOptions,
-): EverifyEnvironmentClient;
-eVerifyApi.fromEnv(
-  options: EverifyEnvironmentClientOptions,
-): EverifyEnvironmentClient;
-
-interface EverifyEnvironmentClient extends Omit<EverifyClient, "authenticate"> {
-  authenticate(options?: EgovCallOptions): Promise<EverifyAuthenticationResponse>;
-  readonly publicKey: string;
-}
-```
-
-**Parameters**
-
-| Parameter         | Type                                                                   | Required | Behavior                                                                                                                                                                                              |
-| ----------------- | ---------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `options`         | `EverifyEnvironmentClientOptions`                                      | Yes      | Environment and transport configuration.                                                                                                                                                              |
-| `options.env`     | `EgovEnvironment`                                                      | No       | Explicit read-only environment map whose values are `string \| undefined`. If omitted, resolution is `Bun.env`, then `process.env`, then `{}`. An explicit object is not merged with runtime globals. |
-| `options.baseUrl` | `string`                                                               | Yes      | Service origin or base path.                                                                                                                                                                          |
-| `options.fetch`   | `(input: RequestInfo \| URL, init?: RequestInit) => Promise<Response>` | No       | Fetch implementation; defaults to `globalThis.fetch`.                                                                                                                                                 |
-| `options.headers` | `HeadersInit`                                                          | No       | Default request headers.                                                                                                                                                                              |
-
-| Environment variable    | Required | Use                                                                        |
-| ----------------------- | -------- | -------------------------------------------------------------------------- |
-| `EVERIFY_CLIENT_ID`     | Yes      | Captured as `clientId` and sent by environment-bound `authenticate()`.     |
-| `EVERIFY_CLIENT_SECRET` | Yes      | Captured as `clientSecret` and sent by environment-bound `authenticate()`. |
-| `EVERIFY_PUBKEY`        | Yes      | Trimmed and exposed as the client's read-only `publicKey` property.        |
-
-**Behavior/Errors**
-
-All three variables are required and read when the client is created. A missing,
-empty, or whitespace-only value throws an `Error` naming the required eGov
-environment variable. `publicKey` is application-facing configuration only:
-this HTTP client never adds it to headers, bodies, query strings, or
-cryptographic operations. The SDK does not interpret or validate its encoding.
-Authentication credentials are captured in the factory closure and supplied
-only to `authenticate()`.
-
-**Endpoint catalog**
-
-**Signature**
-
-```ts
-const everifyCatalog: EgovCatalogService;
-const EVERIFY_SOURCE_URL = "https://platforms.e.gov.ph/dashboard/api-catalogs/everify" as const;
-
-const eVerifyApi: Readonly<{
-  catalog: typeof everifyCatalog;
-  create: typeof createEverifyClient;
-  fromEnv: typeof createEverifyClientFromEnv;
-}>;
-```
-
-The catalog has `id` and `slug` `everify`, name `eVerify`, summary
-`Verify citizen identity against PhilSys with consent and face liveness.`, the
-source URL above, and these endpoints:
-
-| ID                            | Method and route           | Authentication                          | Cataloged statuses                                                  |
-| ----------------------------- | -------------------------- | --------------------------------------- | ------------------------------------------------------------------- |
-| `authenticate`                | `POST /api/auth`           | `client_id` and `client_secret` in JSON | `200` generated; `403` invalid client credentials                   |
-| `verify-personal-information` | `POST /api/query`          | Required bearer token                   | `200` verification result; `401` missing, invalid, or expired token |
-| `qr-check`                    | `POST /api/query/qr/check` | Required bearer token                   | `200` decoded profile; `422` invalid QR format                      |
-| `qr-verify`                   | `POST /api/query/qr`       | Required bearer token                   | `200` matched or unverified identity result                         |
-
-These are the only statuses listed in the static catalog. The transport still
-throws for any non-2xx HTTP response. Reading the catalog makes no request.
-
-**Methods**
-
-| Method                                                                                    | Purpose                                                    |
-| ----------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| [`authenticate(credentials, options?)`](#authenticate)                                    | Issue an access token with a direct client                 |
-| [`authenticate(options?)`](#authenticate)                                                 | Issue an access token with environment-bound credentials   |
-| [`checkQr(accessToken, value, options?)`](#checkqr)                                       | Decode and inspect a National ID QR value without liveness |
-| [`verifyPersonalInformation(accessToken, request, options?)`](#verifypersonalinformation) | Verify demographic data with a Face Liveness session       |
-| [`verifyQr(accessToken, request, options?)`](#verifyqr)                                   | Verify QR identity data with a Face Liveness session       |
-
-## `authenticate`
-
-**Signature**
-
-The direct client requires credentials:
-
-```ts
-authenticate(
-  credentials: EverifyCredentials,
-  options?: EgovCallOptions,
-): Promise<EverifyAuthenticationResponse>;
-
-interface EverifyCredentials {
-  clientId: string;
-  clientSecret: string;
-}
-```
-
-The environment client injects credentials, so its exact signature is:
-
-```ts
-authenticate(options?: EgovCallOptions): Promise<EverifyAuthenticationResponse>;
-```
-
-**Parameters**
-
-| Parameter                  | Type                 | Required           | Wire field and format                                                          |
-| -------------------------- | -------------------- | ------------------ | ------------------------------------------------------------------------------ |
-| `credentials`              | `EverifyCredentials` | Direct client only | JSON credentials. This argument does not exist on the environment client.      |
-| `credentials.clientId`     | `string`             | Direct client only | `client_id`. Environment client uses `EVERIFY_CLIENT_ID`.                      |
-| `credentials.clientSecret` | `string`             | Direct client only | `client_secret`. Environment client uses `EVERIFY_CLIENT_SECRET`.              |
-| `options`                  | `EgovCallOptions`    | No                 | Final per-call options. For the environment client this is the first argument. |
-| `options.headers`          | `HeadersInit`        | No                 | Merged over client defaults. No bearer header is added to authentication.      |
-| `options.signal`           | `AbortSignal`        | No                 | Passed to `fetch` for cancellation.                                            |
-
-**Returns**
-
-This is the first of the three eVerify response structures:
-
-```ts
-interface EverifyAuthenticationResponse {
-  data: {
-    access_token: string;
-    expires_at: string;
-    token_type: string;
-  };
-}
-```
-
-`data` and all three nested fields are required and non-null. `expires_at` is
-left as a string, and the SDK does not constrain `token_type` to `Bearer`.
-
-**Behavior/Errors**
-
-Makes `POST /api/auth` with a JSON body and no SDK-added authorization header.
-Token issuance changes external authentication state but does not mutate the
-client. The catalog lists `200` and `403`. Any non-2xx response throws
-`EgovApiError` with parsed `body`, response `headers`, `method`, `status`,
-`statusText`, and `url`. Fetch, abort, URL, and serialization failures propagate.
-
-## `checkQr`
-
-**Signature**
-
-The direct and environment clients share this generic signature:
-
-```ts
-checkQr<TData extends Record<string, unknown> = Record<string, unknown>>(
-  accessToken: string,
-  value: string,
-  options?: EgovCallOptions,
-): Promise<EverifyQrCheckResponse<TData>>;
-```
-
-**Parameters**
-
-| Parameter         | Type                              | Required | Wire field and format                                                                                                                           |
-| ----------------- | --------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TData`           | `Record<string, unknown>` subtype | No       | Compile-time type selected by the caller for decoded `data`; defaults to `Record<string, unknown>`. It causes no runtime parsing or validation. |
-| `accessToken`     | `string`                          | Yes      | Sent as `Authorization: Bearer <accessToken>`.                                                                                                  |
-| `value`           | `string`                          | Yes      | Sent as JSON field `value`; expected to be the raw scanned National ID QR value.                                                                |
-| `options`         | `EgovCallOptions`                 | No       | Final per-call options.                                                                                                                         |
-| `options.headers` | `HeadersInit`                     | No       | Merged over defaults; `Authorization` is then forced to the supplied token.                                                                     |
-| `options.signal`  | `AbortSignal`                     | No       | Passed to `fetch`.                                                                                                                              |
-
-No Face Liveness session is required for this decode/check operation.
-
-**Returns**
-
-This is the second eVerify response structure:
-
-```ts
-interface EverifyQrCheckResponse<TData extends Record<string, unknown> = Record<string, unknown>> {
-  data: TData;
-  meta: {
-    qr_type: string;
-  };
-}
-```
-
-`data`, `meta`, and `meta.qr_type` are required and non-null. The fields inside
-`data` are provider-defined or caller-modeled and are not known to the SDK.
-
-**Behavior/Errors**
-
-Makes `POST /api/query/qr/check` with bearer authentication and JSON
-`{ value }`. It decodes/checks supplied data and has no SDK-side mutation. The
-catalog lists `200` and `422`; it does not catalog a `401` for this endpoint.
-Any non-2xx response nevertheless throws `EgovApiError`. Fetch and abort errors
-propagate unchanged.
-
-## `verifyPersonalInformation`
-
-**Signature**
-
-```ts
-verifyPersonalInformation(
-  accessToken: string,
-  request: EverifyPersonalInformationRequest,
-  options?: EgovCallOptions,
-): Promise<EverifyVerificationResponse>;
-```
-
-**Parameters**
-
-| Parameter                       | Type                                | Required | Wire field and format                                                                                                |
-| ------------------------------- | ----------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------- |
-| `accessToken`                   | `string`                            | Yes      | Sent as `Authorization: Bearer <accessToken>`.                                                                       |
-| `request`                       | `EverifyPersonalInformationRequest` | Yes      | JSON verification body.                                                                                              |
-| `request.birthDate`             | `string`                            | Yes      | `birth_date`; catalog format `YYYY-MM-DD`. The SDK does not validate it.                                             |
-| `request.faceLivenessSessionId` | `string`                            | Yes      | `face_liveness_session_id`; catalog format UUID, returned by the Face Liveness workflow. The SDK accepts any string. |
-| `request.firstName`             | `string`                            | Yes      | `first_name`.                                                                                                        |
-| `request.lastName`              | `string`                            | Yes      | `last_name`.                                                                                                         |
-| `request.middleName`            | `string`                            | No       | `middle_name`; omitted from serialized JSON when `undefined`.                                                        |
-| `request.suffix`                | `string`                            | No       | `suffix`; omitted from serialized JSON when `undefined`.                                                             |
-| `options`                       | `EgovCallOptions`                   | No       | Final per-call options.                                                                                              |
-| `options.headers`               | `HeadersInit`                       | No       | Merged over defaults; the supplied bearer token wins.                                                                |
-| `options.signal`                | `AbortSignal`                       | No       | Passed to `fetch`.                                                                                                   |
-
-The Face Liveness session is required by both the TypeScript request and the
-endpoint catalog. The SDK does not check whether it exists, has completed, or
-belongs to the same person or environment.
-
-**Returns**
-
-Returns the third eVerify response structure, fully documented in
-Verification response.
-
-**Behavior/Errors**
-
-Makes `POST /api/query` with bearer authentication and JSON. It submits identity
-and biometric-linked data to the provider but performs no local mutation. The
-catalog lists `200` and `401`. Any non-2xx response throws `EgovApiError`; fetch
-and abort failures propagate unchanged.
-
-## `verifyQr`
-
-**Signature**
-
-```ts
-verifyQr(
-  accessToken: string,
-  request: EverifyQrVerifyRequest,
-  options?: EgovCallOptions,
-): Promise<EverifyVerificationResponse>;
-```
-
-**Parameters**
-
-| Parameter                       | Type                     | Required | Wire field and format                                                        |
-| ------------------------------- | ------------------------ | -------- | ---------------------------------------------------------------------------- |
-| `accessToken`                   | `string`                 | Yes      | Sent as `Authorization: Bearer <accessToken>`.                               |
-| `request`                       | `EverifyQrVerifyRequest` | Yes      | JSON verification body.                                                      |
-| `request.faceLivenessSessionId` | `string`                 | Yes      | `face_liveness_session_id`; catalog format UUID. The SDK accepts any string. |
-| `request.value`                 | `string`                 | Yes      | `value`; raw scanned National ID QR value.                                   |
-| `options`                       | `EgovCallOptions`        | No       | Final per-call options.                                                      |
-| `options.headers`               | `HeadersInit`            | No       | Merged over defaults; the supplied bearer token wins.                        |
-| `options.signal`                | `AbortSignal`            | No       | Passed to `fetch`.                                                           |
-
-A Face Liveness session is required. Unlike `checkQr`, this method combines the
-QR value with biometric liveness data.
-
-**Returns**
-
-Returns the third eVerify response structure, fully documented in
-Verification response.
-
-**Behavior/Errors**
-
-Makes `POST /api/query/qr` with bearer authentication and JSON. It submits QR
-identity and biometric-linked data but performs no local mutation. The catalog
-lists only `200` for matched or unverified results and catalogs no error status.
-Any actual non-2xx response still throws `EgovApiError`; fetch and abort failures
-propagate unchanged.
-
-**Verification response**
-
-Both verification methods return:
-
-```ts
-interface EverifyVerificationResponse {
-  data: EverifyIdentityProfile;
-  meta: {
-    result_grade: number;
-    tier_level: string;
-  };
-}
-```
-
-`data`, `meta`, `meta.result_grade`, and `meta.tier_level` are required and
-non-null. Every identity field below is also required in the declared type;
-only `address_line_2`, `present_address_line_2`, and `suffix` are nullable.
-
-| `data` field             | Exact type       |
-| ------------------------ | ---------------- |
-| `address_line_1`         | `string`         |
-| `address_line_2`         | `string \| null` |
-| `barangay`               | `string`         |
-| `birth_date`             | `string`         |
-| `blood_type`             | `string`         |
-| `code`                   | `string`         |
-| `country`                | `string`         |
-| `email`                  | `string`         |
-| `face_url`               | `string`         |
-| `first_name`             | `string`         |
-| `full_address`           | `string`         |
-| `full_name`              | `string`         |
-| `gender`                 | `string`         |
-| `last_name`              | `string`         |
-| `marital_status`         | `string`         |
-| `middle_name`            | `string`         |
-| `mobile_number`          | `string`         |
-| `municipality`           | `string`         |
-| `place_of_birth`         | `string`         |
-| `pob_country`            | `string`         |
-| `pob_municipality`       | `string`         |
-| `pob_province`           | `string`         |
-| `postal_code`            | `string`         |
-| `present_address_line_1` | `string`         |
-| `present_address_line_2` | `string \| null` |
-| `present_barangay`       | `string`         |
-| `present_country`        | `string`         |
-| `present_full_address`   | `string`         |
-| `present_municipality`   | `string`         |
-| `present_postal_code`    | `string`         |
-| `present_province`       | `string`         |
-| `province`               | `string`         |
-| `reference`              | `string`         |
-| `residency_status`       | `string`         |
-| `suffix`                 | `string \| null` |
-| `token`                  | `string`         |
-
-The SDK does not document narrower unions or formats for profile strings,
-`result_grade`, or `tier_level`, and it does not verify that these fields exist
-at runtime.
-
-**End-to-end example**
-
-```ts
-const verify = eVerifyApi.fromEnv({
-  baseUrl: "https://hackathon-everify-api.e.gov.ph",
+import { eVerify } from "egov.js";
+
+const authentication = await eVerify.authenticate({
+  client,
+  body: {
+    client_id: process.env.EVERIFY_CLIENT_ID!,
+    client_secret: process.env.EVERIFY_CLIENT_SECRET!,
+  },
+  throwOnError: true,
 });
-
-const authentication = await verify.authenticate();
-const accessToken = authentication.data.access_token;
-
-const result = await verify.verifyPersonalInformation(accessToken, {
-  birthDate: "1990-01-31",
-  faceLivenessSessionId: "completed-face-liveness-session-id",
-  firstName: "Juan",
-  lastName: "Dela Cruz",
-  middleName: "Santos",
-});
-
-console.log(result.meta.result_grade, result.meta.tier_level);
 ```
 
-**Validation and security**
+### `eVerify.verifyPersonalInformation`
 
-Request and response types are compile-time only. The SDK does not validate
-credentials, token expiry, QR syntax, UUIDs, dates, public-key encoding,
-Face Liveness state, profile fields, or response bodies. Successful bodies are
-cast to the declared type, and `checkQr<TData>` is only a caller assertion.
+**`POST /api/query`** compares supplied identity fields and a face-liveness session against the provider's identity record.
 
-<Warning>
-  eVerify processes credentials, National ID data, and biometric-linked identity records. Keep calls
-  server-side, redact logs and traces, restrict access to `face_url` and token fields, and apply
-  consent and retention controls.
-</Warning>
+```ts
+import { eVerify } from "egov.js";
+
+const identity = await eVerify.verifyPersonalInformation({
+  client,
+  auth: authentication.data.access_token,
+  body: {
+    birth_date: "1990-01-15",
+    face_liveness_session_id: livenessSessionId,
+    first_name: "Juan",
+    last_name: "Dela Cruz",
+  },
+  throwOnError: true,
+});
+```
+
+### `eVerify.checkQr`
+
+**`POST /api/query/qr/check`** decodes a National ID QR value and returns its profile data and QR type.
+
+```ts
+import { eVerify } from "egov.js";
+
+const qrProfile = await eVerify.checkQr({
+  client,
+  auth: authentication.data.access_token,
+  body: { value: nationalIdQrValue },
+  throwOnError: true,
+});
+```
+
+### `eVerify.verifyQr`
+
+**`POST /api/query/qr`** verifies a National ID QR value together with a face-liveness session identifier.
+
+```ts
+import { eVerify } from "egov.js";
+
+const qrVerification = await eVerify.verifyQr({
+  client,
+  auth: authentication.data.access_token,
+  body: {
+    face_liveness_session_id: livenessSessionId,
+    value: nationalIdQrValue,
+  },
+  throwOnError: true,
+});
+```
+
+[View the provider catalog](https://platforms.e.gov.ph/dashboard/api-catalogs/everify)
