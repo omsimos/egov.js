@@ -17,24 +17,13 @@ icon: lucide:chart-no-axes-combined
   </Note>
 </Aside>
 
-## Connect
-
-Configure the documented **provider host** and `x-api-key` header once:
-
-```ts
-import { createClient } from "egov.js";
-
-const compassClient = createClient({
-  baseUrl: "https://dbm-ws.oueg.info",
-  headers: { "x-api-key": process.env.EGOVCOMPASS_API_KEY! },
-});
-```
-
 ## Query model
 
 Pass request filters under the operation's **`query` object**. Required year, period, scope, and program fields vary by dataset.
 
 ## Methods
+
+These examples assume the configured `client` from [the quickstart](../getting-started/quickstart.mdx).
 
 The **API Reference tab** remains the source of truth for complete query parameters, response schemas, and cURL examples.
 
@@ -46,7 +35,7 @@ The **API Reference tab** remains the source of truth for complete query paramet
 import { compass } from "egov.js";
 
 const saaodb = await compass.getSaaodbRecords({
-  client: compassClient,
+  client,
   query: {
     period: "FY",
     reportYear: 2026,
@@ -65,7 +54,7 @@ const saaodb = await compass.getSaaodbRecords({
 import { compass } from "egov.js";
 
 const saaodbDashboard = await compass.getSaaodbDashboard({
-  client: compassClient,
+  client,
   query: {
     reportYear: 2026,
     sheetScope: "summary",
@@ -82,7 +71,7 @@ const saaodbDashboard = await compass.getSaaodbDashboard({
 import { compass } from "egov.js";
 
 const entities = await compass.getSaaodbEntities({
-  client: compassClient,
+  client,
   query: {
     reportYear: 2026,
     sheetScope: "agency",
@@ -99,7 +88,7 @@ const entities = await compass.getSaaodbEntities({
 import { compass } from "egov.js";
 
 const nca = await compass.getNcaRecords({
-  client: compassClient,
+  client,
   query: {
     budgetYear: 2026,
     page: 1,
@@ -117,7 +106,7 @@ const nca = await compass.getNcaRecords({
 import { compass } from "egov.js";
 
 const saro = await compass.getSaroRecords({
-  client: compassClient,
+  client,
   query: { page: 1, limit: 25 },
   throwOnError: true,
 });
@@ -131,7 +120,7 @@ const saro = await compass.getSaroRecords({
 import { compass } from "egov.js";
 
 const lgsf = await compass.getLgsfRecords({
-  client: compassClient,
+  client,
   query: {
     fiscalYear: 2026,
     programCode: "FALGU",
@@ -150,7 +139,7 @@ const lgsf = await compass.getLgsfRecords({
 import { compass } from "egov.js";
 
 const lgsfDashboard = await compass.getLgsfDashboard({
-  client: compassClient,
+  client,
   query: {
     programCode: "FALGU",
     reportYear: 2026,

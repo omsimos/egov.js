@@ -17,20 +17,9 @@ icon: lucide:scan-face
   </Warning>
 </Aside>
 
-## Connect
-
-Configure the documented **hackathon host** and integration API key:
-
-```ts
-import { createClient } from "egov.js";
-
-const faceLivenessClient = createClient({
-  baseUrl: "https://hackathon-face-liveness-api.e.gov.ph",
-  headers: { "x-api-key": process.env.EGOVLIVENESS_API_KEY! },
-});
-```
-
 ## Methods
+
+These examples assume the configured `client` from [the quickstart](../getting-started/quickstart.mdx).
 
 The **API Reference tab** documents the complete session request, hosted verification URL, path parameter, and result schema.
 
@@ -42,7 +31,7 @@ The **API Reference tab** documents the complete session request, hosted verific
 import { faceLiveness } from "egov.js";
 
 const session = await faceLiveness.createSession({
-  client: faceLivenessClient,
+  client,
   body: {
     action: "redirect",
     callback_url: "https://example.gov.ph/identity/liveness-complete",
@@ -59,7 +48,7 @@ const session = await faceLiveness.createSession({
 import { faceLiveness } from "egov.js";
 
 const result = await faceLiveness.getVerificationResult({
-  client: faceLivenessClient,
+  client,
   path: { sessionToken: session.token },
   throwOnError: true,
 });

@@ -17,24 +17,13 @@ icon: lucide:message-square-text
   </Warning>
 </Aside>
 
-## Connect
-
-Configure the documented **provider host** and eMessage token:
-
-```ts
-import { createClient } from "egov.js";
-
-const eMessageClient = createClient({
-  baseUrl: "https://ws-message.e.gov.ph",
-  headers: { "X-EMESSAGE-Auth": process.env.EMESSAGE_ACCESS_TOKEN! },
-});
-```
-
 ## Delivery policy
 
 Apply **retry and duplicate-suppression policy** in the application because the generated client does not retry automatically.
 
 ## Methods
+
+These examples assume the configured `client` from [the quickstart](../getting-started/quickstart.mdx).
 
 The **API Reference tab** documents the complete message body, authentication header, validation errors, and success response.
 
@@ -46,7 +35,7 @@ The **API Reference tab** documents the complete message body, authentication he
 import { eMessage } from "egov.js";
 
 const message = await eMessage.sendSms({
-  client: eMessageClient,
+  client,
   body: {
     message: "Your application is ready for review.",
     number: "+639171234567",

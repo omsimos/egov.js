@@ -17,24 +17,13 @@ icon: lucide:credit-card
   </Warning>
 </Aside>
 
-## Connect
-
-Configure the documented **development host** and complete merchant token:
-
-```ts
-import { createClient } from "egov.js";
-
-const egovPayClient = createClient({
-  baseUrl: "https://egovpay-pgi-ws-dev.oueg.info",
-  headers: { "X-eGovPay-Token": process.env.EGOVPAY_API_KEY! },
-});
-```
-
 ## Sign requests
 
 Payment creation requires a **lowercase HMAC-SHA256 digest** of `amount|txnid`. Remove a leading `test_` prefix from the merchant token only when computing the digest.
 
 ## Methods
+
+These examples assume the configured `client` from [the quickstart](../getting-started/quickstart.mdx).
 
 The **API Reference tab** remains the source of truth for complete payment parameters, schemas, responses, and cURL examples.
 
@@ -46,7 +35,7 @@ The **API Reference tab** remains the source of truth for complete payment param
 import { egovPay } from "egov.js";
 
 const payment = await egovPay.generatePayment({
-  client: egovPayClient,
+  client,
   body: {
     amount: 1_000,
     callback_url: "https://example.gov.ph/payments/callback",
@@ -68,7 +57,7 @@ const payment = await egovPay.generatePayment({
 import { egovPay } from "egov.js";
 
 const transaction = await egovPay.getTransaction({
-  client: egovPayClient,
+  client,
   path: { uuid: payment.data.uuid },
   throwOnError: true,
 });
@@ -82,7 +71,7 @@ const transaction = await egovPay.getTransaction({
 import { egovPay } from "egov.js";
 
 const voided = await egovPay.voidTransaction({
-  client: egovPayClient,
+  client,
   path: { uuid: payment.data.uuid },
   throwOnError: true,
 });

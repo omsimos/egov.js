@@ -17,23 +17,13 @@ icon: lucide:blocks
   </Warning>
 </Aside>
 
-## Connect
-
-Create a dedicated **RPC client** for the documented host:
-
-```ts
-import { createClient } from "egov.js";
-
-const egovChainClient = createClient({
-  baseUrl: "https://hackathon-blockchain.e.gov.ph",
-});
-```
-
 ## Authentication
 
 The documented **RPC operation** does not declare an authentication scheme. Apply any access controls required by the environment through client headers.
 
 ## Methods
+
+These examples assume the configured `client` from [the quickstart](../getting-started/quickstart.mdx).
 
 The **API Reference tab** documents the generic JSON-RPC envelope, success and error responses, and a catalog of supported RPC variants.
 
@@ -45,7 +35,7 @@ The **API Reference tab** documents the generic JSON-RPC envelope, success and e
 import { egovChain } from "egov.js";
 
 const blockNumber = await egovChain.jsonRpc({
-  client: egovChainClient,
+  client,
   body: {
     id: 1,
     jsonrpc: "2.0",

@@ -17,23 +17,13 @@ icon: lucide:message-square-warning
   </Warning>
 </Aside>
 
-## Connect
-
-Create a dedicated **provider client** for the documented staging host:
-
-```ts
-import { createClient } from "egov.js";
-
-const eReportClient = createClient({
-  baseUrl: "https://stg-ereport-ws.oueg.info",
-});
-```
-
 ## Authentication flow
 
 Use **`eReport.generateToken`** to obtain an integration bearer token. OTP confirmation returns the `X-EReport-View-Token` required for listing or retrieving reports.
 
 ## Methods
+
+These examples assume the configured `client` from [the quickstart](../getting-started/quickstart.mdx).
 
 The **API Reference tab** remains the source of truth for complete parameters, schemas, responses, and cURL examples.
 
@@ -45,7 +35,7 @@ The **API Reference tab** remains the source of truth for complete parameters, s
 import { eReport } from "egov.js";
 
 const integration = await eReport.generateToken({
-  client: eReportClient,
+  client,
   body: { access_code: reportAccessCode },
   throwOnError: true,
 });
@@ -59,7 +49,7 @@ const integration = await eReport.generateToken({
 import { eReport } from "egov.js";
 
 const reportTypes = await eReport.listReportTypes({
-  client: eReportClient,
+  client,
   auth: integration.access_token,
   throwOnError: true,
 });
@@ -73,7 +63,7 @@ const reportTypes = await eReport.listReportTypes({
 import { eReport } from "egov.js";
 
 const regions = await eReport.listRegions({
-  client: eReportClient,
+  client,
   auth: integration.access_token,
   throwOnError: true,
 });
@@ -87,7 +77,7 @@ const regions = await eReport.listRegions({
 import { eReport } from "egov.js";
 
 const provinces = await eReport.listProvinces({
-  client: eReportClient,
+  client,
   auth: integration.access_token,
   query: { region_code: "040000000" },
   throwOnError: true,
@@ -102,7 +92,7 @@ const provinces = await eReport.listProvinces({
 import { eReport } from "egov.js";
 
 const municipalities = await eReport.listMunicipalities({
-  client: eReportClient,
+  client,
   auth: integration.access_token,
   query: { province_code: "042100000" },
   throwOnError: true,
@@ -117,7 +107,7 @@ const municipalities = await eReport.listMunicipalities({
 import { eReport } from "egov.js";
 
 const barangays = await eReport.listBarangays({
-  client: eReportClient,
+  client,
   auth: integration.access_token,
   query: { municipality_code: "042111000" },
   throwOnError: true,
@@ -132,7 +122,7 @@ const barangays = await eReport.listBarangays({
 import { eReport } from "egov.js";
 
 const complaint = await eReport.submitComplaint({
-  client: eReportClient,
+  client,
   auth: integration.access_token,
   body: {
     barangay_code: "042111001",
@@ -160,7 +150,7 @@ const complaint = await eReport.submitComplaint({
 import { eReport } from "egov.js";
 
 const otpRequest = await eReport.requestOtp({
-  client: eReportClient,
+  client,
   auth: integration.access_token,
   body: { email: "juan@example.gov.ph" },
   throwOnError: true,
@@ -175,7 +165,7 @@ const otpRequest = await eReport.requestOtp({
 import { eReport } from "egov.js";
 
 const confirmation = await eReport.confirmOtp({
-  client: eReportClient,
+  client,
   auth: integration.access_token,
   body: {
     email: "juan@example.gov.ph",
@@ -193,7 +183,7 @@ const confirmation = await eReport.confirmOtp({
 import { eReport } from "egov.js";
 
 const reports = await eReport.listReports({
-  client: eReportClient,
+  client,
   headers: { "X-EReport-View-Token": confirmation.report_view_token },
   query: { page: 1, limit: 10 },
   throwOnError: true,
@@ -208,7 +198,7 @@ const reports = await eReport.listReports({
 import { eReport } from "egov.js";
 
 const report = await eReport.getReport({
-  client: eReportClient,
+  client,
   headers: { "X-EReport-View-Token": confirmation.report_view_token },
   path: { case_number: complaint.case_number },
   throwOnError: true,

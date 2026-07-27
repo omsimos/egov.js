@@ -17,23 +17,13 @@ icon: lucide:badge-check
   </Warning>
 </Aside>
 
-## Connect
-
-Create a dedicated **provider client** for the documented hackathon host:
-
-```ts
-import { createClient } from "egov.js";
-
-const eVerifyClient = createClient({
-  baseUrl: "https://hackathon-everify-api.e.gov.ph",
-});
-```
-
 ## Authenticate
 
 Call **`eVerify.authenticate`** with the client ID and client secret, then pass the returned bearer token through `auth`.
 
 ## Methods
+
+These examples assume the configured `client` from [the quickstart](../getting-started/quickstart.mdx).
 
 The **API Reference tab** remains the source of truth for complete identity parameters, schemas, responses, and cURL examples.
 
@@ -45,7 +35,7 @@ The **API Reference tab** remains the source of truth for complete identity para
 import { eVerify } from "egov.js";
 
 const authentication = await eVerify.authenticate({
-  client: eVerifyClient,
+  client,
   body: {
     client_id: process.env.EVERIFY_CLIENT_ID!,
     client_secret: process.env.EVERIFY_CLIENT_SECRET!,
@@ -62,7 +52,7 @@ const authentication = await eVerify.authenticate({
 import { eVerify } from "egov.js";
 
 const identity = await eVerify.verifyPersonalInformation({
-  client: eVerifyClient,
+  client,
   auth: authentication.data.access_token,
   body: {
     birth_date: "1990-01-15",
@@ -82,7 +72,7 @@ const identity = await eVerify.verifyPersonalInformation({
 import { eVerify } from "egov.js";
 
 const qrProfile = await eVerify.checkQr({
-  client: eVerifyClient,
+  client,
   auth: authentication.data.access_token,
   body: { value: nationalIdQrValue },
   throwOnError: true,
@@ -97,7 +87,7 @@ const qrProfile = await eVerify.checkQr({
 import { eVerify } from "egov.js";
 
 const qrVerification = await eVerify.verifyQr({
-  client: eVerifyClient,
+  client,
   auth: authentication.data.access_token,
   body: {
     face_liveness_session_id: livenessSessionId,

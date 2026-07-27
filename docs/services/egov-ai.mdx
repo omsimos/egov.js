@@ -17,23 +17,13 @@ icon: lucide:sparkles
   </Warning>
 </Aside>
 
-## Connect
-
-Create a dedicated **provider client** for the documented host:
-
-```ts
-import { createClient } from "egov.js";
-
-const egovAiClient = createClient({
-  baseUrl: "https://egov-ai-core-ws.oueg.info",
-});
-```
-
 ## Authenticate
 
 Exchange an **access code** with `egovAi.generateAccessToken`, then pass the returned bearer token through `auth` for the remaining operations.
 
 ## Methods
+
+These examples assume the configured `client` from [the quickstart](../getting-started/quickstart.mdx).
 
 The **API Reference tab** remains the source of truth for complete parameters, schemas, responses, and cURL examples.
 
@@ -45,7 +35,7 @@ The **API Reference tab** remains the source of truth for complete parameters, s
 import { egovAi } from "egov.js";
 
 const token = await egovAi.generateAccessToken({
-  client: egovAiClient,
+  client,
   body: { access_code: process.env.EGOVAI_ACCESS_CODE! },
   throwOnError: true,
 });
@@ -59,7 +49,7 @@ const token = await egovAi.generateAccessToken({
 import { egovAi } from "egov.js";
 
 const assistant = await egovAi.generateAssistant({
-  client: egovAiClient,
+  client,
   auth: token.access_token,
   body: {
     category: "general",
@@ -77,7 +67,7 @@ const assistant = await egovAi.generateAssistant({
 import { egovAi } from "egov.js";
 
 const speech = await egovAi.generateSpeech({
-  client: egovAiClient,
+  client,
   auth: token.access_token,
   body: {
     category: "public-service-announcement",
@@ -95,7 +85,7 @@ const speech = await egovAi.generateSpeech({
 import { egovAi } from "egov.js";
 
 const tourism = await egovAi.generateTourism({
-  client: egovAiClient,
+  client,
   auth: token.access_token,
   body: {
     category: "destination-guide",
@@ -113,7 +103,7 @@ const tourism = await egovAi.generateTourism({
 import { egovAi } from "egov.js";
 
 const legalGuide = await egovAi.generateLawsAndRegulations({
-  client: egovAiClient,
+  client,
   auth: token.access_token,
   body: {
     category: "business-registration",
@@ -131,7 +121,7 @@ const legalGuide = await egovAi.generateLawsAndRegulations({
 import { egovAi } from "egov.js";
 
 const translation = await egovAi.translate({
-  client: egovAiClient,
+  client,
   auth: token.access_token,
   body: {
     prompt: "Your application is ready for review.",
@@ -150,7 +140,7 @@ const translation = await egovAi.translate({
 import { egovAi } from "egov.js";
 
 const extracted = await egovAi.extractDocument({
-  client: egovAiClient,
+  client,
   auth: token.access_token,
   body: { file: documentFile },
   throwOnError: true,
@@ -165,7 +155,7 @@ const extracted = await egovAi.extractDocument({
 import { egovAi } from "egov.js";
 
 const credits = await egovAi.getTokenCredits({
-  client: egovAiClient,
+  client,
   auth: token.access_token,
   throwOnError: true,
 });
