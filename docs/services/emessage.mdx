@@ -21,9 +21,24 @@ icon: lucide:message-square-text
 
 Apply **retry and duplicate-suppression policy** in the application because the generated client does not retry automatically.
 
+## Initialize the client
+
+Create a **dedicated client** with the eMessage token issued to your integration:
+
+```ts
+import { createClient } from "egov.js";
+
+const client = createClient({
+  baseUrl: "https://ws-message.e.gov.ph",
+  headers: {
+    "X-EMESSAGE-Auth": process.env.EMESSAGE_TOKEN!,
+  },
+});
+```
+
 ## Methods
 
-These examples assume the configured `client` from [the quickstart](../getting-started/quickstart.mdx).
+The example below uses this **authenticated eMessage client**. See [the quickstart](../getting-started/quickstart.mdx) for the general client pattern.
 
 The **API Reference tab** documents the complete message body, authentication header, validation errors, and success response.
 

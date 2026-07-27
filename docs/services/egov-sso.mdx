@@ -21,9 +21,21 @@ icon: lucide:log-in
 
 Call **`egovSso.generateAccessToken`** with the partner code, partner secret, and exchange code. Pass the returned bearer token to `egovSso.authenticate` through `auth`.
 
+## Initialize the client
+
+Create a **dedicated client** for the documented eGov SSO hackathon host:
+
+```ts
+import { createClient } from "egov.js";
+
+const client = createClient({
+  baseUrl: "https://hackathon-sso.e.gov.ph",
+});
+```
+
 ## Methods
 
-These examples assume the configured `client` from [the quickstart](../getting-started/quickstart.mdx).
+The examples below use this **eGov SSO client**. See [the quickstart](../getting-started/quickstart.mdx) for the general client pattern.
 
 The **API Reference tab** documents token-exchange errors, bearer authentication, request fields, and the citizen profile schema.
 

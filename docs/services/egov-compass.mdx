@@ -21,9 +21,24 @@ icon: lucide:chart-no-axes-combined
 
 Pass request filters under the operation's **`query` object**. Required year, period, scope, and program fields vary by dataset.
 
+## Initialize the client
+
+Create a **dedicated client** with the Compass API key issued to your integration:
+
+```ts
+import { createClient } from "egov.js";
+
+const client = createClient({
+  baseUrl: "https://dbm-ws.oueg.info",
+  headers: {
+    "x-api-key": process.env.EGOVCOMPASS_API_KEY!,
+  },
+});
+```
+
 ## Methods
 
-These examples assume the configured `client` from [the quickstart](../getting-started/quickstart.mdx).
+The examples below use this **authenticated Compass client**. See [the quickstart](../getting-started/quickstart.mdx) for the general client pattern.
 
 The **API Reference tab** remains the source of truth for complete query parameters, response schemas, and cURL examples.
 

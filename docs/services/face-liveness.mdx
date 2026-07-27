@@ -17,9 +17,24 @@ icon: lucide:scan-face
   </Warning>
 </Aside>
 
+## Initialize the client
+
+Create a **dedicated client** with the Face Liveness API key issued to your integration:
+
+```ts
+import { createClient } from "egov.js";
+
+const client = createClient({
+  baseUrl: "https://hackathon-face-liveness-api.e.gov.ph",
+  headers: {
+    "x-api-key": process.env.FACE_LIVENESS_API_KEY!,
+  },
+});
+```
+
 ## Methods
 
-These examples assume the configured `client` from [the quickstart](../getting-started/quickstart.mdx).
+The examples below use this **authenticated Face Liveness client**. See [the quickstart](../getting-started/quickstart.mdx) for the general client pattern.
 
 The **API Reference tab** documents the complete session request, hosted verification URL, path parameter, and result schema.
 

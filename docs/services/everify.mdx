@@ -21,9 +21,21 @@ icon: lucide:badge-check
 
 Call **`eVerify.authenticate`** with the client ID and client secret, then pass the returned bearer token through `auth`.
 
+## Initialize the client
+
+Create a **dedicated client** for the documented eVerify hackathon host:
+
+```ts
+import { createClient } from "egov.js";
+
+const client = createClient({
+  baseUrl: "https://hackathon-everify-api.e.gov.ph",
+});
+```
+
 ## Methods
 
-These examples assume the configured `client` from [the quickstart](../getting-started/quickstart.mdx).
+The examples below use this **eVerify client**. See [the quickstart](../getting-started/quickstart.mdx) for the general client pattern.
 
 The **API Reference tab** remains the source of truth for complete identity parameters, schemas, responses, and cURL examples.
 

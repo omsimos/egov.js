@@ -21,9 +21,21 @@ icon: lucide:message-square-warning
 
 Use **`eReport.generateToken`** to obtain an integration bearer token. OTP confirmation returns the `X-EReport-View-Token` required for listing or retrieving reports.
 
+## Initialize the client
+
+Create a **dedicated client** for the documented eReport staging host:
+
+```ts
+import { createClient } from "egov.js";
+
+const client = createClient({
+  baseUrl: "https://stg-ereport-ws.oueg.info",
+});
+```
+
 ## Methods
 
-These examples assume the configured `client` from [the quickstart](../getting-started/quickstart.mdx).
+The examples below use this **eReport client**. See [the quickstart](../getting-started/quickstart.mdx) for the general client pattern.
 
 The **API Reference tab** remains the source of truth for complete parameters, schemas, responses, and cURL examples.
 

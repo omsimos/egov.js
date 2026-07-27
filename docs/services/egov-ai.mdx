@@ -21,9 +21,21 @@ icon: lucide:sparkles
 
 Exchange an **access code** with `egovAi.generateAccessToken`, then pass the returned bearer token through `auth` for the remaining operations.
 
+## Initialize the client
+
+Create a **dedicated client** for the documented eGov AI provider host:
+
+```ts
+import { createClient } from "egov.js";
+
+const client = createClient({
+  baseUrl: "https://egov-ai-core-ws.oueg.info",
+});
+```
+
 ## Methods
 
-These examples assume the configured `client` from [the quickstart](../getting-started/quickstart.mdx).
+The examples below use this **eGov AI client**. See [the quickstart](../getting-started/quickstart.mdx) for a complete token-and-request flow.
 
 The **API Reference tab** remains the source of truth for complete parameters, schemas, responses, and cURL examples.
 
