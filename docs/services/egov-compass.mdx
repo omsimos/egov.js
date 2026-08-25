@@ -29,7 +29,7 @@ Create a **dedicated client** with the Compass API key issued to your integratio
 import { createClient } from "egov.js";
 
 const client = createClient({
-  baseUrl: "https://dbm-ws.oueg.info",
+  baseUrl: process.env.EGOVCOMPASS_BASE_URL!,
   headers: {
     "x-api-key": process.env.EGOVCOMPASS_API_KEY!,
   },

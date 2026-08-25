@@ -38,7 +38,7 @@ TypeScript types:
 import { createClient, egovChain } from "egov.js";
 
 const client = createClient({
-  baseUrl: "https://hackathon-blockchain.e.gov.ph",
+  baseUrl: process.env.EGOVCHAIN_BASE_URL!,
 });
 
 console.log(typeof egovChain.jsonRpc, client);

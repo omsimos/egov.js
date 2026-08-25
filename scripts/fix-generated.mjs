@@ -72,3 +72,26 @@ await writeFile(
     "const iterator = header instanceof Headers ? headersEntries(header) : Array.isArray(header) ? header : Object.entries(header);",
   ),
 );
+
+const types = new URL("../src/generated/types.gen.ts", import.meta.url);
+const typesSource = await readFile(types, "utf8");
+const clientOptions = /^(export type ClientOptions = \{\n  baseUrl:\n)([\s\S]*?)(;\n\};)$/m;
+const match = typesSource.match(clientOptions);
+
+if (!match) {
+  throw new Error("Generated ClientOptions shape changed; base URL deduplication was not applied.");
+}
+
+const seenBaseUrls = new Set();
+const baseUrls = match[2]
+  .split("\n")
+  .filter((line) => {
+    const member = line.trim();
+    if (!member.startsWith('| "https://')) return true;
+    if (seenBaseUrls.has(member)) return false;
+    seenBaseUrls.add(member);
+    return true;
+  })
+  .join("\n");
+
+await writeFile(types, typesSource.replace(clientOptions, `$1${baseUrls}$3`));

@@ -29,7 +29,7 @@ Create a **dedicated client** with the eMessage token issued to your integration
 import { createClient } from "egov.js";
 
 const client = createClient({
-  baseUrl: "https://ws-message.e.gov.ph",
+  baseUrl: process.env.EMESSAGE_BASE_URL!,
   headers: {
     "X-EMESSAGE-Auth": process.env.EMESSAGE_TOKEN!,
   },

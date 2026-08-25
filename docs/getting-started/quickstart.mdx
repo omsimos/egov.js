@@ -25,7 +25,7 @@ Each provider has its own host. Create a client for the host you intend to call:
 import { createClient, egovAi } from "egov.js";
 
 const client = createClient({
-  baseUrl: "https://egov-ai-core-ws.oueg.info",
+  baseUrl: process.env.EGOVAI_BASE_URL!,
 });
 ```
 

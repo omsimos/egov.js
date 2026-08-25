@@ -25,7 +25,7 @@ Create a **dedicated client** with the Face Liveness API key issued to your inte
 import { createClient } from "egov.js";
 
 const client = createClient({
-  baseUrl: "https://hackathon-face-liveness-api.e.gov.ph",
+  baseUrl: process.env.EGOVLIVENESS_BASE_URL!,
   headers: {
     "x-api-key": process.env.FACE_LIVENESS_API_KEY!,
   },

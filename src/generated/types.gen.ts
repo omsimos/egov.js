@@ -3,45 +3,15 @@
 export type ClientOptions = {
   baseUrl:
     | `${string}://${string}`
-    | "https://egov-ai-core-ws.oueg.info"
-    | "https://egov-ai-core-ws.oueg.info"
-    | "https://egov-ai-core-ws.oueg.info"
-    | "https://egov-ai-core-ws.oueg.info"
-    | "https://egov-ai-core-ws.oueg.info"
-    | "https://egov-ai-core-ws.oueg.info"
-    | "https://egov-ai-core-ws.oueg.info"
-    | "https://egov-ai-core-ws.oueg.info"
-    | "https://hackathon-blockchain.e.gov.ph"
-    | "https://dbm-ws.oueg.info"
-    | "https://dbm-ws.oueg.info"
-    | "https://dbm-ws.oueg.info"
-    | "https://dbm-ws.oueg.info"
-    | "https://dbm-ws.oueg.info"
-    | "https://dbm-ws.oueg.info"
-    | "https://dbm-ws.oueg.info"
-    | "https://hackathon-face-liveness-api.e.gov.ph"
-    | "https://hackathon-face-liveness-api.e.gov.ph"
-    | "https://egovpay-pgi-ws-dev.oueg.info"
-    | "https://egovpay-pgi-ws-dev.oueg.info"
-    | "https://egovpay-pgi-ws-dev.oueg.info"
+    | "https://platforms-api.e.gov.ph/egov-ai"
+    | "https://platforms-api.e.gov.ph/egovchain"
+    | "https://platforms-api.e.gov.ph/compass"
+    | "https://platforms-api.e.gov.ph/face-liveness"
+    | "https://platforms-api.e.gov.ph/egovpay"
     | "https://hackathon-sso.e.gov.ph"
-    | "https://hackathon-sso.e.gov.ph"
-    | "https://ws-message.e.gov.ph"
-    | "https://stg-ereport-ws.oueg.info"
-    | "https://stg-ereport-ws.oueg.info"
-    | "https://stg-ereport-ws.oueg.info"
-    | "https://stg-ereport-ws.oueg.info"
-    | "https://stg-ereport-ws.oueg.info"
-    | "https://stg-ereport-ws.oueg.info"
-    | "https://stg-ereport-ws.oueg.info"
-    | "https://stg-ereport-ws.oueg.info"
-    | "https://stg-ereport-ws.oueg.info"
-    | "https://stg-ereport-ws.oueg.info"
-    | "https://stg-ereport-ws.oueg.info"
-    | "https://hackathon-everify-api.e.gov.ph"
-    | "https://hackathon-everify-api.e.gov.ph"
-    | "https://hackathon-everify-api.e.gov.ph"
-    | "https://hackathon-everify-api.e.gov.ph"
+    | "https://platforms-api.e.gov.ph/emessage"
+    | "https://platforms-api.e.gov.ph/ereport"
+    | "https://platforms-api.e.gov.ph/everify"
     | (string & {});
 };
 
@@ -195,7 +165,7 @@ export type CompassSaaodbDashboardResponse = {
 };
 
 export type CompassNcaRecordsResponse = {
-  items: Array<OpenRecord>;
+  data: Array<OpenRecord>;
   limit: number;
   page: number;
   total: number;
@@ -212,7 +182,7 @@ export type CompassSaroRecord = {
 };
 
 export type CompassSaroRecordsResponse = {
-  items: Array<CompassSaroRecord>;
+  data: Array<CompassSaroRecord>;
   limit: number;
   page: number;
   total: number;
@@ -284,8 +254,14 @@ export type EgovPayGeneratePaymentRequest = {
    */
   digest: string;
   email?: string;
+  /**
+   * Provider datetime, for example `2027-07-10 23:59:59`.
+   */
   expires_at?: string;
   items: Array<EgovPayItem>;
+  /**
+   * Provider datetime, for example `2027-07-10 23:59:59`.
+   */
   link_expires_at?: string;
   mobile?: string;
   name?: string;
@@ -676,6 +652,16 @@ export type EverifyVerificationResponse = {
   meta: EverifyVerificationMeta;
 };
 
+export type EverifyUnverifiedResponse = {
+  data: {
+    verified: false;
+  };
+  meta: {
+    result_grade: "FAILED_FACE";
+    tier_level: string;
+  };
+};
+
 export type EverifyQrCheckRequest = {
   value: string;
 };
@@ -695,6 +681,10 @@ export type EverifyQrVerifyRequest = {
 export type Page = number;
 
 export type Limit = number;
+
+export type RequiredPage = number;
+
+export type RequiredLimit = number;
 
 export type CompassReportYear = number;
 
@@ -893,9 +883,14 @@ export type EgovAiGetTokenCreditsResponse =
 
 export type EgovChainJsonRpcData = {
   body: EgovChainRpcRequest;
-  path?: never;
+  path: {
+    /**
+     * Gateway token issued with the eGovChain credentials.
+     */
+    token: string;
+  };
   query?: never;
-  url: "/";
+  url: "/{token}";
 };
 
 export type EgovChainJsonRpcResponses = {
@@ -916,8 +911,8 @@ export type EgovCompassGetSaaodbRecordsData = {
     class?: CompassExpenseClass;
     sheetScope?: CompassSheetScope;
     entityName?: string;
-    page?: number;
-    limit?: number;
+    page: number;
+    limit: number;
   };
   url: "/api/v1/records/saaodb";
 };
@@ -1288,6 +1283,17 @@ export type EReportListReportTypesData = {
   url: "/api/integration/datasets/report_types";
 };
 
+export type EReportListReportTypesErrors = {
+  /**
+   * Missing, invalid, or expired access token.
+   */
+  401: unknown;
+  /**
+   * Provider error.
+   */
+  500: unknown;
+};
+
 export type EReportListReportTypesResponses = {
   /**
    * Report types returned.
@@ -1303,6 +1309,21 @@ export type EReportListRegionsData = {
   path?: never;
   query?: never;
   url: "/api/integration/datasets/regions";
+};
+
+export type EReportListRegionsErrors = {
+  /**
+   * Missing, invalid, or expired access token.
+   */
+  401: unknown;
+  /**
+   * Forbidden.
+   */
+  403: unknown;
+  /**
+   * Provider error.
+   */
+  500: unknown;
 };
 
 export type EReportListRegionsResponses = {
@@ -1324,6 +1345,13 @@ export type EReportListProvincesData = {
   url: "/api/integration/datasets/provinces";
 };
 
+export type EReportListProvincesErrors = {
+  /**
+   * Missing, invalid, or expired access token.
+   */
+  401: unknown;
+};
+
 export type EReportListProvincesResponses = {
   /**
    * Provinces returned.
@@ -1341,6 +1369,13 @@ export type EReportListMunicipalitiesData = {
     province_code: string;
   };
   url: "/api/integration/datasets/municipalities";
+};
+
+export type EReportListMunicipalitiesErrors = {
+  /**
+   * Missing, invalid, or expired access token.
+   */
+  401: unknown;
 };
 
 export type EReportListMunicipalitiesResponses = {
@@ -1362,6 +1397,13 @@ export type EReportListBarangaysData = {
   url: "/api/integration/datasets/barangays";
 };
 
+export type EReportListBarangaysErrors = {
+  /**
+   * Missing, invalid, or expired access token.
+   */
+  401: unknown;
+};
+
 export type EReportListBarangaysResponses = {
   /**
    * Barangays returned.
@@ -1377,6 +1419,13 @@ export type EReportGenerateTokenData = {
   path?: never;
   query?: never;
   url: "/api/integration/token";
+};
+
+export type EReportGenerateTokenErrors = {
+  /**
+   * Invalid access code.
+   */
+  401: unknown;
 };
 
 export type EReportGenerateTokenResponses = {
@@ -1396,6 +1445,13 @@ export type EReportSubmitComplaintData = {
   url: "/api/integration/submit_complaint";
 };
 
+export type EReportSubmitComplaintErrors = {
+  /**
+   * Missing, invalid, or expired access token.
+   */
+  401: unknown;
+};
+
 export type EReportSubmitComplaintResponses = {
   /**
    * Complaint accepted.
@@ -1413,6 +1469,13 @@ export type EReportRequestOtpData = {
   url: "/api/integration/verify/request";
 };
 
+export type EReportRequestOtpErrors = {
+  /**
+   * Missing, invalid, or expired access token.
+   */
+  401: unknown;
+};
+
 export type EReportRequestOtpResponses = {
   /**
    * OTP dispatched.
@@ -1428,6 +1491,13 @@ export type EReportConfirmOtpData = {
   path?: never;
   query?: never;
   url: "/api/integration/verify/confirm";
+};
+
+export type EReportConfirmOtpErrors = {
+  /**
+   * Missing, invalid, or expired access token.
+   */
+  401: unknown;
 };
 
 export type EReportConfirmOtpResponses = {
@@ -1451,6 +1521,13 @@ export type EReportListReportsData = {
   url: "/api/integration/reports";
 };
 
+export type EReportListReportsErrors = {
+  /**
+   * Missing, invalid, or expired report view token.
+   */
+  401: unknown;
+};
+
 export type EReportListReportsResponses = {
   /**
    * Reports returned.
@@ -1468,6 +1545,13 @@ export type EReportGetReportData = {
   };
   query?: never;
   url: "/api/integration/reports/{case_number}";
+};
+
+export type EReportGetReportErrors = {
+  /**
+   * Missing, invalid, or expired report view token.
+   */
+  401: unknown;
 };
 
 export type EReportGetReportResponses = {
@@ -1561,7 +1645,7 @@ export type EVerifyVerifyQrResponses = {
   /**
    * Matched or unverified identity result.
    */
-  200: EverifyVerificationResponse;
+  200: EverifyVerificationResponse | EverifyUnverifiedResponse;
 };
 
 export type EVerifyVerifyQrResponse = EVerifyVerifyQrResponses[keyof EVerifyVerifyQrResponses];

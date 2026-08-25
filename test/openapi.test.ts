@@ -29,15 +29,15 @@ interface OpenApiDocument {
 }
 
 const providerServers: Record<string, string> = {
-  Compass: "https://dbm-ws.oueg.info",
-  "Face Liveness": "https://hackathon-face-liveness-api.e.gov.ph",
-  "eGov AI": "https://egov-ai-core-ws.oueg.info",
+  Compass: "https://platforms-api.e.gov.ph/compass",
+  "Face Liveness": "https://platforms-api.e.gov.ph/face-liveness",
+  "eGov AI": "https://platforms-api.e.gov.ph/egov-ai",
   "eGov SSO": "https://hackathon-sso.e.gov.ph",
-  eGovChain: "https://hackathon-blockchain.e.gov.ph",
-  eGovPay: "https://egovpay-pgi-ws-dev.oueg.info",
-  eMessage: "https://ws-message.e.gov.ph",
-  eReport: "https://stg-ereport-ws.oueg.info",
-  eVerify: "https://hackathon-everify-api.e.gov.ph",
+  eGovChain: "https://platforms-api.e.gov.ph/egovchain",
+  eGovPay: "https://platforms-api.e.gov.ph/egovpay",
+  eMessage: "https://platforms-api.e.gov.ph/emessage",
+  eReport: "https://platforms-api.e.gov.ph/ereport",
+  eVerify: "https://platforms-api.e.gov.ph/everify",
 };
 
 async function readOpenApi(): Promise<OpenApiDocument> {
@@ -61,7 +61,7 @@ describe("openapi.json", () => {
   test("publishes reusable schemas, tags, and security schemes", async () => {
     const document = await readOpenApi();
 
-    expect(Object.keys(document.components?.schemas ?? {})).toHaveLength(72);
+    expect(Object.keys(document.components?.schemas ?? {})).toHaveLength(73);
     expect(Object.keys(document.components?.securitySchemes ?? {})).toHaveLength(5);
     expect(document.tags).toHaveLength(9);
   });

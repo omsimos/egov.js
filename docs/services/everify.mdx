@@ -29,7 +29,7 @@ Create a **dedicated client** for the documented eVerify hackathon host:
 import { createClient } from "egov.js";
 
 const client = createClient({
-  baseUrl: "https://hackathon-everify-api.e.gov.ph",
+  baseUrl: process.env.EVERIFY_BASE_URL!,
 });
 ```
 

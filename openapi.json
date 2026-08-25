@@ -83,7 +83,7 @@
     "/api/v1/egov/integration/token": {
       "servers": [
         {
-          "url": "https://egov-ai-core-ws.oueg.info",
+          "url": "https://platforms-api.e.gov.ph/egov-ai",
           "description": "Documented eGov AI provider host."
         }
       ],
@@ -115,7 +115,7 @@
     "/api/v1/egov/integration/ai_assistant/generate": {
       "servers": [
         {
-          "url": "https://egov-ai-core-ws.oueg.info",
+          "url": "https://platforms-api.e.gov.ph/egov-ai",
           "description": "Documented eGov AI provider host."
         }
       ],
@@ -148,7 +148,7 @@
     "/api/v1/egov/integration/speech_maker/generate": {
       "servers": [
         {
-          "url": "https://egov-ai-core-ws.oueg.info",
+          "url": "https://platforms-api.e.gov.ph/egov-ai",
           "description": "Documented eGov AI provider host."
         }
       ],
@@ -181,7 +181,7 @@
     "/api/v1/egov/integration/tourism/generate": {
       "servers": [
         {
-          "url": "https://egov-ai-core-ws.oueg.info",
+          "url": "https://platforms-api.e.gov.ph/egov-ai",
           "description": "Documented eGov AI provider host."
         }
       ],
@@ -214,7 +214,7 @@
     "/api/v1/egov/integration/laws_and_regulations/generate": {
       "servers": [
         {
-          "url": "https://egov-ai-core-ws.oueg.info",
+          "url": "https://platforms-api.e.gov.ph/egov-ai",
           "description": "Documented eGov AI provider host."
         }
       ],
@@ -247,7 +247,7 @@
     "/api/v1/egov/integration/translator/generate": {
       "servers": [
         {
-          "url": "https://egov-ai-core-ws.oueg.info",
+          "url": "https://platforms-api.e.gov.ph/egov-ai",
           "description": "Documented eGov AI provider host."
         }
       ],
@@ -280,7 +280,7 @@
     "/api/v1/egov/integration/document_extractor/generate": {
       "servers": [
         {
-          "url": "https://egov-ai-core-ws.oueg.info",
+          "url": "https://platforms-api.e.gov.ph/egov-ai",
           "description": "Documented eGov AI provider host."
         }
       ],
@@ -313,7 +313,7 @@
     "/api/v1/egov/integration/credits": {
       "servers": [
         {
-          "url": "https://egov-ai-core-ws.oueg.info",
+          "url": "https://platforms-api.e.gov.ph/egov-ai",
           "description": "Documented eGov AI provider host."
         }
       ],
@@ -335,17 +335,26 @@
         }
       }
     },
-    "/": {
+    "/{token}": {
       "servers": [
         {
-          "url": "https://hackathon-blockchain.e.gov.ph",
-          "description": "Documented eGovChain hackathon RPC host."
+          "url": "https://platforms-api.e.gov.ph/egovchain",
+          "description": "Documented tokenized eGovChain gateway host."
         }
       ],
       "post": {
         "tags": ["eGovChain"],
         "summary": "Call an eGovChain JSON-RPC method",
         "operationId": "egovChainJsonRpc",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "description": "Gateway token issued with the eGovChain credentials.",
+            "schema": { "type": "string" }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -612,22 +621,22 @@
           },
           {
             "id": "guestbook-create-team-simulation",
-            "name": "eth_call — createTeam simulation",
+            "name": "eth_call — createTeam(\"Team Alpha\") SIMULATION ONLY",
             "rpcMethod": "eth_call"
           },
           {
             "id": "guestbook-post-simulation",
-            "name": "eth_call — post simulation",
+            "name": "eth_call — post(\"Hello hackathon!\") SIMULATION ONLY",
             "rpcMethod": "eth_call"
           },
           {
             "id": "guestbook-post-for-team-simulation",
-            "name": "eth_call — postForTeam simulation",
+            "name": "eth_call — postForTeam(0, \"Go Alpha!\") SIMULATION ONLY",
             "rpcMethod": "eth_call"
           },
           {
             "id": "guestbook-estimate-create-team",
-            "name": "eth_estimateGas — createTeam",
+            "name": "eth_estimateGas — createTeam(\"Team Alpha\")",
             "rpcMethod": "eth_estimateGas"
           },
           {
@@ -645,7 +654,10 @@
     },
     "/api/v1/records/saaodb": {
       "servers": [
-        { "url": "https://dbm-ws.oueg.info", "description": "Documented Compass provider host." }
+        {
+          "url": "https://platforms-api.e.gov.ph/compass",
+          "description": "Documented Compass gateway host."
+        }
       ],
       "get": {
         "tags": ["Compass"],
@@ -671,8 +683,8 @@
             "schema": { "$ref": "#/components/schemas/CompassSheetScope" }
           },
           { "name": "entityName", "in": "query", "schema": { "type": "string" } },
-          { "$ref": "#/components/parameters/Page" },
-          { "$ref": "#/components/parameters/Limit" }
+          { "$ref": "#/components/parameters/RequiredPage" },
+          { "$ref": "#/components/parameters/RequiredLimit" }
         ],
         "responses": {
           "200": {
@@ -688,7 +700,10 @@
     },
     "/api/v1/records/saaodb/dashboard": {
       "servers": [
-        { "url": "https://dbm-ws.oueg.info", "description": "Documented Compass provider host." }
+        {
+          "url": "https://platforms-api.e.gov.ph/compass",
+          "description": "Documented Compass gateway host."
+        }
       ],
       "get": {
         "tags": ["Compass"],
@@ -718,7 +733,10 @@
     },
     "/api/v1/records/saaodb/entities": {
       "servers": [
-        { "url": "https://dbm-ws.oueg.info", "description": "Documented Compass provider host." }
+        {
+          "url": "https://platforms-api.e.gov.ph/compass",
+          "description": "Documented Compass gateway host."
+        }
       ],
       "get": {
         "tags": ["Compass"],
@@ -751,7 +769,10 @@
     },
     "/api/v1/records/nca": {
       "servers": [
-        { "url": "https://dbm-ws.oueg.info", "description": "Documented Compass provider host." }
+        {
+          "url": "https://platforms-api.e.gov.ph/compass",
+          "description": "Documented Compass gateway host."
+        }
       ],
       "get": {
         "tags": ["Compass"],
@@ -786,7 +807,10 @@
     },
     "/api/v1/records/saro": {
       "servers": [
-        { "url": "https://dbm-ws.oueg.info", "description": "Documented Compass provider host." }
+        {
+          "url": "https://platforms-api.e.gov.ph/compass",
+          "description": "Documented Compass gateway host."
+        }
       ],
       "get": {
         "tags": ["Compass"],
@@ -815,7 +839,10 @@
     },
     "/api/v1/records/lgsf": {
       "servers": [
-        { "url": "https://dbm-ws.oueg.info", "description": "Documented Compass provider host." }
+        {
+          "url": "https://platforms-api.e.gov.ph/compass",
+          "description": "Documented Compass gateway host."
+        }
       ],
       "get": {
         "tags": ["Compass"],
@@ -849,7 +876,10 @@
     },
     "/api/v1/records/lgsf/dashboard": {
       "servers": [
-        { "url": "https://dbm-ws.oueg.info", "description": "Documented Compass provider host." }
+        {
+          "url": "https://platforms-api.e.gov.ph/compass",
+          "description": "Documented Compass gateway host."
+        }
       ],
       "get": {
         "tags": ["Compass"],
@@ -885,8 +915,8 @@
     "/v1/liveness/session": {
       "servers": [
         {
-          "url": "https://hackathon-face-liveness-api.e.gov.ph",
-          "description": "Documented Face Liveness hackathon host."
+          "url": "https://platforms-api.e.gov.ph/face-liveness",
+          "description": "Documented Face Liveness gateway host."
         }
       ],
       "post": {
@@ -917,8 +947,8 @@
     "/v1/liveness/result/{sessionToken}": {
       "servers": [
         {
-          "url": "https://hackathon-face-liveness-api.e.gov.ph",
-          "description": "Documented Face Liveness hackathon host."
+          "url": "https://platforms-api.e.gov.ph/face-liveness",
+          "description": "Documented Face Liveness gateway host."
         }
       ],
       "get": {
@@ -949,8 +979,8 @@
     "/api/v1/transaction": {
       "servers": [
         {
-          "url": "https://egovpay-pgi-ws-dev.oueg.info",
-          "description": "Documented eGovPay development host."
+          "url": "https://platforms-api.e.gov.ph/egovpay",
+          "description": "Documented eGovPay gateway host."
         }
       ],
       "post": {
@@ -984,8 +1014,8 @@
     "/api/v1/transaction/{uuid}": {
       "servers": [
         {
-          "url": "https://egovpay-pgi-ws-dev.oueg.info",
-          "description": "Documented eGovPay development host."
+          "url": "https://platforms-api.e.gov.ph/egovpay",
+          "description": "Documented eGovPay gateway host."
         }
       ],
       "get": {
@@ -1011,8 +1041,8 @@
     "/api/v1/transaction/{uuid}/void": {
       "servers": [
         {
-          "url": "https://egovpay-pgi-ws-dev.oueg.info",
-          "description": "Documented eGovPay development host."
+          "url": "https://platforms-api.e.gov.ph/egovpay",
+          "description": "Documented eGovPay gateway host."
         }
       ],
       "put": {
@@ -1097,7 +1127,7 @@
     "/messaging/v1/sms/push": {
       "servers": [
         {
-          "url": "https://ws-message.e.gov.ph",
+          "url": "https://platforms-api.e.gov.ph/emessage",
           "description": "Documented eMessage provider host."
         }
       ],
@@ -1131,8 +1161,8 @@
     "/api/integration/datasets/report_types": {
       "servers": [
         {
-          "url": "https://stg-ereport-ws.oueg.info",
-          "description": "Documented eReport staging host."
+          "url": "https://platforms-api.e.gov.ph/ereport",
+          "description": "Documented eReport gateway host."
         }
       ],
       "get": {
@@ -1148,15 +1178,17 @@
                 "schema": { "$ref": "#/components/schemas/EReportReportTypeListResponse" }
               }
             }
-          }
+          },
+          "401": { "description": "Missing, invalid, or expired access token." },
+          "500": { "description": "Provider error." }
         }
       }
     },
     "/api/integration/datasets/regions": {
       "servers": [
         {
-          "url": "https://stg-ereport-ws.oueg.info",
-          "description": "Documented eReport staging host."
+          "url": "https://platforms-api.e.gov.ph/ereport",
+          "description": "Documented eReport gateway host."
         }
       ],
       "get": {
@@ -1172,15 +1204,18 @@
                 "schema": { "$ref": "#/components/schemas/EReportLocationListResponse" }
               }
             }
-          }
+          },
+          "401": { "description": "Missing, invalid, or expired access token." },
+          "403": { "description": "Forbidden." },
+          "500": { "description": "Provider error." }
         }
       }
     },
     "/api/integration/datasets/provinces": {
       "servers": [
         {
-          "url": "https://stg-ereport-ws.oueg.info",
-          "description": "Documented eReport staging host."
+          "url": "https://platforms-api.e.gov.ph/ereport",
+          "description": "Documented eReport gateway host."
         }
       ],
       "get": {
@@ -1204,15 +1239,16 @@
                 "schema": { "$ref": "#/components/schemas/EReportLocationListResponse" }
               }
             }
-          }
+          },
+          "401": { "description": "Missing, invalid, or expired access token." }
         }
       }
     },
     "/api/integration/datasets/municipalities": {
       "servers": [
         {
-          "url": "https://stg-ereport-ws.oueg.info",
-          "description": "Documented eReport staging host."
+          "url": "https://platforms-api.e.gov.ph/ereport",
+          "description": "Documented eReport gateway host."
         }
       ],
       "get": {
@@ -1236,15 +1272,16 @@
                 "schema": { "$ref": "#/components/schemas/EReportLocationListResponse" }
               }
             }
-          }
+          },
+          "401": { "description": "Missing, invalid, or expired access token." }
         }
       }
     },
     "/api/integration/datasets/barangays": {
       "servers": [
         {
-          "url": "https://stg-ereport-ws.oueg.info",
-          "description": "Documented eReport staging host."
+          "url": "https://platforms-api.e.gov.ph/ereport",
+          "description": "Documented eReport gateway host."
         }
       ],
       "get": {
@@ -1268,15 +1305,16 @@
                 "schema": { "$ref": "#/components/schemas/EReportLocationListResponse" }
               }
             }
-          }
+          },
+          "401": { "description": "Missing, invalid, or expired access token." }
         }
       }
     },
     "/api/integration/token": {
       "servers": [
         {
-          "url": "https://stg-ereport-ws.oueg.info",
-          "description": "Documented eReport staging host."
+          "url": "https://platforms-api.e.gov.ph/ereport",
+          "description": "Documented eReport gateway host."
         }
       ],
       "post": {
@@ -1299,15 +1337,16 @@
                 "schema": { "$ref": "#/components/schemas/EReportGenerateTokenResponse" }
               }
             }
-          }
+          },
+          "401": { "description": "Invalid access code." }
         }
       }
     },
     "/api/integration/submit_complaint": {
       "servers": [
         {
-          "url": "https://stg-ereport-ws.oueg.info",
-          "description": "Documented eReport staging host."
+          "url": "https://platforms-api.e.gov.ph/ereport",
+          "description": "Documented eReport gateway host."
         }
       ],
       "post": {
@@ -1331,15 +1370,16 @@
                 "schema": { "$ref": "#/components/schemas/EReportSubmitComplaintResponse" }
               }
             }
-          }
+          },
+          "401": { "description": "Missing, invalid, or expired access token." }
         }
       }
     },
     "/api/integration/verify/request": {
       "servers": [
         {
-          "url": "https://stg-ereport-ws.oueg.info",
-          "description": "Documented eReport staging host."
+          "url": "https://platforms-api.e.gov.ph/ereport",
+          "description": "Documented eReport gateway host."
         }
       ],
       "post": {
@@ -1363,15 +1403,16 @@
                 "schema": { "$ref": "#/components/schemas/EReportRequestOtpResponse" }
               }
             }
-          }
+          },
+          "401": { "description": "Missing, invalid, or expired access token." }
         }
       }
     },
     "/api/integration/verify/confirm": {
       "servers": [
         {
-          "url": "https://stg-ereport-ws.oueg.info",
-          "description": "Documented eReport staging host."
+          "url": "https://platforms-api.e.gov.ph/ereport",
+          "description": "Documented eReport gateway host."
         }
       ],
       "post": {
@@ -1395,15 +1436,16 @@
                 "schema": { "$ref": "#/components/schemas/EReportConfirmOtpResponse" }
               }
             }
-          }
+          },
+          "401": { "description": "Missing, invalid, or expired access token." }
         }
       }
     },
     "/api/integration/reports": {
       "servers": [
         {
-          "url": "https://stg-ereport-ws.oueg.info",
-          "description": "Documented eReport staging host."
+          "url": "https://platforms-api.e.gov.ph/ereport",
+          "description": "Documented eReport gateway host."
         }
       ],
       "get": {
@@ -1424,15 +1466,16 @@
                 "schema": { "$ref": "#/components/schemas/EReportReportsResponse" }
               }
             }
-          }
+          },
+          "401": { "description": "Missing, invalid, or expired report view token." }
         }
       }
     },
     "/api/integration/reports/{case_number}": {
       "servers": [
         {
-          "url": "https://stg-ereport-ws.oueg.info",
-          "description": "Documented eReport staging host."
+          "url": "https://platforms-api.e.gov.ph/ereport",
+          "description": "Documented eReport gateway host."
         }
       ],
       "get": {
@@ -1456,15 +1499,16 @@
                 "schema": { "$ref": "#/components/schemas/EReportReportResponse" }
               }
             }
-          }
+          },
+          "401": { "description": "Missing, invalid, or expired report view token." }
         }
       }
     },
     "/api/auth": {
       "servers": [
         {
-          "url": "https://hackathon-everify-api.e.gov.ph",
-          "description": "Documented eVerify hackathon host."
+          "url": "https://platforms-api.e.gov.ph/everify",
+          "description": "Documented eVerify gateway host."
         }
       ],
       "post": {
@@ -1495,8 +1539,8 @@
     "/api/query": {
       "servers": [
         {
-          "url": "https://hackathon-everify-api.e.gov.ph",
-          "description": "Documented eVerify hackathon host."
+          "url": "https://platforms-api.e.gov.ph/everify",
+          "description": "Documented eVerify gateway host."
         }
       ],
       "post": {
@@ -1528,8 +1572,8 @@
     "/api/query/qr/check": {
       "servers": [
         {
-          "url": "https://hackathon-everify-api.e.gov.ph",
-          "description": "Documented eVerify hackathon host."
+          "url": "https://platforms-api.e.gov.ph/everify",
+          "description": "Documented eVerify gateway host."
         }
       ],
       "post": {
@@ -1561,8 +1605,8 @@
     "/api/query/qr": {
       "servers": [
         {
-          "url": "https://hackathon-everify-api.e.gov.ph",
-          "description": "Documented eVerify hackathon host."
+          "url": "https://platforms-api.e.gov.ph/everify",
+          "description": "Documented eVerify gateway host."
         }
       ],
       "post": {
@@ -1583,7 +1627,12 @@
             "description": "Matched or unverified identity result.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/EverifyVerificationResponse" }
+                "schema": {
+                  "oneOf": [
+                    { "$ref": "#/components/schemas/EverifyVerificationResponse" },
+                    { "$ref": "#/components/schemas/EverifyUnverifiedResponse" }
+                  ]
+                }
               }
             }
           }
@@ -1632,6 +1681,18 @@
       "Limit": {
         "name": "limit",
         "in": "query",
+        "schema": { "type": "integer" }
+      },
+      "RequiredPage": {
+        "name": "page",
+        "in": "query",
+        "required": true,
+        "schema": { "type": "integer" }
+      },
+      "RequiredLimit": {
+        "name": "limit",
+        "in": "query",
+        "required": true,
         "schema": { "type": "integer" }
       },
       "CompassReportYear": {
@@ -1824,7 +1885,7 @@
           "id": { "type": "string" },
           "obligations": { "type": "number" },
           "period": { "$ref": "#/components/schemas/CompassPeriod" },
-          "reportYear": { "type": "number" },
+          "reportYear": { "type": "integer" },
           "sheetScope": { "$ref": "#/components/schemas/CompassSheetScope" }
         }
       },
@@ -1911,7 +1972,7 @@
               "obligationRate": { "type": "number" }
             }
           },
-          "reportYear": { "type": "number" },
+          "reportYear": { "type": "integer" },
           "sheetScope": { "$ref": "#/components/schemas/CompassSheetScope" },
           "topEntities": {
             "type": "array",
@@ -1922,15 +1983,15 @@
       "CompassNcaRecordsResponse": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["items", "limit", "page", "total"],
+        "required": ["data", "limit", "page", "total"],
         "properties": {
-          "items": {
+          "data": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/OpenRecord" }
           },
-          "limit": { "type": "number" },
-          "page": { "type": "number" },
-          "total": { "type": "number" }
+          "limit": { "type": "integer" },
+          "page": { "type": "integer" },
+          "total": { "type": "integer" }
         }
       },
       "CompassSaroRecord": {
@@ -1948,15 +2009,15 @@
       "CompassSaroRecordsResponse": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["items", "limit", "page", "total"],
+        "required": ["data", "limit", "page", "total"],
         "properties": {
-          "items": {
+          "data": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/CompassSaroRecord" }
           },
-          "limit": { "type": "number" },
-          "page": { "type": "number" },
-          "total": { "type": "number" }
+          "limit": { "type": "integer" },
+          "page": { "type": "integer" },
+          "total": { "type": "integer" }
         }
       },
       "CompassLgsfRecordsResponse": {
@@ -2089,12 +2150,18 @@
             "description": "Lowercase hexadecimal HMAC-SHA256 of `amount|txnid`. The key is the merchant token with a leading `test_` prefix removed; production tokens are used unchanged."
           },
           "email": { "type": "string" },
-          "expires_at": { "type": "string", "format": "date-time" },
+          "expires_at": {
+            "type": "string",
+            "description": "Provider datetime, for example `2027-07-10 23:59:59`."
+          },
           "items": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/EgovPayItem" }
           },
-          "link_expires_at": { "type": "string", "format": "date-time" },
+          "link_expires_at": {
+            "type": "string",
+            "description": "Provider datetime, for example `2027-07-10 23:59:59`."
+          },
           "mobile": { "type": "string" },
           "name": { "type": "string" },
           "redirect_url": { "type": "string", "format": "uri" },
@@ -2825,6 +2892,28 @@
         "properties": {
           "data": { "$ref": "#/components/schemas/EverifyIdentityProfile" },
           "meta": { "$ref": "#/components/schemas/EverifyVerificationMeta" }
+        }
+      },
+      "EverifyUnverifiedResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["data", "meta"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["verified"],
+            "properties": { "verified": { "const": false } }
+          },
+          "meta": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["result_grade", "tier_level"],
+            "properties": {
+              "result_grade": { "const": "FAILED_FACE" },
+              "tier_level": { "type": "string" }
+            }
+          }
         }
       },
       "EverifyQrCheckRequest": {

@@ -88,12 +88,12 @@ describe("generated SDK", () => {
     await compass.getSaaodbRecords({
       auth: "api-key",
       client,
-      query: { period: "FY", reportYear: 2026 },
+      query: { limit: 10, page: 1, period: "FY", reportYear: 2026 },
       throwOnError: true,
     });
 
     expect(request?.url).toBe(
-      "https://compass.example.test/api/v1/records/saaodb?period=FY&reportYear=2026",
+      "https://compass.example.test/api/v1/records/saaodb?limit=10&page=1&period=FY&reportYear=2026",
     );
     expect(request?.headers.get("x-api-key")).toBe("api-key");
     expect(request?.headers.get("x-client-kind")).toBe("tuple");

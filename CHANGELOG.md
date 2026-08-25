@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0
+
+### Minor Changes
+
+- 4b68a36: Refresh the generated SDK and OpenAPI contract from the current eGov API catalogs, including gateway servers, tokenized eGovChain requests, Compass pagination and response envelopes, eReport error statuses, and eVerify face-mismatch responses.
+
 All notable changes to this project are documented in this file. This project
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 

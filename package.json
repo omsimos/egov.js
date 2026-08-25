@@ -1,6 +1,6 @@
 {
   "name": "egov.js",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "OpenAPI specification and generated TypeScript SDK for Philippine eGov APIs.",
   "keywords": [
     "api",
@@ -53,7 +53,7 @@
   },
   "scripts": {
     "build": "tsdown",
-    "generate": "openapi-ts && node scripts/fix-generated.mjs && oxfmt src/generated/sdk.gen.ts src/generated/client/utils.gen.ts",
+    "generate": "openapi-ts && node scripts/fix-generated.mjs && oxfmt src/generated/sdk.gen.ts src/generated/client/utils.gen.ts src/generated/types.gen.ts",
     "check:generated": "node scripts/check-generated.mjs",
     "openapi:lint": "redocly lint openapi.json --extends=spec",
     "dev": "tsdown --watch",

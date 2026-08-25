@@ -29,7 +29,7 @@ Create a **dedicated client** with the eGovPay merchant token issued to your int
 import { createClient } from "egov.js";
 
 const client = createClient({
-  baseUrl: "https://egovpay-pgi-ws-dev.oueg.info",
+  baseUrl: process.env.EGOVPAY_BASE_URL!,
   headers: {
     "X-eGovPay-Token": process.env.EGOVPAY_TOKEN!,
   },

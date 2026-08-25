@@ -73,26 +73,37 @@ import type {
   EMessageSendSmsErrors,
   EMessageSendSmsResponses,
   EReportConfirmOtpData,
+  EReportConfirmOtpErrors,
   EReportConfirmOtpResponses,
   EReportGenerateTokenData,
+  EReportGenerateTokenErrors,
   EReportGenerateTokenResponses,
   EReportGetReportData,
+  EReportGetReportErrors,
   EReportGetReportResponses,
   EReportListBarangaysData,
+  EReportListBarangaysErrors,
   EReportListBarangaysResponses,
   EReportListMunicipalitiesData,
+  EReportListMunicipalitiesErrors,
   EReportListMunicipalitiesResponses,
   EReportListProvincesData,
+  EReportListProvincesErrors,
   EReportListProvincesResponses,
   EReportListRegionsData,
+  EReportListRegionsErrors,
   EReportListRegionsResponses,
   EReportListReportsData,
+  EReportListReportsErrors,
   EReportListReportsResponses,
   EReportListReportTypesData,
+  EReportListReportTypesErrors,
   EReportListReportTypesResponses,
   EReportRequestOtpData,
+  EReportRequestOtpErrors,
   EReportRequestOtpResponses,
   EReportSubmitComplaintData,
+  EReportSubmitComplaintErrors,
   EReportSubmitComplaintResponses,
   EVerifyAuthenticateData,
   EVerifyAuthenticateErrors,
@@ -333,7 +344,7 @@ export class egovChain {
     options: Options<EgovChainJsonRpcData, ThrowOnError>,
   ): RequestResult<EgovChainJsonRpcResponses, unknown, ThrowOnError, "data"> {
     return options.client.post<EgovChainJsonRpcResponses, unknown, ThrowOnError, "data">({
-      url: "/",
+      url: "/{token}",
       ...options,
       responseStyle: "data",
       headers: mergeHeaders({ "Content-Type": "application/json" }, options.headers),
@@ -639,8 +650,18 @@ export class eReport {
    */
   public static listReportTypes<ThrowOnError extends boolean = false>(
     options: Options<EReportListReportTypesData, ThrowOnError>,
-  ): RequestResult<EReportListReportTypesResponses, unknown, ThrowOnError, "data"> {
-    return options.client.get<EReportListReportTypesResponses, unknown, ThrowOnError, "data">({
+  ): RequestResult<
+    EReportListReportTypesResponses,
+    EReportListReportTypesErrors,
+    ThrowOnError,
+    "data"
+  > {
+    return options.client.get<
+      EReportListReportTypesResponses,
+      EReportListReportTypesErrors,
+      ThrowOnError,
+      "data"
+    >({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/api/integration/datasets/report_types",
       ...options,
@@ -653,8 +674,13 @@ export class eReport {
    */
   public static listRegions<ThrowOnError extends boolean = false>(
     options: Options<EReportListRegionsData, ThrowOnError>,
-  ): RequestResult<EReportListRegionsResponses, unknown, ThrowOnError, "data"> {
-    return options.client.get<EReportListRegionsResponses, unknown, ThrowOnError, "data">({
+  ): RequestResult<EReportListRegionsResponses, EReportListRegionsErrors, ThrowOnError, "data"> {
+    return options.client.get<
+      EReportListRegionsResponses,
+      EReportListRegionsErrors,
+      ThrowOnError,
+      "data"
+    >({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/api/integration/datasets/regions",
       ...options,
@@ -667,8 +693,18 @@ export class eReport {
    */
   public static listProvinces<ThrowOnError extends boolean = false>(
     options: Options<EReportListProvincesData, ThrowOnError>,
-  ): RequestResult<EReportListProvincesResponses, unknown, ThrowOnError, "data"> {
-    return options.client.get<EReportListProvincesResponses, unknown, ThrowOnError, "data">({
+  ): RequestResult<
+    EReportListProvincesResponses,
+    EReportListProvincesErrors,
+    ThrowOnError,
+    "data"
+  > {
+    return options.client.get<
+      EReportListProvincesResponses,
+      EReportListProvincesErrors,
+      ThrowOnError,
+      "data"
+    >({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/api/integration/datasets/provinces",
       ...options,
@@ -681,8 +717,18 @@ export class eReport {
    */
   public static listMunicipalities<ThrowOnError extends boolean = false>(
     options: Options<EReportListMunicipalitiesData, ThrowOnError>,
-  ): RequestResult<EReportListMunicipalitiesResponses, unknown, ThrowOnError, "data"> {
-    return options.client.get<EReportListMunicipalitiesResponses, unknown, ThrowOnError, "data">({
+  ): RequestResult<
+    EReportListMunicipalitiesResponses,
+    EReportListMunicipalitiesErrors,
+    ThrowOnError,
+    "data"
+  > {
+    return options.client.get<
+      EReportListMunicipalitiesResponses,
+      EReportListMunicipalitiesErrors,
+      ThrowOnError,
+      "data"
+    >({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/api/integration/datasets/municipalities",
       ...options,
@@ -695,8 +741,18 @@ export class eReport {
    */
   public static listBarangays<ThrowOnError extends boolean = false>(
     options: Options<EReportListBarangaysData, ThrowOnError>,
-  ): RequestResult<EReportListBarangaysResponses, unknown, ThrowOnError, "data"> {
-    return options.client.get<EReportListBarangaysResponses, unknown, ThrowOnError, "data">({
+  ): RequestResult<
+    EReportListBarangaysResponses,
+    EReportListBarangaysErrors,
+    ThrowOnError,
+    "data"
+  > {
+    return options.client.get<
+      EReportListBarangaysResponses,
+      EReportListBarangaysErrors,
+      ThrowOnError,
+      "data"
+    >({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/api/integration/datasets/barangays",
       ...options,
@@ -709,8 +765,18 @@ export class eReport {
    */
   public static generateToken<ThrowOnError extends boolean = false>(
     options: Options<EReportGenerateTokenData, ThrowOnError>,
-  ): RequestResult<EReportGenerateTokenResponses, unknown, ThrowOnError, "data"> {
-    return options.client.post<EReportGenerateTokenResponses, unknown, ThrowOnError, "data">({
+  ): RequestResult<
+    EReportGenerateTokenResponses,
+    EReportGenerateTokenErrors,
+    ThrowOnError,
+    "data"
+  > {
+    return options.client.post<
+      EReportGenerateTokenResponses,
+      EReportGenerateTokenErrors,
+      ThrowOnError,
+      "data"
+    >({
       url: "/api/integration/token",
       ...options,
       responseStyle: "data",
@@ -723,8 +789,18 @@ export class eReport {
    */
   public static submitComplaint<ThrowOnError extends boolean = false>(
     options: Options<EReportSubmitComplaintData, ThrowOnError>,
-  ): RequestResult<EReportSubmitComplaintResponses, unknown, ThrowOnError, "data"> {
-    return options.client.post<EReportSubmitComplaintResponses, unknown, ThrowOnError, "data">({
+  ): RequestResult<
+    EReportSubmitComplaintResponses,
+    EReportSubmitComplaintErrors,
+    ThrowOnError,
+    "data"
+  > {
+    return options.client.post<
+      EReportSubmitComplaintResponses,
+      EReportSubmitComplaintErrors,
+      ThrowOnError,
+      "data"
+    >({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/api/integration/submit_complaint",
       ...options,
@@ -738,8 +814,13 @@ export class eReport {
    */
   public static requestOtp<ThrowOnError extends boolean = false>(
     options: Options<EReportRequestOtpData, ThrowOnError>,
-  ): RequestResult<EReportRequestOtpResponses, unknown, ThrowOnError, "data"> {
-    return options.client.post<EReportRequestOtpResponses, unknown, ThrowOnError, "data">({
+  ): RequestResult<EReportRequestOtpResponses, EReportRequestOtpErrors, ThrowOnError, "data"> {
+    return options.client.post<
+      EReportRequestOtpResponses,
+      EReportRequestOtpErrors,
+      ThrowOnError,
+      "data"
+    >({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/api/integration/verify/request",
       ...options,
@@ -753,8 +834,13 @@ export class eReport {
    */
   public static confirmOtp<ThrowOnError extends boolean = false>(
     options: Options<EReportConfirmOtpData, ThrowOnError>,
-  ): RequestResult<EReportConfirmOtpResponses, unknown, ThrowOnError, "data"> {
-    return options.client.post<EReportConfirmOtpResponses, unknown, ThrowOnError, "data">({
+  ): RequestResult<EReportConfirmOtpResponses, EReportConfirmOtpErrors, ThrowOnError, "data"> {
+    return options.client.post<
+      EReportConfirmOtpResponses,
+      EReportConfirmOtpErrors,
+      ThrowOnError,
+      "data"
+    >({
       security: [{ scheme: "bearer", type: "http" }],
       url: "/api/integration/verify/confirm",
       ...options,
@@ -768,8 +854,13 @@ export class eReport {
    */
   public static listReports<ThrowOnError extends boolean = false>(
     options: Options<EReportListReportsData, ThrowOnError>,
-  ): RequestResult<EReportListReportsResponses, unknown, ThrowOnError, "data"> {
-    return options.client.get<EReportListReportsResponses, unknown, ThrowOnError, "data">({
+  ): RequestResult<EReportListReportsResponses, EReportListReportsErrors, ThrowOnError, "data"> {
+    return options.client.get<
+      EReportListReportsResponses,
+      EReportListReportsErrors,
+      ThrowOnError,
+      "data"
+    >({
       security: [{ name: "X-EReport-View-Token", type: "apiKey" }],
       url: "/api/integration/reports",
       ...options,
@@ -782,8 +873,13 @@ export class eReport {
    */
   public static getReport<ThrowOnError extends boolean = false>(
     options: Options<EReportGetReportData, ThrowOnError>,
-  ): RequestResult<EReportGetReportResponses, unknown, ThrowOnError, "data"> {
-    return options.client.get<EReportGetReportResponses, unknown, ThrowOnError, "data">({
+  ): RequestResult<EReportGetReportResponses, EReportGetReportErrors, ThrowOnError, "data"> {
+    return options.client.get<
+      EReportGetReportResponses,
+      EReportGetReportErrors,
+      ThrowOnError,
+      "data"
+    >({
       security: [{ name: "X-EReport-View-Token", type: "apiKey" }],
       url: "/api/integration/reports/{case_number}",
       ...options,

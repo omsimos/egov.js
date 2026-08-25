@@ -29,7 +29,7 @@ Create a **dedicated client** for the documented eGov AI provider host:
 import { createClient } from "egov.js";
 
 const client = createClient({
-  baseUrl: "https://egov-ai-core-ws.oueg.info",
+  baseUrl: process.env.EGOVAI_BASE_URL!,
 });
 ```
 

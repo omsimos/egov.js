@@ -29,7 +29,7 @@ Create a **dedicated client** for the documented eReport staging host:
 import { createClient } from "egov.js";
 
 const client = createClient({
-  baseUrl: "https://stg-ereport-ws.oueg.info",
+  baseUrl: process.env.EREPORT_BASE_URL!,
 });
 ```
 

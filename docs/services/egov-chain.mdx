@@ -2,7 +2,7 @@
 $schema: https://holocron.so/frontmatter.json
 title: Call the eGovChain JSON-RPC service
 sidebarTitle: eGovChain
-description: Connect to the eGovChain hackathon RPC host for EVM-compatible reads, log queries, contract calls, and signed transaction submission.
+description: Connect to the tokenized eGovChain gateway for EVM-compatible reads, log queries, contract calls, and signed transaction submission.
 icon: lucide:blocks
 ---
 
@@ -19,17 +19,17 @@ icon: lucide:blocks
 
 ## Authentication
 
-The documented **RPC operation** does not declare an authentication scheme. Apply any access controls required by the environment through client headers.
+The gateway token is part of the request path. Read it from `EGOVCHAIN_TOKEN` and pass it through the generated `path` options; do not put it in headers or logs.
 
 ## Initialize the client
 
-Create a **dedicated client** for the documented eGovChain hackathon host:
+Create a **dedicated client** for the configured eGovChain gateway:
 
 ```ts
 import { createClient } from "egov.js";
 
 const client = createClient({
-  baseUrl: "https://hackathon-blockchain.e.gov.ph",
+  baseUrl: process.env.EGOVCHAIN_BASE_URL!,
 });
 ```
 
@@ -41,13 +41,14 @@ The **API Reference tab** documents the generic JSON-RPC envelope, success and e
 
 ### `egovChain.jsonRpc`
 
-**`POST /`** sends a JSON-RPC method, optional parameters, and request identifier to the eGovChain endpoint.
+**`POST /{token}`** sends a JSON-RPC method, optional parameters, and request identifier to the eGovChain endpoint.
 
 ```ts
 import { egovChain } from "egov.js";
 
 const blockNumber = await egovChain.jsonRpc({
   client,
+  path: { token: process.env.EGOVCHAIN_TOKEN! },
   body: {
     id: 1,
     jsonrpc: "2.0",

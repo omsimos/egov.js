@@ -40,7 +40,7 @@ bearer token to authenticated operations:
 import { createClient, egovAi } from "egov.js";
 
 const client = createClient({
-  baseUrl: "https://egov-ai-core-ws.oueg.info",
+  baseUrl: process.env.EGOVAI_BASE_URL!,
 });
 
 const token = await egovAi.generateAccessToken({
@@ -79,7 +79,7 @@ services can configure their required header once:
 import { createClient, compass } from "egov.js";
 
 const client = createClient({
-  baseUrl: "https://dbm-ws.oueg.info",
+  baseUrl: process.env.EGOVCOMPASS_BASE_URL!,
   headers: {
     "X-API-Key": process.env.EGOVCOMPASS_API_KEY!,
   },
