@@ -76,16 +76,16 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
-    "@changesets/cli": "2.31.1",
+    "@changesets/cli": "3.0.1",
     "@hey-api/openapi-ts": "0.99.0",
-    "@redocly/cli": "2.40.0",
-    "@types/node": "22.20.1",
-    "oxfmt": "0.60.0",
-    "oxlint": "1.75.0",
-    "publint": "0.3.22",
-    "tsdown": "0.19.0",
-    "typescript": "5.9.3",
-    "vitest": "4.1.10"
+    "@redocly/cli": "2.47.0",
+    "@types/node": "26.2.0",
+    "oxfmt": "0.64.0",
+    "oxlint": "1.79.0",
+    "publint": "0.3.24",
+    "tsdown": "0.22.14",
+    "typescript": "7.0.2",
+    "vitest": "4.1.11"
   },
   "engines": {
     "node": ">=22.18.0"
