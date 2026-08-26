@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+
 import { describe, expect, test } from "vitest";
 
 import {
@@ -20,8 +22,19 @@ function assertResponseStyleIsFixed(options: Parameters<typeof egovAi.generateAs
 
 void assertResponseStyleIsFixed;
 
+const methods = ["delete", "get", "patch", "post", "put"] as const;
+
+interface WireContract {
+  paths: Record<string, Partial<Record<(typeof methods)[number], unknown>>>;
+  tags?: unknown[];
+}
+
+async function readWireContract(): Promise<WireContract> {
+  return JSON.parse(await readFile(new URL("../openapi.json", import.meta.url), "utf8"));
+}
+
 describe("generated SDK", () => {
-  test("groups every operation into a service namespace", () => {
+  test("groups every operation into a service namespace", async () => {
     const services = {
       compass,
       egovAi,
@@ -42,8 +55,16 @@ describe("generated SDK", () => {
       0,
     );
 
-    expect(Object.keys(services)).toHaveLength(9);
-    expect(operationCount).toBe(39);
+    // The SDK surface must match the wire contract exactly; openapi.json is the
+    // only place these totals are maintained.
+    const contract = await readWireContract();
+    const contractOperations = Object.values(contract.paths).reduce(
+      (count, path) => count + methods.filter((method) => path[method]).length,
+      0,
+    );
+
+    expect(Object.keys(services)).toHaveLength((contract.tags ?? []).length);
+    expect(operationCount).toBe(contractOperations);
   });
 
   test("serializes a bearer-authenticated JSON operation", async () => {
