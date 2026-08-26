@@ -1,0 +1,11 @@
+# Default owners for everything in this repository.
+* @joshxfi @princejoogie
+
+# The wire contract drives every generated file; changes need contract review.
+/openapi.json @joshxfi @princejoogie
+/openapi-ts.config.ts @joshxfi @princejoogie
+
+# Release, CI, and packaging surface.
+/.github/ @joshxfi @princejoogie
+/package.json @joshxfi @princejoogie
+/pnpm-workspace.yaml @joshxfi @princejoogie

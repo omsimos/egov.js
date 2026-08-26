@@ -2,7 +2,9 @@ node_modules/
 dist/
 coverage/
 docs/dist/
+artifacts/
 *.log
+*.tsbuildinfo
 .DS_Store
 .env
 .env.*

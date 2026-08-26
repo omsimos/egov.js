@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://egov-sdk.omsimos.com
+    about: Installation, quickstart, per-service guides, and the API reference.
+  - name: Questions and ideas
+    url: https://github.com/omsimos/egov.js/discussions
+    about: Ask usage questions or discuss a change before opening an issue.
+  - name: Report a security vulnerability
+    url: https://github.com/omsimos/egov.js/security/advisories/new
+    about: Report vulnerabilities or exposed eGov credentials privately. Never open a public issue for these.
+  - name: eGov provider support
+    url: https://platforms.e.gov.ph
+    about: Credentials, quotas, and provider-side outages are handled by eGov, not by this SDK.
