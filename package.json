@@ -12,7 +12,7 @@
     "sdk",
     "typescript"
   ],
-  "homepage": "https://github.com/omsimos/egov.js#readme",
+  "homepage": "https://egov-sdk.omsimos.com",
   "bugs": {
     "url": "https://github.com/omsimos/egov.js/issues"
   },

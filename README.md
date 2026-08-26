@@ -1,12 +1,27 @@
 # egov.js
 
+[![npm](https://img.shields.io/npm/v/egov.js?color=155eef)](https://www.npmjs.com/package/egov.js)
+[![CI](https://github.com/omsimos/egov.js/actions/workflows/ci.yml/badge.svg)](https://github.com/omsimos/egov.js/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+
 OpenAPI specification and generated TypeScript SDK for nine Philippine eGov
 partner services. The SDK is generated with
 [`@hey-api/openapi-ts`](https://heyapi.dev/openapi-ts/get-started) and bundles a
 Fetch client without runtime dependencies.
 
+**Documentation: [egov-sdk.omsimos.com](https://egov-sdk.omsimos.com)**
+
+> [!IMPORTANT]
+> This is an unofficial, community-maintained SDK. It is not affiliated with,
+> endorsed by, or supported by the Department of Information and Communications
+> Technology (DICT), eGov PH, or any Philippine government agency. Product and
+> service names are the property of their respective owners.
+
+> [!WARNING]
 > Provider hosts are staging or hackathon services unless confirmed otherwise.
-> Keep credentials and citizen data on trusted server infrastructure.
+> Keep credentials and citizen data on trusted server infrastructure. Credentials
+> and quotas are issued by eGov at
+> [platforms.e.gov.ph](https://platforms.e.gov.ph), not by this project.
 
 ## Services
 
@@ -135,10 +150,20 @@ pnpm install
 pnpm check
 ```
 
-`pnpm check` validates and regenerates the OpenAPI SDK, checks formatting and
-types, runs tests, verifies package exports, and builds the Holocron docs.
+`pnpm check` validates the OpenAPI contract and generated SDK, checks formatting
+and types, runs tests, verifies package exports, and builds the Holocron docs.
 
-See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the contribution workflow.
+## Contributing
+
+Issues and pull requests are welcome. Start with
+[`CONTRIBUTING.md`](./CONTRIBUTING.md) for the development workflow and the
+walkthrough for changing the wire contract.
+
+- [Code of Conduct](./CODE_OF_CONDUCT.md)
+- [Security Policy](./SECURITY.md) — report vulnerabilities privately, never in
+  a public issue
+- [Discussions](https://github.com/omsimos/egov.js/discussions) — usage
+  questions and proposals
 
 ## License
 
